@@ -2,7 +2,7 @@
 A three-dimensional Lagrangian model capable of evaluating the influence of flow velocity, shear dispersion and turbulent diffusion on the transport and dispersal patterns of Asian carp eggs is presented. The model’s variables include not only biological behavior (growth rate, density changes) but also the physical characteristics of the flow field, such as mean velocities and eddy diffusivities.
 # Code Structure
 The Graphical User Inter Interface (GUI) code for the FluEgg is FluEgg.m and FluEgg.fig. 
-The Main function of FluEgg is called FluEgggui, this function uses the Jump function, in this function particles move (jump) every time step following the random walk and random displacement approach.
+The Main function of FluEgg is called FluEgggui.
 
 # Motivation
 The transport of Asian carp eggs and fish in the early stages of development is very important on their life history and recruitment success. A better understanding of the transport and dispersal patterns of Asian carp at early life stages might give insight into the development and implementation of control strategies for Asian carp.
