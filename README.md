@@ -1,13 +1,25 @@
 # Fluvial Egg Drift Simulator (FluEgg)
 A three-dimensional Lagrangian model capable of evaluating the influence of flow velocity, shear dispersion and turbulent diffusion on the transport and dispersal patterns of Asian carp eggs is presented. The model’s variables include not only biological behavior (growth rate, density changes) but also the physical characteristics of the flow field, such as mean velocities and eddy diffusivities.
 # Code Structure
-The code for the FluEgg Grafical User Inter Interface (GUI) is FluEgg.m and the GUI is FluEgg.fig. 
-The Main function of FluEgg is called FluEgggui, this function uses the Jump function.
+The Graphical User Inter Interface (GUI) code for the FluEgg is FluEgg.m and FluEgg.fig. 
+The Main function of FluEgg is called FluEgggui, this function uses the Jump function, in this function particles move (jump) every time step following the random walk and random displacement approach.
+
 # Motivation
+The transport of Asian carp eggs and fish in the early stages of development is very important on their life history and recruitment success. A better understanding of the transport and dispersal patterns of Asian carp at early life stages might give insight into the development and implementation of control strategies for Asian carp.
+
+The FluEgg model was developed to evaluate the influence of flow velocity, shear dispersion and turbulent diffusion on the transport and dispersal patterns of Asian carp eggs. FluEgg output includes the three-dimensional location of the eggs at each time
+step together with its growth stage. The output results can be used to estimate lateral, longitudinal or vertical egg distribution. In addition, it can be used to generate an egg breakthrough curve (egg concentration as a function of time) at a certain downstream location from the virtual spawning location. Egg breakthrough curves are important for understanding egg dispersion and travel times.
+Egg vertical concentration distribution might give insights into egg suspension and settlement. Egg longitudinal concentration distributions can be used to estimate the streamwise and shear velocity, and minimum river length required for successful egg development. 
+
+Egg lateral distributions give information about dead zones, provided the input hydraulic data for the model is sufficiently well
+described. The location of suitable spawning grounds can be predicted based on the egg growth stage and on the vertical, lateral
+or longitudinal egg concentration distributions.
+The FluEgg model has the capability to predict the drifting behavior of eggs based on the physical properties of the eggs and
+the environmental and hydrodynamic characteristics of the stream where the eggs are drifting.
 
 # Installation
+The FluEgg model iswritten in the MATLAB® programming language (Mathworks, Natick, MA,USA). It requires the statistics and image processing toolboxes.
 
-# License
 ==============================================================================
 FluEgg Release License
 ==============================================================================
