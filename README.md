@@ -16,6 +16,10 @@ described. The location of suitable spawning grounds can be predicted based on t
 or longitudinal egg concentration distributions.
 The FluEgg model has the capability to predict the drifting behavior of eggs based on the physical properties of the eggs and
 the environmental and hydrodynamic characteristics of the stream where the eggs are drifting.
+A complete description of the FluEgg model was presented by Garcia et al. (2013); users can refer to this paper for detailed information on both the mathematical model and the performance of the model.
+
+#References
+Garcia, T., Jackson, P.R.,Murphy, E.A., Valocchi, A.J., Garcia, M.H., 2013. Development of a Fluvial Egg Drift Simulator to evaluate the transport and dispersion of Asian carp eggs in rivers. Ecol. Model. 263, 211–222
 
 # Installation
 The FluEgg model iswritten in the MATLAB® programming language (Mathworks, Natick, MA,USA). It requires the statistics and image processing toolboxes.
