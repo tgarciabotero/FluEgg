@@ -40,7 +40,7 @@ function loadfromfile_Callback(hObject, eventdata, handles)
     '*.xls','xls-files (*.xls)'; ...
     '*.csv'             , 'CSV - comma delimited (*.csv)'; ... 
     '*.txt'             , 'Text (Tab Delimited (*.txt)'}, ...
-    'Select Excel file to import','MultiSelect', 'on');
+    'Select file to import','MultiSelect', 'on');
 strFilename=fullfile(PathName,FileName);
 if PathName==0 %if the user pressed cancelled, then we exit this callback
     return
@@ -59,7 +59,6 @@ guidata(hObject, handles);% Update handles structure
 Riverin_DataPlot(hObject, eventdata, handles)
 
 function Riverin_DataPlot(hObject, eventdata, handles)
-
 %% DepthPlot Riverin data
 RinFile=handles.userdata.Riverinputfile;
 %calculate cumulative distance as the middle of the cell

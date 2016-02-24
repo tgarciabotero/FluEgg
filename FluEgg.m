@@ -34,20 +34,20 @@ else                                                                      %
 end                                                                       %
 % End initialization code - DO NOT EDIT                                   %
 warning('off', 'MATLAB:dispatcher:UnresolvedFunctionHandle');                                                                          %
-%% Code Paths:::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::%
-    addpath('./Codes');
-    %:::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::% 
+%:::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::% 
 
 function FluEgg_OpeningFcn(hObject, eventdata, handles, varargin)
 handles.output = hObject;
+
+
 %% Figures and icons
-axes(handles.riverfig); imshow('./icons/riverfig.png');
-axes(handles.eggsfig); imshow('./icons/eggsfig2.png');
-axes(handles.waterclock); imshow('./icons/waterclock.png');
-axes(handles.bottom); imshow('./icons/asiancarp.png');
-axes(handles.logoUofI); imshow('./icons/imark.tif');
-axes(handles.logo_usgs); imshow('./icons/logo_usgs.png');
-addpath('./User_Interfaces/');
+axes(handles.riverfig); imshow('riverfig.png');
+axes(handles.eggsfig); imshow('eggsfig2.png');
+axes(handles.waterclock); imshow('waterclock.png');
+axes(handles.bottom); imshow('asiancarp.png');
+axes(handles.logoUofI); imshow('imark.tif');
+axes(handles.logo_usgs); imshow('logo_usgs.png');
+
 workpath = pwd;
 setappdata(0,'workpath',workpath);
 guidata(hObject, handles);% Update handles structure
@@ -156,8 +156,8 @@ case 'Use diameter and egg density time series (Chapman, 2011)'
   set(handles.Ti,'Visible','off');
   set(handles.text_C,'Visible','off');
   set(handles.ConstRhoe,'Visible','off');
-  set(handles.textPostFert_Time,'Visible','on');
-  set(handles.PostferT,'Visible','on');
+  %set(handles.textPostFert_Time,'Visible','on');
+  %set(handles.PostferT,'Visible','on');
 case 'Use constant egg diameter and density' 
   set(handles.textPostFert_Time,'Visible','off');
   set(handles.PostferT,'Visible','off');
@@ -290,6 +290,12 @@ end
 save('./results/Vertdist.mat','batchresults','-append')
 end
 else
+     if length(get(handles.edit_River_name, 'String'))<2
+         ed = errordlg('Please input the river name','Error');
+         set(ed, 'WindowStyle', 'modal');
+         uiwait(ed);
+         return
+     end
     FluEgggui(hObject, eventdata,handles);
    % Vert_Dist %% need to comment this out later-->this is to produce%results without using the results gui
 end

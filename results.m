@@ -46,9 +46,9 @@ end
 
 % --- Executes just before Results is made visible.
 function Results_OpeningFcn(hObject, eventdata, handles, varargin)
-axes(handles.bottom); imshow('./icons/asiancarp.png');
-axes(handles.logoUofI); imshow('./icons/imark.tif');
-axes(handles.logo_usgs); imshow('./icons/logo_usgs.png');
+axes(handles.bottom); imshow('asiancarp.png');
+axes(handles.logoUofI); imshow('imark.tif');
+axes(handles.logo_usgs); imshow('logo_usgs.png');
 button_load_picture(hObject, eventdata, handles);
 handles.Results=0;
 handles.output = hObject;
@@ -318,5 +318,5 @@ text(CumlDistance(1)/3,0.87,texlabel('Cell #'),'FontWeight','bold','FontName','A
 end
 
 function button_load_picture(hObject, eventdata, handles)
-Fig_open=imread('./icons/browse.png');
+Fig_open=imread('browse.png');
 set(handles.Browse_button, 'Cdata', Fig_open);

@@ -44,9 +44,9 @@ end
 % End initialization code - DO NOT EDIT
 %% ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 function Egg_vertical_concentration_OpeningFcn(hObject, ~, handles, varargin)
-axes(handles.bottom); imshow('./icons/asiancarp.png');
-axes(handles.logoUofI); imshow('./icons/imark.tif');
-axes(handles.logo_usgs); imshow('./icons/logo_usgs.png');
+axes(handles.bottom); imshow('asiancarp.png');
+axes(handles.logoUofI); imshow('imark.tif');
+axes(handles.logo_usgs); imshow('logo_usgs.png');
 %%
 handleResults=getappdata(0,'handleResults'); 
 ResultsSim=getappdata(handleResults,'ResultsSim');
@@ -185,10 +185,17 @@ Cy=(N./hightLayers)*100;
 Cavg=sum(N)/H;
 CyCavg=Cy./Cavg;
 Vertdist=[z_o_H_midd CyCavg];
-%% Saving results
+%% Saving results as .mat
 hFluEggGui=getappdata(0,'hFluEggGui');
 outputfile=getappdata(hFluEggGui, 'outputfile');
 save(outputfile,'Vertdist','-mat','-append');
+%% Saving results as text file 
+hFluEggGui=getappdata(0,'hFluEggGui');
+Folderpath=getappdata(hFluEggGui, 'Folderpath');
+hdr={'Z/H','Log Cz/Cavg'};
+dlmwrite([Folderpath,'VertDist' '.txt'],[sprintf('%s\t',hdr{:}) ''],'');
+dlmwrite([Folderpath,'VertDist' '.txt'],Vertdist,'-append','delimiter','\t','precision', 6);
+%%
 %if Batch==0
 figure('Color',[1 1 1]);
 semilogx(CyCavg,z_o_H_midd,'MarkerFaceColor',[0 0 0],'MarkerSize',5,...

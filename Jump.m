@@ -227,8 +227,17 @@ ResultsSim.VX=VX;
 ResultsSim.Temp=Temp;
 ResultsSim.specie=specie;
 save(outputfile,'ResultsSim','-mat');
-%save(['./results/Results', get(handles.edit_River_name, 'String'),get(handles.Totaltime, 'String'),'h', ...
-%                            get(handles.Dt, 'String'),'s' '.mat'],'ResultsSim','-mat');
-%%
-%save(outputfile,'X','Y','Z','time','VsT','touch','D','alive','-mat');%,'-append');%'D','Rhoet'
+%folderName= uigetdir('./results','Folder name to save results');
+%% SAVE RESULTS AS TEXT FILE
+mkdir('./results',['Results_', get(handles.edit_River_name, 'String'),'_',get(handles.Totaltime, 'String'),'h_',get(handles.Dt, 'String'),'s']);
+Folderpath=['./results/Results_', get(handles.edit_River_name, 'String'),'_',get(handles.Totaltime, 'String'),'h_', ...
+                            get(handles.Dt, 'String'),'s/'];
+save([Folderpath,'X' '.txt'],'X', '-ASCII');
+save([Folderpath,'Y' '.txt'],'Y', '-ASCII');
+save([Folderpath,'Z' '.txt'],'Z', '-ASCII');
+save([Folderpath,'time' '.txt'],'time', '-ASCII');
+hFluEggGui=getappdata(0,'hFluEggGui');
+setappdata(hFluEggGui, 'Folderpath', Folderpath);        
+hdr={'Specie=',specie;'Dt_s=',Dt;'Simulation time_h=',time(end)/3600};
+dlmcell([Folderpath,'Simulation info' '.txt'],hdr,' ');                                  %
 end
