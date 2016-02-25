@@ -22,7 +22,7 @@ function varargout = snapshotPlotDt(varargin)
 
 % Edit the above text to modify the response to help snapshotPlotDt
 
-% Last Modified by GUIDE v2.5 02-May-2013 11:55:51
+% Last Modified by GUIDE v2.5 26-Aug-2013 16:48:37
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
@@ -46,16 +46,18 @@ end
 
 % --- Executes just before snapshotPlotDt is made visible.
 function snapshotPlotDt_OpeningFcn(hObject, ~, handles, varargin)
+diary('./results/FluEgg_LogFile.txt')
 handleResults=getappdata(0,'handleResults'); 
 ResultsSim=getappdata(handleResults,'ResultsSim');
 time=ResultsSim.time;
-set(handles.TimeStep_Snapshot,'String',time(end)/3600/10)
+set(handles.TimeStep_Snapshot,'String',round(10*time(end)/3600/10)/10)
 handles.output = hObject;
 guidata(hObject, handles);
 
 
 % --- Outputs from this function are returned to the command line.
-function varargout = snapshotPlotDt_OutputFcn(~, ~, handles) 
+function varargout = snapshotPlotDt_OutputFcn(~, ~, handles)
+diary off
 varargout{1} = handles.output;
 
 function TimeStep_Snapshot_Callback(~, ~, handles)
@@ -81,17 +83,21 @@ time=ResultsSim.time;
 CumlDistance=ResultsSim.CumlDistance;
 Depth=ResultsSim.Depth;
 %%
-figure('color','w','position',[ 1000 300 600  400]);
-subaxis(1,1,1,'MR',0.02,'ML',0.09,'MB',0.1,'MT',0.075);
+set(0,'Units','pixels') ;
+scnsize = get(0,'ScreenSize');
+figure('Name','Evolution of a mass of Asian carp eggs','NumberTitle','off',...
+    'Menubar','figure','color','w','position',[8 scnsize(4)/2.6 scnsize(3)/2.1333 scnsize(4)/2]);
+%figure('color','w','position',[ 1000 300 600  400]);
+subaxis(1,1,1,'MR',0.035,'ML',0.09,'MB',0.12,'MT',0.075);
 Dt=time(2)-time(1);
 Legends=cell(1,fix(1+time(end)/(3600*TimeStep_Snapshot)));i=1;
-for t=0:3600*TimeStep_Snapshot:(length(X)-1)*Dt
+for t=0:3600*TimeStep_Snapshot:time(end)%(length(X)-1)*Dt
     if t==0
             scatter((X(round(t/Dt+1),:)/1000),Z(round(t/Dt+1),:),30,'filled');
             hold all
     else
     scatter((X(round(t/Dt+1),:)/1000),Z(round(t/Dt+1),:),5);%,'filled')
-    time(round(t/Dt+1));%display(time(round(t/Dt+1))/3600)
+    %time(round(t/Dt+1));display(time(round(t/Dt+1))/3600)
     end
     Legends{i}=[num2str(t/3600) 'h'];i=i+1;
 end
@@ -100,20 +106,38 @@ stairs([0; CumlDistance],[-Depth; -Depth(end)],'color','k','linewidth',1.5);
 set(gca,'TickDir','in','TickLength',[0.021 0.021],'FontSize',12);
 xlabel('Distance [km]','FontName','Arial','FontSize',12);
 ylabel('Vertical location of eggs [m]','FontName','Arial','FontSize',12);
-legend(Legends,'FontName','Arial','FontSize',8)
+legend(Legends,'Location','Best','FontName','Arial','FontSize',8)
 xlim([0 max(CumlDistance)])
+No=length(Depth);
 %% Text
+text(-0.12,0.15, '\downarrow','FontWeight','bold','FontName','Arial')
+text(-2.5,0.5, 'Fish spawn here','FontWeight','normal','FontName','Arial')
+text(CumlDistance(end)/2.4,0.2,texlabel('Water surface'),'FontWeight','normal','FontName','Arial')
+text(CumlDistance(fix(No/3)),-Depth(fix(No/3)+1)-1,'\uparrow','FontWeight','normal','FontName','Arial','FontSize',20)
+text(CumlDistance(fix(No/3))-1,-Depth(fix(No/3)+1)-1.5, 'River bed','FontWeight','normal','FontName','Arial')
+set(gca,'XMinorTick','on')
+%% Cell labels ON-OFF
+label_on=get(handles.Labelcheckbox,'Value');  %Need to comment this for now
+if label_on==1
+
 for i=1:length(CumlDistance)
     if i==1
-            text(CumlDistance(i)/3,-Depth(i)-0.2,texlabel(num2str(i)),'FontWeight','bold','FontName','Arial')
+            text(CumlDistance(i)/5.5,-Depth(i)*1.4,texlabel(num2str(i)),'FontWeight','normal','FontName','Arial','FontSize',8)
     else
-    text(CumlDistance(i)-(CumlDistance(i)-CumlDistance(i-1))/1.5,-Depth(i)-0.2,texlabel(num2str(i)),'FontWeight','bold','FontName','Arial')
+    text(CumlDistance(i)-(CumlDistance(i)-CumlDistance(i-1))/1.1,-Depth(i)-0.2,texlabel(num2str(i)),'FontWeight','normal','FontName','Arial','FontSize',8)
     end
 end
-text(CumlDistance(end)/2.4,0.2,texlabel('Water surface'),'FontWeight','bold','FontName','Arial')
-text(CumlDistance(1)/3,-Depth(1)-0.7,texlabel('Cell #'),'FontWeight','bold','FontName','Arial')
-text(-0.12,0.15, '\downarrow','FontWeight','bold','FontName','Arial')
-text(-2.5,0.4, 'Fish spawn here','FontWeight','bold','FontName','Arial')
-text(CumlDistance(end)*0.97,-Depth(end)+0.15, '\downarrow','FontWeight','bold','FontName','Arial')
-text(CumlDistance(end)*0.9,-Depth(end)+0.4, 'River bed','FontWeight','bold','FontName','Arial')
-set(gca,'XMinorTick','on')
+text(CumlDistance(1)/3,-Depth(1)*2.5,texlabel('Cell #'),'FontWeight','normal','FontName','Arial','FontSize',8)
+% text(38.34,0.15, '\downarrow','FontWeight','normal','FontName','Arial')
+% text(32.14,0.4, 'Lake Michigan','FontWeight','normal','FontName','Arial')
+end
+diary off
+
+
+% --- Executes on button press in Labelcheckbox.
+function Labelcheckbox_Callback(hObject, eventdata, handles)
+% hObject    handle to Labelcheckbox (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+% Hint: get(hObject,'Value') returns toggle state of Labelcheckbox

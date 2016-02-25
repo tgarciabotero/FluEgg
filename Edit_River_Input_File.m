@@ -20,10 +20,13 @@ end
 % End initialization code - DO NOT EDIT
 
 function Edit_River_Input_File_OpeningFcn(hObject, eventdata, handles, varargin)
+diary('./results/FluEgg_LogFile.txt')
 handles.output = hObject;
-%RiverInputFile_CellEditCallback(hObject, eventdata, handles)
 guidata(hObject, handles);
 
+function varargout = Edit_River_Input_File_OutputFcn(hObject, eventdata, handles) 
+diary off
+varargout{1} = handles.output;
 
 function pannel_CreateFcn(hObject, eventdata, handles)
 
@@ -138,8 +141,6 @@ handles.userdata.Riverinputfile=get(handles.RiverInputFile,'Data');
 Riverin_DataPlot(hObject, eventdata, handles)
 guidata(hObject, handles);% Update handles structure
 function RiverInputFile_CellSelectionCallback(hObject, eventdata, handles)
-function varargout = Edit_River_Input_File_OutputFcn(hObject, eventdata, handles) 
-varargout{1} = handles.output;
 
 function ContinueButton_Callback(hObject, eventdata, handles)
 Riverinputfile=handles.userdata.Riverinputfile;
@@ -181,6 +182,7 @@ set(handlesmain.MinW,'String',floor(min(Width)*100/2)/100);
 set(handlesmain.MaxW,'String',floor(max(Width)*100/2)/100);
 set(handlesmain.MinH,'String',min(Depth));
 set(handlesmain.MaxH,'String',max(Depth));
+diary off
 close();
 
 function SaveFile_button_Callback(hObject, eventdata, handles)

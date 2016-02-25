@@ -42,7 +42,10 @@ Software.
 The following pieces of software have additional or alternate copyrights,
 licenses, and/or restrictions:
 
-Program/Function     Developer      Directory
-----------------     ---------      ---------
-voxel.m              Suresh Joel    FluEggRepo\voxel.m  
-cells.m              Suresh Joel    FluEggRepo\voxel.m  
+Program/Function     Developer         Directory
+----------------     ---------         ---------
+voxel.m              Suresh Joel       FluEgg_Git_Repo\voxel.m  
+cells.m              Suresh Joel       FluEgg_Git_Repo\voxel.m  
+dlmcell              Roland Pfister    FluEgg_Git_Repo\dlmcell.m  
+parseArgs.m            Aslak Grinsted    FluEgg_Git_Repo\parseArgs.m  
+subaxis.m              Aslak Grinsted    FluEgg_Git_Repo\subaxis.m  

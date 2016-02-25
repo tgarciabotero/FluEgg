@@ -22,7 +22,7 @@ function varargout = Egg_vertical_concentration(varargin)
 
 % Edit the above text to modify the response to help Egg_vertical_concentration
 
-% Last Modified by GUIDE v2.5 02-May-2013 14:46:55
+% Last Modified by GUIDE v2.5 05-Aug-2013 14:19:10
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
@@ -44,9 +44,8 @@ end
 % End initialization code - DO NOT EDIT
 %% ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 function Egg_vertical_concentration_OpeningFcn(hObject, ~, handles, varargin)
+diary('./results/FluEgg_LogFile.txt')
 axes(handles.bottom); imshow('asiancarp.png');
-axes(handles.logoUofI); imshow('imark.tif');
-axes(handles.logo_usgs); imshow('logo_usgs.png');
 %%
 handleResults=getappdata(0,'handleResults'); 
 ResultsSim=getappdata(handleResults,'ResultsSim');
@@ -67,6 +66,7 @@ handles.update=0;
 guidata(hObject, handles);
 
 function varargout = Egg_vertical_concentration_OutputFcn(~, ~, handles) 
+diary off
 varargout{1} = handles.output;
 
 function X_editBox_Callback(hObject,eventdata, handles)
@@ -186,25 +186,31 @@ Cavg=sum(N)/H;
 CyCavg=Cy./Cavg;
 Vertdist=[z_o_H_midd CyCavg];
 %% Saving results as .mat
-hFluEggGui=getappdata(0,'hFluEggGui');
-outputfile=getappdata(hFluEggGui, 'outputfile');
-save(outputfile,'Vertdist','-mat','-append');
+handleResults=getappdata(0,'handleResults');
+fullpath_result=getappdata(handleResults,'fullpath_result');
+save(fullpath_result,'Vertdist','-mat','-append');
 %% Saving results as text file 
-hFluEggGui=getappdata(0,'hFluEggGui');
-Folderpath=getappdata(hFluEggGui, 'Folderpath');
+Folderpath=uigetdir('./results','Select output folder');
+if Folderpath~= 0
+    set(findobj('Tag','editOutputDir'),'String',Folderpath);
+end
 hdr={'Z/H','Log Cz/Cavg'};
 dlmwrite([Folderpath,'VertDist' '.txt'],[sprintf('%s\t',hdr{:}) ''],'');
 dlmwrite([Folderpath,'VertDist' '.txt'],Vertdist,'-append','delimiter','\t','precision', 6);
 %%
 %if Batch==0
-figure('Color',[1 1 1]);
+set(0,'Units','pixels') ;
+scnsize = get(0,'ScreenSize');
+figure('Name','Egg vertical concentration distribution','Color',[1 1 1],...
+    'position',[8 scnsize(4)/2.6 scnsize(3)/2.1333 scnsize(4)/2]);
+subaxis(1,1,1,'MR',0.035,'ML',0.09,'MB',0.13,'MT',0.075);
 semilogx(CyCavg,z_o_H_midd,'MarkerFaceColor',[0 0 0],'MarkerSize',5,...
     'Marker','square','LineWidth',2,'LineStyle','--','Color',[0 0 0]);
 xlim([1 500])
 ylim([0 1])
 set(gca,'XTick',[0 10 50 100 500],'XTickLabel',[0 10 50 100 500]);
-xlabel('log C_z/C');
-ylabel('z/H');
+xlabel('log C_z/C [%]');
+ylabel('z/h');
 legend('FluEgg simulation','Location','NorthWest')
 %% Grid ON-OFF
 gridon=get(handles.Grid_on_checkbox,'Value');  %Need to comment this for now
@@ -215,4 +221,5 @@ else
 end
 %% Message
 h = msgbox([num2str(sum(N)) ' eggs passed by ' num2str(Dist_X/1000) ' km downstream from the virtual spawning location during the simulation time'],'FluEgg Message');
+diary off
 end

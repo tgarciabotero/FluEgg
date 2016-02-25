@@ -58,12 +58,12 @@ switch str{val};
     case 'Use constant egg diameter and density' %%model would use a constant Rhoe and D 
         D=str2double(get(handles.ConstD,'String'));%mm
         D=D*ones(length(time),1);
-        Rhoe_i=str2double(get(handles.ConstRhoe,'String'));
-        Rhoe_i=Rhoe_i*ones(length(time),1);      
-        Ti=str2double(get(handles.Ti,'String'));
+        Rhoe_ref=str2double(get(handles.ConstRhoe,'String'));
+        Rhoe_ref=Rhoe_ref*ones(length(time),1);      
+        Tref=str2double(get(handles.Tref,'String'));
     case 'Use diameter and egg density time series (Chapman, 2011)'
-        Ti=22; %C
-       [D,Rhoe_i]=EggBio(time,specie); %include bighead   
+        Tref=22; %C
+       [D,Rhoe_ref]=EggBio(time,specie); %include bighead   
 end
 %% Calculate water density
 Rhow=density(Temp); %Here we calculate the water density in every cell
@@ -79,7 +79,8 @@ for i=1:Eggs
     T(i)=Temp(cell(i));
     D_50(i)=D50(cell(i)); %mm
     %% Calculating the SG of esggs
-    Rhoe(i)=(1004.5-0.20646*Temp(cell(i)))-((1004.5-0.20646*Ti)-Rhoe_i(t));
+    %Rhoe(i)=(1004.5-0.20646*Temp(cell(i)))-((1004.5-0.20646*Tref)-Rhoe_ref(t));
+    Rhoe(i)=Rhoe_ref(t)+0.20646*(Tref-Temp(cell(i)));
     SG(i)=Rhoe(i)/Rhow(cell(i));%dimensionless
     %======================================================================      
     %% Explicit Lagrangian Horizontal Diffusion
@@ -88,6 +89,7 @@ end
 %% Calculating Fall velocity
 %% Dietrich's
 Vzpart=-Dietrich(D(t),SG(1),T(1))/100;%D should be in mm, vs output is in cm/s, then we convert it to m
+display(max(Vzpart))%used to calculate Dt
 %% Iterative method
 %Vzpart=-fzero(@(vs) vfallfun(vs,D(t),SG(1),T(1)),20)/100;  % Call optimizer, D should be in mm, vs output is in cm/s, then we convert it to m
 % if isnan(Vzpart)
@@ -101,10 +103,8 @@ Vzpart=Vzpart*ones(Eggs,1); %Initially all the eggs have the same Vs
 clear Xi Yi Zi Dmin Vsmax DiamStd VsStd Diam vs C
 %Rhoet(t)=Rhoe(1);
 VsT(t,:)=Vzpart';
-Jump(Steps,time,Totaltime,h,alivemodel,handles,X,Dt,DH,Y,Vy,W,D,Vz,Z,Vzpart,H,ustar,alive,celldead,T,D_50,touch,cell,Rhoe,SG,VsT,Ti,Rhoe_i,Rhow,temp_variables,specie);   
-% DELETE the waitbar; 
-delete(h)
-toc
+Jump(Steps,time,Totaltime,h,alivemodel,handles,X,Dt,DH,Y,Vy,W,D,Vz,Z,Vzpart,H,ustar,alive,celldead,T,D_50,touch,cell,Rhoe,SG,VsT,Tref,Rhoe_ref,Rhow,temp_variables,specie);   
+toc;
 display(toc)
 
 % Total_perTime=sum(touch,2);

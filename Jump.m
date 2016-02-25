@@ -1,14 +1,30 @@
-function []=Jump(Steps,time,Totaltime,h,alivemodel,handles,X,Dt,DH,Y,Vy,W,D,Vz,Z,Vzpart,H,ustar,alive,celldead,T,D_50,touch,cell,Rhoe,SG,VsT,Ti,Rhoe_i,Rhow,temp_variables,specie)
+function []=Jump(Steps,time,Totaltime,h,alivemodel,handles,X,Dt,DH,Y,Vy,W,D,Vz,Z,Vzpart,H,ustar,alive,celldead,T,D_50,touch,cell,Rhoe,SG,VsT,Tref,Rhoe_ref,Rhow,temp_variables,specie)
 Mortality=0;
+waitstep = floor((Steps+1)/100);
+alpha=2.51;%1.9;%1.3;%
+beta=2.47;%1.8;%1.2;%
 for t=2:Steps+1
-    fill=time(t)/Totaltime;
+    %%
+    if ~mod(t, waitstep) || t==Steps+1
+        fill=time(t)/Totaltime;
     % Check for Cancel button press
     if getappdata(h,'canceling')
         close(h);
         return;%break
     end
     % Report current estimate in the waitbar's message field
-    waitbar(fill,h,['Please wait....' sprintf('%12.1f',fill*100) '%']);
+    waitbar(fill,h,['Please wait....' sprintf('%12.1f',fill*100) '%']);   
+    end
+
+%     %%
+%     fill=time(t)/Totaltime;
+%     % Check for Cancel button press
+%     if getappdata(h,'canceling')
+%         close(h);
+%         return;%break
+%     end
+%     % Report current estimate in the waitbar's message field
+%     waitbar(fill,h,['Please wait....' sprintf('%12.1f',fill*100) '%']);
 
 %%
 %a=Z(t-1,:)>0;
@@ -34,7 +50,10 @@ switch str{val};
     case 'Log Law Rough Bottom Boundary (Case rivers)' 
         ks=2.5*D_50(a)/1000;%m
         Vxz=ustar(a).*((1/0.41)*log(Zb./ks)+8.5);%Vxz of alive eggs
+        Vxz(Vxz<0)=0; %Non slip boundary condition;
 end
+%% Streamwise velocity distribution in the transverse direction
+Vxz=Vxz.*betapdf(Y(t-1,a)'./W(a),alpha,beta);
 %% X
 X(t,a)=X(t-1,a)'+(Dt*Vxz)+(normrnd(0,1,sum(a),1).*sqrt(2*DH(a)*Dt));
 %reflecting Boundary
@@ -116,7 +135,7 @@ D50=temp_variables.D50;
         D_50(c(i))=D50(Cell); %mm
         %%
         %% Calculating the SG of esggs
-        Rhoe(c(i))=(1004.5-0.20646*Temp(Cell))-((1004.5-0.20646*Ti)-(0.5*(Rhoe_i(t)+Rhoe_i(t-1))));%dimensionless.  Calculated at half timestep
+        Rhoe(c(i))=(0.5*(Rhoe_ref(t)+Rhoe_ref(t-1)))+0.20646*(Tref-Temp(cell(i)));%Calculated at half timestep
         SG(c(i))=Rhoe(c(i))/Rhow(Cell);%dimensionless
         if SG(c(i))<1
             Vzpart(c(i))=0;
@@ -208,6 +227,11 @@ VsT(t,:)=Vzpart';
 %%
 end
 %%
+% DELETE the waitbar; 
+delete(h)
+%%
+M=msgbox('Please wait FluEgg is saving the results','FluEgg','help');
+%%
 outputfile=['./results/Results_', get(handles.edit_River_name, 'String'),'_',get(handles.Totaltime, 'String'),'h_', ...
                             get(handles.Dt, 'String'),'s' '.mat'];
 hFluEggGui=getappdata(0,'hFluEggGui');
@@ -226,7 +250,7 @@ ResultsSim.Width=Width;
 ResultsSim.VX=VX;
 ResultsSim.Temp=Temp;
 ResultsSim.specie=specie;
-save(outputfile,'ResultsSim','-mat');
+save(outputfile,'ResultsSim','-mat','-v7.3');
 %folderName= uigetdir('./results','Folder name to save results');
 %% SAVE RESULTS AS TEXT FILE
 mkdir('./results',['Results_', get(handles.edit_River_name, 'String'),'_',get(handles.Totaltime, 'String'),'h_',get(handles.Dt, 'String'),'s']);
@@ -239,5 +263,7 @@ save([Folderpath,'time' '.txt'],'time', '-ASCII');
 hFluEggGui=getappdata(0,'hFluEggGui');
 setappdata(hFluEggGui, 'Folderpath', Folderpath);        
 hdr={'Specie=',specie;'Dt_s=',Dt;'Simulation time_h=',time(end)/3600};
-dlmcell([Folderpath,'Simulation info' '.txt'],hdr,' ');                                  %
+dlmcell([Folderpath,'Simulation info' '.txt'],hdr,' ');    
+delete(M)
+%
 end

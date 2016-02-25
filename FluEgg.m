@@ -1,8 +1,9 @@
 function varargout = FluEgg(varargin)
-%%::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::%
+%%%::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::%
 %%                       MAIN INTERFACE PROGRAM                           %
 %%           Lagrangian Asian Carp Egg Transport Model                    %
-%%         for Control and Evaluation of Spawning Rivers                  %
+%%         for Control and Evaluation of Spawning Rivers
+%%             FLUVIAL EGG DRIFT SIMULATOR (FluEgg)
 %:::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::%
 %-------------------------------------------------------------------------%
 % This interface is used to facilitate the use of the FluEgg developed by % 
@@ -13,94 +14,145 @@ function varargout = FluEgg(varargin)
 %-------------------------------------------------------------------------%
 %   Created by      : Tatiana Garcia                                      %
 %   Date            : May 20, 2010                                        %
-%   Last Modified   : Dec 12, 2012  
+%   Last Modified   : July 26, 2013  
 %:::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::%
-%                                                                         %
-% Begin initialization code - DO NOT EDIT                                 %
-gui_Singleton = 1;                                                        %
-gui_State = struct('gui_Name',       mfilename, ...                       %
-                   'gui_Singleton',  gui_Singleton, ...                   %
-                   'gui_OpeningFcn', @FluEgg_OpeningFcn, ...              %
-                   'gui_OutputFcn',  @FluEgg_OutputFcn, ...               %
-                   'gui_LayoutFcn',  [] , ...                             %
-                   'gui_Callback',   []);                                 %
-if nargin && ischar(varargin{1})                                          %
-    gui_State.gui_Callback = str2func(varargin{1});                       %
-end                                                                       %
-if nargout                                                                %
-    [varargout{1:nargout}] = gui_mainfcn(gui_State, varargin{:});         %
-else                                                                      %
-   gui_mainfcn(gui_State, varargin{:});                                  %
-end                                                                       %
-% End initialization code - DO NOT EDIT                                   %
-warning('off', 'MATLAB:dispatcher:UnresolvedFunctionHandle');                                                                          %
-%:::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::% 
+%
+%      H = FLUEGG returns the handle to a new FLUEGG or the handle to
+%      the existing singleton*.
+%      FLUEGG('CALLBACK',hObject,eventData,handles,...) calls the local
+%      function named CALLBACK in FLUEGG.M with the given input arguments.
+%      FLUEGG('Property','Value',...) creates a new FLUEGG or raises the
+%      existing singleton*.  Starting from the left, property value pairs are
+%      applied to the GUI before FluEgg_OpeningFcn gets called.  An
+%      unrecognized property name or invalid value makes property application
+%      stop.  All inputs are passed to FluEgg_OpeningFcn via varargin.
+%
+%      *See GUI Options on GUIDE's Tools menu.  Choose "GUI allows only one
+%      instance to run (singleton)".
+%
+% See also: GUIDE, GUIDATA, GUIHANDLES
 
-function FluEgg_OpeningFcn(hObject, eventdata, handles, varargin)
+% Edit the above text to modify the response to help FluEgg
+
+% Last Modified by GUIDE v2.5 10-Oct-2013 10:35:43
+
+% Begin initialization code - DO NOT EDIT
+gui_Singleton = 1;
+gui_State = struct('gui_Name',       mfilename, ...
+                   'gui_Singleton',  gui_Singleton, ...
+                   'gui_OpeningFcn', @FluEgg_OpeningFcn, ...
+                   'gui_OutputFcn',  @FluEgg_OutputFcn, ...
+                   'gui_LayoutFcn',  [] , ...
+                   'gui_Callback',   []);
+if nargin && ischar(varargin{1})
+    gui_State.gui_Callback = str2func(varargin{1});
+end
+
+if nargout
+    [varargout{1:nargout}] = gui_mainfcn(gui_State, varargin{:});
+else
+    gui_mainfcn(gui_State, varargin{:});
+end
+% End initialization code - DO NOT EDIT
+
+% --- Executes just before FluEgg is made visible.
+function FluEgg_OpeningFcn(hObject, ~, handles, varargin)
 handles.output = hObject;
-
-
 %% Figures and icons
 axes(handles.riverfig); imshow('riverfig.png');
 axes(handles.eggsfig); imshow('eggsfig2.png');
-axes(handles.waterclock); imshow('waterclock.png');
 axes(handles.bottom); imshow('asiancarp.png');
-axes(handles.logoUofI); imshow('imark.tif');
-axes(handles.logo_usgs); imshow('logo_usgs.png');
-
-workpath = pwd;
-setappdata(0,'workpath',workpath);
 guidata(hObject, handles);% Update handles structure
+
+% --- Outputs from this function are returned to the command line.
+function varargout = FluEgg_OutputFcn(~, ~, handles) 
+varargout{1} = handles.output;
+
+%% River input data::::::::::::::::::::::::::::::::::::::::::::::::::::::%
+
+% --- Executes on button press in Load_River_Input.
+function Load_River_Input_Callback(hObject,eventdata, handles)
+delete('./results/FluEgg_LogFile.txt')
+diary('./results/FluEgg_LogFile.txt')
+workpath = pwd;setappdata(0,'workpath',workpath);
 %% Main handles
 setappdata(0,'hFluEggGui',gcf);
 setappdata(gcf,   'handlesmain'    , handles);
 setappdata(gcf,   'hObjectmain'    , hObject);
 setappdata(gcf,   'eventdatamain'    , eventdata);
-setappdata(gcf,   'Batch'    , 0);
+%setappdata(gcf,   'Batch'    , 0);
 setappdata(gcf,'fhRunning',@Running);
-
-
-function varargout = FluEgg_OutputFcn(hObject, eventdata, handles) 
-varargout{1} = handles.output;
-
-%% River input data::::::::::::::::::::::::::::::::::::::::::::::::::::::%
-function riverfig_CreateFcn(hObject, eventdata, handles)
-function RiverInPannel_SelectionChangeFcn(hObject, eventdata, handles)
-function RiverInPannel_CreateFcn(hObject, eventdata, handles)
-
-function Load_River_Input_Callback(hObject, eventdata, handles)
 Edit_River_Input_File();
 %% Make Visible
 set(handles.Summary_panel,'Visible','on');
+    set(handles.text13,'Visible','on');
+    set(handles.text14,'Visible','on');
+    set(handles.text15,'Visible','on');
+    set(handles.text16,'Visible','on');
+    set(handles.text17,'Visible','on');
+    set(handles.MinH,'Visible','on');
+    set(handles.MinW,'Visible','on');
+    set(handles.MinX,'Visible','on');
+    set(handles.MaxH,'Visible','on');
+    set(handles.MaxW,'Visible','on');
+    set(handles.MaxX,'Visible','on');
 set(handles.Simulation_setup,'Visible','on');
+    set(handles.Totaltime,'Visible','on');
+    set(handles.text11,'Visible','on');
+    set(handles.Dt,'Visible','on');
+    set(handles.text12,'Visible','on');
 set(handles.simulation_panel,'Visible','on');
+    set(handles.Running,'Visible','on');
 set(handles.Running,'Visible','on');
 %% Make Results Invisible
 set(handles.panel_Results,'Visible','off');
 set(handles.NewSim_Button,'Visible','off');
 guidata(hObject, handles);% Update handles structure
 
-function popup_roughness_Callback(hObject, eventdata, handles)
+function popup_roughness_Callback(hObject, ~, handles)
 guidata(hObject,handles)
-function popup_roughness_CreateFcn(hObject, eventdata, handles)
+function popup_roughness_CreateFcn(hObject, ~, handles)
 if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
     set(hObject,'BackgroundColor','white');
 end
+
 function popupDiffusivity_Callback(hObject, eventdata, handles)
-guidata(hObject,handles)
 function popupDiffusivity_CreateFcn(hObject, eventdata, handles)
 if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
     set(hObject,'BackgroundColor','white');
 end
-%% Spawning event Getting Input data ::::::::::::::::::::::::::::::::::::::::::::::::::::%
-function Num_Eggs_Callback(hObject, eventdata, handles)
-function Num_Eggs_CreateFcn(hObject, eventdata, handles)
-if ispc && isequal(get(hObject,'BackgroundColor'), get(0,...
-        'defaultUicontrolBackgroundColor'))
+
+function edit_River_name_Callback(~, ~, handles)
+function edit_River_name_CreateFcn(hObject, eventdata, handles)
+if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
     set(hObject,'BackgroundColor','white');
 end
 
-function Xi_input_Callback(hObject, eventdata, handles)
+%% Spawning event Getting Input data
+%% ::::::::::::::::::::::::::::::::::::::::::::::::::::%
+function Num_Eggs_Callback(~, ~, handles)
+function Num_Eggs_CreateFcn(hObject, eventdata, handles)
+if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
+    set(hObject,'BackgroundColor','white');
+end
+
+function Zi_input_Callback(hObject, eventdata, handles)
+function Zi_input_CreateFcn(hObject, eventdata, handles)
+if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
+    set(hObject,'BackgroundColor','white');
+end
+
+function Yi_input_Callback(hObject, ~, handles)
+load './Temp/temp_variables.mat' 
+Width=temp_variables.Width;
+set(handles.Yi_input,'String',floor(Width(1)*100/2)/100);
+guidata(hObject, handles);% Update handles structure
+function Yi_input_CreateFcn(hObject, eventdata, handles)
+if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
+    set(hObject,'BackgroundColor','white');
+end
+
+function Xi_input_Callback(hObject, ~, handles)
 load './Temp/temp_variables.mat'
 CumlDistance=temp_variables.CumlDistance;
 Width=temp_variables.Width;
@@ -115,34 +167,15 @@ C=find(Xi<CumlDistance*1000);C=C(1);
 %% Update Yi
 set(handles.Yi_input,'String',floor(Width(C)*100/2)/100);
 guidata(hObject, handles);% Update handles structure
-
 function Xi_input_CreateFcn(hObject, eventdata, handles)
-if ispc && isequal(get(hObject,'BackgroundColor'), get(0,...
-        'defaultUicontrolBackgroundColor'))
+if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
     set(hObject,'BackgroundColor','white');
 end
 
-function Yi_input_Callback(hObject, eventdata, handles)
-load './Temp/temp_variables.mat' 
-Width=temp_variables.Width;
-set(handles.Yi_input,'String',floor(Width(1)*100/2)/100);
-guidata(hObject, handles);% Update handles structure
-function Yi_input_CreateFcn(hObject, eventdata, handles)
 
-if ispc && isequal(get(hObject,'BackgroundColor'), get(0,...
-        'defaultUicontrolBackgroundColor'))
-    set(hObject,'BackgroundColor','white');
-end
-
-function Zi_input_Callback(hObject, eventdata, handles)
-function Zi_input_CreateFcn(hObject, eventdata, handles)
-if ispc && isequal(get(hObject,'BackgroundColor'), get(0,...
-        'defaultUicontrolBackgroundColor'))
-    set(hObject,'BackgroundColor','white');
-end
-
-%% Eggs Characteristics Getting Input data ::::::::::::::::::::::::::::::::::::::::::::::::::::%
-function popup_EggsChar_Callback(hObject, eventdata, handles)
+%% Eggs Characteristics Getting Input data
+%% ::::::::::::::::::::::::::::::::::::::::::::::::::::%
+function popup_EggsChar_Callback(hObject, ~, handles)
 % Determine the selected data set.
 str = get(handles.popup_EggsChar, 'String');
 val = get(handles.popup_EggsChar,'Value');
@@ -153,7 +186,7 @@ case 'Use diameter and egg density time series (Chapman, 2011)'
   set(handles.ConstD,'Visible','off');
   set(handles.textDensity,'Visible','off');
   set(handles.text_at,'Visible','off');
-  set(handles.Ti,'Visible','off');
+  set(handles.Tref,'Visible','off');
   set(handles.text_C,'Visible','off');
   set(handles.ConstRhoe,'Visible','off');
   %set(handles.textPostFert_Time,'Visible','on');
@@ -165,98 +198,53 @@ case 'Use constant egg diameter and density'
   set(handles.ConstD,'Visible','on');
   set(handles.textDensity,'Visible','on');
   set(handles.text_at,'Visible','on');
-  set(handles.Ti,'Visible','on');
+  set(handles.Tref,'Visible','on');
   set(handles.text_C,'Visible','on');
   set(handles.ConstRhoe,'Visible','on');
   end
 guidata(hObject,handles)
-function popup_EggsChar_CreateFcn(hObject, eventdata, handles)
+function popup_EggsChar_CreateFcn(hObject, ~, handles)
 if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
     set(hObject,'BackgroundColor','white');
 end
-function D_Callback(hObject, eventdata, handles)
-function D_CreateFcn(hObject, eventdata, handles)
-if ispc && isequal(get(hObject,'BackgroundColor'), get(0,...
-        'defaultUicontrolBackgroundColor'))
-    set(hObject,'BackgroundColor','white');
-end
-function PostferT_Callback(hObject, eventdata, handles)
-function PostferT_CreateFcn(hObject, eventdata, handles)
-if ispc && isequal(get(hObject,'BackgroundColor'), get(0,...
-        'defaultUicontrolBackgroundColor'))
-    set(hObject,'BackgroundColor','white');
-end
+
 function ConstD_Callback(hObject, eventdata, handles)
 function ConstD_CreateFcn(hObject, eventdata, handles)
-if ispc && isequal(get(hObject,'BackgroundColor'), get(0,...
-        'defaultUicontrolBackgroundColor'))
+if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
     set(hObject,'BackgroundColor','white');
 end
+
+function PostferT_Callback(~, ~, handles)
+function PostferT_CreateFcn(hObject, eventdata, handles)
+if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
+    set(hObject,'BackgroundColor','white');
+end
+
 function ConstRhoe_Callback(hObject, eventdata, handles)
 function ConstRhoe_CreateFcn(hObject, eventdata, handles)
-if ispc && isequal(get(hObject,'BackgroundColor'), get(0,...
-        'defaultUicontrolBackgroundColor'))
+if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
     set(hObject,'BackgroundColor','white');
 end
-function Silver_Callback(hObject, eventdata, handles)
-function Bighead_Callback(hObject, eventdata, handles)
+
+function Tref_Callback(hObject, eventdata, handles)
+function Tref_CreateFcn(hObject, eventdata, handles)
+if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
+    set(hObject,'BackgroundColor','white');
+end
 
 %% Simulation setup Getting Input data ::::::::::::::::::::::::::::::::::::::::::::::::::::%
 function Totaltime_Callback(hObject, eventdata, handles)
 function Totaltime_CreateFcn(hObject, eventdata, handles)
-if ispc && isequal(get(hObject,'BackgroundColor'), get(0,...
-        'defaultUicontrolBackgroundColor'))
+if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
     set(hObject,'BackgroundColor','white');
 end
+
 function Dt_Callback(hObject, eventdata, handles)
 function Dt_CreateFcn(hObject, eventdata, handles)
-if ispc && isequal(get(hObject,'BackgroundColor'), get(0,...
-        'defaultUicontrolBackgroundColor'))
-    set(hObject,'BackgroundColor','white');
-end
-
-%% River geometry summary ::::::::::::::::::::::::::::::::::::::::::::::::::::%
-function MinH_Callback(hObject, eventdata, handles)
-function MinH_CreateFcn(hObject, eventdata, handles)
-if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
-    set(hObject,'BackgroundColor','white');
-end
-function MinW_Callback(hObject, eventdata, handles)
-function MinW_CreateFcn(hObject, eventdata, handles)
-if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
-    set(hObject,'BackgroundColor','white');
-end
-function MinX_Callback(hObject, eventdata, handles)
-function MinX_CreateFcn(hObject, eventdata, handles)
-if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
-    set(hObject,'BackgroundColor','white');
-end
-function MaxH_Callback(hObject, eventdata, handles)
-function MaxH_CreateFcn(hObject, eventdata, handles)
-if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
-    set(hObject,'BackgroundColor','white');
-end
-function MaxW_Callback(hObject, eventdata, handles)
-function MaxW_CreateFcn(hObject, eventdata, handles)
-if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
-    set(hObject,'BackgroundColor','white');
-end
-function MaxX_Callback(hObject, eventdata, handles)
-function MaxX_CreateFcn(hObject, eventdata, handles)
-
 if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
     set(hObject,'BackgroundColor','white');
 end
 
-function uipanelSpawning_CreateFcn(hObject, eventdata, handles)
-function uipanelEggs_Chara_CreateFcn(hObject, eventdata, handles)
-function Simulation_setup_CreateFcn(hObject, eventdata, handles)
-function Summary_panel_CreateFcn(hObject, eventdata, handles)
-function Batch_button_Callback(hObject, eventdata, handles)
-Batch();
-set(handles.Batch_button,'Value',1) 
-display(get(handles.popup_EggsChar,'Value'))
-guidata(hObject, handles);
 function Running
 hFluEggGui=getappdata(0,'hFluEggGui');
 handles= getappdata(hFluEggGui, 'handlesmain');
@@ -304,19 +292,15 @@ beep
 set(handles.Running,'Visible','off');
 %% Make Results Visible
 set(handles.panel_Results,'Visible','on');
+    set(handles.Results,'Visible','on');
 set(handles.NewSim_Button,'Visible','on');
+diary off
 guidata(hObject, handles);
 
 %% Analyze the Results::::::::::::::::::::::::::::::::::::::::::::::::::::::%
 function Results_Callback(hObject, eventdata, handles)
 Results();
-function uipanelEggs_Chara_DeleteFcn(hObject, eventdata, handles)
-function Ks_Callback(hObject, eventdata, handles)
-function Ks_CreateFcn(hObject, eventdata, handles)
 
-if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
-    set(hObject,'BackgroundColor','white');
-end
 function NewSim_Button_Callback(hObject, eventdata, handles)
 set(handles.Summary_panel,'Visible','off');
 set(handles.Simulation_setup,'Visible','off');
@@ -324,38 +308,22 @@ set(handles.simulation_panel,'Visible','off');
 set(handles.panel_Results,'Visible','off');
 guidata(hObject, handles);
 
-function Batch_button_CreateFcn(hObject, eventdata, handles)
-function Running_ButtonDownFcn(hObject, eventdata, handles)
-function Batch_Callback(hObject, eventdata, handles)
-
-function Ti_Callback(hObject, eventdata, handles)
-
-function Ti_CreateFcn(hObject, eventdata, handles)
-
-if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
-    set(hObject,'BackgroundColor','white');
-end
+function Batch_button_Callback(hObject, eventdata, handles)
+Batch();
+set(handles.Batch_button,'Value',1) 
+display(get(handles.popup_EggsChar,'Value'))
+guidata(hObject, handles);
 
 
 % --------------------------------------------------------------------
-function Results_menu_Callback(hObject, eventdata, handles)
-
-% --------------------------------------------------------------------
-function Analyzeresults_Callback(hObject, eventdata, handles)
+function Analyze_Results_Callback(hObject, eventdata, handles)
+% hObject    handle to Analyze_Results (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
 Results();
 
-function edit_River_name_Callback(hObject, eventdata, handles)
-
-function edit_River_name_CreateFcn(hObject, eventdata, handles)
-
-if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
-    set(hObject,'BackgroundColor','white');
-end
-
-
-function edit58_Callback(hObject, eventdata, handles)
-
-function edit58_CreateFcn(hObject, eventdata, handles)
-if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
-    set(hObject,'BackgroundColor','white');
-end
+% --------------------------------------------------------------------
+function tools_Callback(hObject, eventdata, handles)
+% hObject    handle to tools (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
