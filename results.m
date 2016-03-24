@@ -623,13 +623,14 @@ else
     TimeToHatch=35703*(AvgTemp^-2.223);%Time to hatch in hours
 end
 ylimits=get(ax1,'YLim');
+N=Nsusp+Nbot;
 if TimeToHatch*60*60<time(end)
     plot([TimeToHatch TimeToHatch],ylimits,'color','k','LineStyle','--','linewidth',2)
     %% text
     text(TimeToHatch*0.995,ylimits(end)*1.02, '\downarrow','FontWeight','normal','FontName','Arial')
     text(TimeToHatch,ylimits(end)*1.19, {'Hatching time','at an average',['temperature of ', num2str(round(AvgTemp*10)/10),' \circC'],['(',num2str(floor(TimeToHatch*10)/10),' hours)']},'HorizontalAlignment','center','FontName','Arial')
     %%
-     N=Nsusp+Nbot;
+     
 %     id=find(N==max(N));id=id(1);
 %     leadingEdge=0.89*bids(id);
 %     TrailingEdge=leadingEdge+2000000/(3600*1025*bids(id)^-0.887);

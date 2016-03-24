@@ -1,4 +1,4 @@
-function []=Jump(Steps,time,Totaltime,h,alivemodel,handles,X,Dt,DH,Y,Vy,W,D,Vz,Z,Vzpart,H,ustar,alive,celldead,T,D_50,touch,cell,Rhoe,SG,VsT,Tref,Rhoe_ref,Rhow,temp_variables,specie)
+function []=Jump(Steps,time,Totaltime,h,alivemodel,handles,X,Dt,DH,Y,Vy,W,D,Vz,Z,Vzpart,H,ustar,alive,celldead,T,KS,touch,cell,Rhoe,SG,VsT,Tref,Rhoe_ref,Rhow,temp_variables,specie)
 Mortality=0;
 waitstep = floor((Steps+1)/100);
 alpha=2.51;%1.9;%1.3;%
@@ -47,9 +47,9 @@ val=get(handles.popup_roughness,'Value');
 switch str{val};
     case 'Log Law Smooth Bottom Boundary (Case flumes)'  
         Vxz=ustar(a).*((1/0.41)*log((ustar(a).*Zb)./viscosity)+5.5);
+        Vxz(Vxz<0)=0; %Non slip boundary condition;
     case 'Log Law Rough Bottom Boundary (Case rivers)' 
-        ks=2.5*D_50(a)/1000;%m
-        Vxz=ustar(a).*((1/0.41)*log(Zb./ks)+8.5);%Vxz of alive eggs
+        Vxz=ustar(a).*((1/0.41)*log(Zb./KS(a))+8.5);%Vxz of alive eggs
         Vxz(Vxz<0)=0; %Non slip boundary condition;
 end
 %% Streamwise velocity distribution in the transverse direction
@@ -112,17 +112,17 @@ Vvert=temp_variables.Vvert;
 Ustar=temp_variables.Ustar;
 Temp=temp_variables.Temp;
 Width=temp_variables.Width;
-D50=temp_variables.D50;
+ks=temp_variables.ks; %ks of cells
 %%
    [c,~]=find(X(t,:)'>(CumlDistance(cell)*1000));
        for i=1:length(c)
         C=find(X(t,c(i))<CumlDistance*1000);
         if isempty(C)
-            ed = errordlg('The cells domain have being exceeded please decrease the simulation time or add more cells to the domain','Error');
-            set(ed, 'WindowStyle', 'modal');
-            uiwait(ed);
-            return
-        end
+            %ed = errordlg('The cells domain have being exceeded please decrease the simulation time or add more cells to the domain','Error');
+            %set(ed, 'WindowStyle', 'modal');
+            %uiwait(ed);
+            a=1; display(a)
+        else
         cell(c(i))=C(1);Cell=cell(c(i));%cell is the cell were an egg is
         %Vx(c(i))=VX(Cell); %m/s 
         Vz(c(i))=Vvert(Cell); %m/s 
@@ -132,7 +132,7 @@ D50=temp_variables.D50;
         DH(c(i))=0.6*Depth(Cell)*Ustar(Cell);
         ustar(c(i))=Ustar(Cell);
         T(c(i))=Temp(Cell); 
-        D_50(c(i))=D50(Cell); %mm
+        KS(c(i))=ks(Cell); %mm
         %%
         %% Calculating the SG of esggs
         Rhoe(c(i))=(0.5*(Rhoe_ref(t)+Rhoe_ref(t-1)))+0.20646*(Tref-Temp(cell(i)));%Calculated at half timestep
@@ -145,7 +145,8 @@ D50=temp_variables.D50;
         %% Iterative method
         %Vzpart(c(i))=-fzero(@(vs) vfallfun(vs,0.5*(D(t)+D(t-1)),SG(c(i)),T(c(i))),2)/100;  % Call optimizer, D should be in mm, vs output is in cm/s, then we convert it to m
         %Vzpart in m/s  Settling velocity calculated in t1+1/2
-      end
+       end
+end
    
 %% Reflective Boundary   
 

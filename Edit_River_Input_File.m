@@ -21,6 +21,7 @@ end
 
 function Edit_River_Input_File_OpeningFcn(hObject, eventdata, handles, varargin)
 diary('./results/FluEgg_LogFile.txt')
+handles.ks=0;
 handles.output = hObject;
 guidata(hObject, handles);
 
@@ -51,7 +52,7 @@ else
    if FileName~=0
        set(handles.Riverinput_filename,'string',fullfile(FileName));
        Riverinputfile=importdata(strFilename);handles.userdata.Riverinputfile=...
-           Riverinputfile.data;
+           Riverinputfile.data; handles.userdata.Riverinputfile_hdr= Riverinputfile.textdata;
        % Load River input file
        RinFile=handles.userdata.Riverinputfile;
               set(handles.RiverInputFile,'Data',RinFile);
@@ -128,13 +129,46 @@ box(handles.TempPlot,'on');
 axis(handles.TempPlot,[0 max(RinFile(:,2)) 0 max(RinFile(:,9))*1.5]);
 %==========================================================================
 
-%% D50 Riverin data
+%% D50 Riverin data or Ks
+if handles.ks==1
+    set(handles.D50Plot,'Visible','on');
+    plot(handles.D50Plot,x,[RinFile(:,10);RinFile(end,10)],'LineWidth',1.5,'Color',[0 0 0]); 
+    ylabel(handles.D50Plot,{'Ks [m]'},'FontWeight','bold','FontSize',10);
+    box(handles.D50Plot,'on');
+    axis(handles.D50Plot,[0 max(RinFile(:,2)) 0 max(RinFile(:,10))*1.5]);    
+else
 set(handles.D50Plot,'Visible','on');
 plot(handles.D50Plot,x,[RinFile(:,10);RinFile(end,10)],'LineWidth',1.5,'Color',[0 0 0]); 
 ylabel(handles.D50Plot,{'D50 [mm]'},'FontWeight','bold','FontSize',10);
 box(handles.D50Plot,'on');
 axis(handles.D50Plot,[0 max(RinFile(:,2)) 0 max(RinFile(:,10))*1.5]);
+end
 %==========================================================================
+
+% --------------------------------------------------------------------
+function Ks_calculate_Callback(hObject, eventdata, handles)
+handles.ks=1;
+if  isfield(handles,'userdata')==0
+   ed = errordlg('Please load the river input file and continue','Error');
+   set(ed, 'WindowStyle', 'modal');
+   uiwait(ed); 
+   return
+end
+%a
+Riverinputfile=handles.userdata.Riverinputfile;
+Depth=Riverinputfile(:,3);        %m
+Vmag=Riverinputfile(:,5);         %m/s
+Vlat=Riverinputfile(:,6);         %m/s
+Vvert=Riverinputfile(:,7);        %m/s
+Ustar=Riverinputfile(:,8);        %m/s
+VX=sqrt(Vmag.^2-Vlat.^2-Vvert.^2);%m/s
+ks=11*Depth./exp((VX.*0.41)./Ustar);%m
+Riverinputfile(:,10)=ks;handles.userdata.Riverinputfile=Riverinputfile;
+handles.userdata.Riverinputfile_hdr={'CellNumber','CumlDistance_km','Depth_m','Q_cms','Vmag_mps','Vvert_mps','Vlat_mps','Ustar_mps','Temp_C','Ks_m'};
+set(handles.RiverInputFile,  'ColumnName', handles.userdata.Riverinputfile_hdr);
+set(handles.RiverInputFile,'Data',Riverinputfile);
+Riverin_DataPlot(hObject, eventdata, handles)
+guidata(hObject, handles);% Update handles structure
 
 function RiverInputFile_CellEditCallback(hObject, eventdata, handles)
 handles.userdata.Riverinputfile=get(handles.RiverInputFile,'Data');
@@ -152,7 +186,6 @@ Vlat=Riverinputfile(:,6);         %m/s
 Vvert=Riverinputfile(:,7);        %m/s
 Ustar=Riverinputfile(:,8);        %m/s
 Temp=Riverinputfile(:,9);         %C
-D50=Riverinputfile(:,10);          %mm
 %%
 Width=abs(Q./(Vmag.*Depth));           %m
 VX=sqrt(Vmag.^2-Vlat.^2-Vvert.^2);%m/s
@@ -166,7 +199,28 @@ temp_variables.Vvert=Vvert;
 temp_variables.Ustar=Ustar;
 temp_variables.Temp=Temp;
 temp_variables.Width=Width;
-temp_variables.D50=D50;
+hdr_end=handles.userdata.Riverinputfile_hdr{end};
+switch hdr_end
+    case 'D50_mm'
+        D50=Riverinputfile(:,10);          %mm
+        ks=2.5*D50/1000;%m
+        Ucheck=Ustar.*log(11*Depth./ks)/0.41;
+        Ucheck=abs((Ucheck)-(VX))*100./(VX);Ucheck=mean(Ucheck);
+        if Ucheck>10
+            ed = errordlg('The prescribed values of D50 are not consistent with the prescribed values of the streamwise velocity. Please check the input values or use the FluEgg tool to calculate the roughness of the river substrate.','Error');
+            set(ed, 'WindowStyle', 'modal');
+            uiwait(ed); 
+            return
+        end
+    case 'Ks_m'
+        ks=Riverinputfile(:,10);          %m
+    otherwise
+        ed = errordlg('Unexpected label in river input file. please check','Error');
+        set(ed, 'WindowStyle', 'modal');
+        uiwait(ed); 
+        return
+end
+temp_variables.ks=ks;
 save './Temp/temp_variables.mat' 'temp_variables'
 %% Updating spawning location to the middle of the cell
    %% getting main handles
@@ -188,7 +242,7 @@ close();
 function SaveFile_button_Callback(hObject, eventdata, handles)
 [file,path] = uiputfile('*.txt','Save modified file as');
 strFilename=fullfile(path,file);
-hdr={'CellNumber','CumlDistance_km','Depth_m','Q_cms','Vmag_mps','Vvert_mps','Vlat_mps','Ustar_mps','Temp_C','D50_mm'};
+hdr=handles.userdata.Riverinputfile_hdr;
 dlmwrite(strFilename,[sprintf('%s\t',hdr{:}) ''],'');
 dlmwrite(strFilename,get(handles.RiverInputFile,'Data'),'-append','delimiter','\t','precision', 6);
 
@@ -198,3 +252,10 @@ function River_inputfile_GUI_CreateFcn(hObject, eventdata, handles)
 %:::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::%
 %% <<<<<<<<<<<<<<<<<<<<<<<<< END OF FUNCTION >>>>>>>>>>>>>>>>>>>>>>>>>>>>%%
 %:::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::%
+
+
+% --------------------------------------------------------------------
+function tools_ks_Callback(hObject, eventdata, handles)
+% hObject    handle to tools_ks (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
