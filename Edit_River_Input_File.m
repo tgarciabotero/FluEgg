@@ -66,30 +66,30 @@ function Riverin_DataPlot(hObject, eventdata, handles)
 RinFile=handles.userdata.Riverinputfile;
 %calculate cumulative distance as the middle of the cell
 x=RinFile(:,2);
-x=(x+[0; x(1:end-1)])/2;
+x=[(x+[0; x(1:end-1)])/2; x(end)];
 set(handles.DepthPlot,'Visible','on');
-plot(handles.DepthPlot,x,RinFile(:,3),'LineWidth',1.5,'Color',[0 0 0]); 
+plot(handles.DepthPlot,x,[RinFile(:,3);RinFile(end,3)],'LineWidth',1.5,'Color',[0 0 0]); 
 ylabel(handles.DepthPlot,'H [m]','FontWeight','bold','FontSize',10);
 box(handles.DepthPlot,'on');
 axis(handles.DepthPlot,[0 max(RinFile(:,2)) 0 max(RinFile(:,3))*1.5]);
 %==========================================================================
 %% QPlot Riverin data
 set(handles.QPlot,'Visible','on');
-plot(handles.QPlot,x,RinFile(:,4),'LineWidth',1.5,'Color',[0 0 0]);
+plot(handles.QPlot,x,[RinFile(:,4);RinFile(end,4)],'LineWidth',1.5,'Color',[0 0 0]);
 ylabel(handles.QPlot,{'Q [cms]'},'FontWeight','bold','FontSize',10);
 box(handles.QPlot,'on');
 axis(handles.QPlot,[0 max(RinFile(:,2)) 0 max(RinFile(:,4))*1.5]);
 %==========================================================================
 %% VmagPlot Riverin data
 set(handles.VmagPlot,'Visible','on');
-plot(handles.VmagPlot,x,RinFile(:,5),'LineWidth',1.5,'Color',[0 0 0]);
+plot(handles.VmagPlot,x,[RinFile(:,5);RinFile(end,5)],'LineWidth',1.5,'Color',[0 0 0]);
 ylabel(handles.VmagPlot,{'Vmag [m/s]'},'FontWeight','bold','FontSize',10);
 box(handles.VmagPlot,'on');
 axis(handles.VmagPlot,[0 max(RinFile(:,2)) 0 max(RinFile(:,5))*1.5]);
 %==========================================================================
 %% VyPlot Riverin data
 set(handles.VyPlot,'Visible','on');
-plot(handles.VyPlot,x,RinFile(:,6),'LineWidth',1.5,'Color',[0 0 0]);
+plot(handles.VyPlot,x,[RinFile(:,6);RinFile(end,6)],'LineWidth',1.5,'Color',[0 0 0]);
 ylabel(handles.VyPlot,{'Vy [m/s]'},'FontWeight','bold','FontSize',10);
 box(handles.VyPlot,'on');
 if max(RinFile(:,7))~=0
@@ -100,7 +100,7 @@ end
 %==========================================================================
 %% VzPlot Riverin data
 set(handles.VzPlot,'Visible','on');
-plot(handles.VzPlot,x,RinFile(:,7),'LineWidth',1.5,'Color',[0 0 0]);
+plot(handles.VzPlot,x,[RinFile(:,7);RinFile(end,7)],'LineWidth',1.5,'Color',[0 0 0]);
 ylabel(handles.VzPlot,{'Vz [m/s]'},'FontWeight','bold','FontSize',10);
 box(handles.VzPlot,'on');
 if max(RinFile(:,7))~=0
@@ -111,7 +111,7 @@ end
 %==========================================================================
 %% UstarPlot Riverin data
 set(handles.UstarPlot,'Visible','on');
-plot(handles.UstarPlot,x,RinFile(:,8),'LineWidth',1.5,'Color',[0 0 0]); 
+plot(handles.UstarPlot,x,[RinFile(:,8);RinFile(end,8)],'LineWidth',1.5,'Color',[0 0 0]); 
 ylabel(handles.UstarPlot,{'u_* [m/s]'},'FontWeight','bold','FontSize',10);
 xlabel(handles.UstarPlot,{'Cumulative distance [Km]'},'FontWeight','bold',...
     'FontSize',10);
@@ -121,7 +121,7 @@ axis(handles.UstarPlot,[0 max(RinFile(:,2)) 0 max(RinFile(:,8))*1.5]);
 
 %% TempPlot Riverin data
 set(handles.TempPlot,'Visible','on');
-plot(handles.TempPlot,x,RinFile(:,9),'LineWidth',1.5,'Color',[0 0 0]); 
+plot(handles.TempPlot,x,[RinFile(:,9);RinFile(end,9)],'LineWidth',1.5,'Color',[0 0 0]); 
 ylabel(handles.TempPlot,{'T [^oC]'},'FontWeight','bold','FontSize',10);
 xlabel(handles.TempPlot,{'Cumulative distance [Km]'},'FontWeight','bold', 'FontSize',10);
 box(handles.TempPlot,'on');
@@ -130,7 +130,7 @@ axis(handles.TempPlot,[0 max(RinFile(:,2)) 0 max(RinFile(:,9))*1.5]);
 
 %% D50 Riverin data
 set(handles.D50Plot,'Visible','on');
-plot(handles.D50Plot,x,RinFile(:,10),'LineWidth',1.5,'Color',[0 0 0]); 
+plot(handles.D50Plot,x,[RinFile(:,10);RinFile(end,10)],'LineWidth',1.5,'Color',[0 0 0]); 
 ylabel(handles.D50Plot,{'D50 [mm]'},'FontWeight','bold','FontSize',10);
 box(handles.D50Plot,'on');
 axis(handles.D50Plot,[0 max(RinFile(:,2)) 0 max(RinFile(:,10))*1.5]);
@@ -176,12 +176,12 @@ save './Temp/temp_variables.mat' 'temp_variables'
    set(handlesmain.Yi_input,'String',floor(Width(1)*100/2)/100);
    guidata(hObject, handles);% Update handles structure
 %% Updating River Geometry Summary
-set(handlesmain.MinX,'String',min(CumlDistance));
-set(handlesmain.MaxX,'String',max(CumlDistance));
-set(handlesmain.MinW,'String',floor(min(Width)*100/2)/100);
-set(handlesmain.MaxW,'String',floor(max(Width)*100/2)/100);
-set(handlesmain.MinH,'String',min(Depth));
-set(handlesmain.MaxH,'String',max(Depth));
+set(handlesmain.MinX,'String',floor(min(CumlDistance)*100)/100);
+set(handlesmain.MaxX,'String',floor(max(CumlDistance)*100)/100);
+set(handlesmain.MinW,'String',floor(min(Width)*100)/100);
+set(handlesmain.MaxW,'String',floor(max(Width)*100)/100);
+set(handlesmain.MinH,'String',floor(min(Depth)*100)/100);
+set(handlesmain.MaxH,'String',floor(max(Depth)*100)/100);
 diary off
 close();
 

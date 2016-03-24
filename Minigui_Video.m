@@ -100,9 +100,9 @@ set(0,'Units','pixels') ;
 scnsize = get(0,'ScreenSize');
 hf=figure('Name','3D animation of eggs transport (video)','NumberTitle','off',...
     'color','w','position',[8 scnsize(4)/2.6 scnsize(3)/2.1333 scnsize(4)/2]);
-subaxis(1,1,1,'MR',0.04,'ML',0.185,'MB',0.2,'MT',0.2);
+subaxis(1,1,1,'MR',0.04,'ML',0.134,'MB',0.4,'MT',0.3);
 axis off
-font = 'Helvetica'; fontsize = 10;
+font='Helvetica'; fontsize = 10;
 %% Drawing cells
 %% cubes
 colormap([0.6 1 1;0.57 0.97 1;0.54 0.94 1;0.51 0.9 1;0.49 0.89 1;0.46 0.88 1;0.43 0.83 1;0.4 0.8 1;0.39 0.79 1;0.375 0.775000035762787 1;0.362500011920929 0.762499988079071 1;0.349999994039536 0.75 1;0.337500005960464 0.737500011920929 1;0.325000017881393 0.725000023841858 1;0.3125 0.712500035762787 1;0.300000011920929 0.700000047683716 1;0.287499994039536 0.6875 1;0.275000005960464 0.675000011920929 1;0.262500017881393 0.662500023841858 1;0.25 0.650000035762787 1;0.237499997019768 0.637500047683716 1;0.225000008940697 0.625 1;0.212500005960464 0.612500011920929 1;0.200000002980232 0.600000023841858 1;0.1875 0.587500035762787 1;0.174999997019768 0.575000047683716 1;0.162500008940697 0.5625 1;0.150000005960464 0.550000011920929 1;0.137500002980232 0.537500023841858 1;0.125 0.525000035762787 1;0.112500004470348 0.512499988079071 1;0.100000001490116 0.5 1;0.0874999985098839 0.487500011920929 1;0.0750000029802322 0.475000023841858 1;0.0625 0.462500005960464 1;0.0500000007450581 0.450000017881393 1;0.0375000014901161 0.4375 1;0.025000000372529 0.425000011920929 1;0.0125000001862645 0.412499994039536 1;0 0.400000005960464 1;0 0.387500017881393 0.987500011920929;0 0.375 0.975000023841858;0 0.362500011920929 0.962499976158142;0 0.349999994039536 0.949999988079071;0 0.337500005960464 0.9375;0 0.325000017881393 0.925000011920929;0 0.3125 0.912500023841858;0 0.300000011920929 0.899999976158142;0 0.287499994039536 0.887499988079071;0 0.275000005960464 0.875;0 0.262500017881393 0.862500011920929;0 0.25 0.850000023841858;0 0.237499997019768 0.837500035762787;0 0.225000008940697 0.824999988079071;0 0.212500005960464 0.8125;0 0.200000002980232 0.800000011920929;0 0.174999997019768 0.775000035762787;0 0.150000005960464 0.75;0 0.125 0.72;0 0.1 0.700000047683716;0 0.075 0.675;0 0.05 0.65;0 0.025 0.625;0 0 0.6]);
@@ -120,6 +120,8 @@ for k=1:Fcell%length(CumlDistance)%Fcell
     yf(:,k)=[0 0 0 0];
     zb(:,k)=[-Depth(k) -Depth(k) -Depth(k) -Depth(k)];%[0 0 0 0];
     zt(:,k)=[0 0 0 0];%[Depth(k) Depth(k) Depth(k) Depth(k)];
+    xx(:,k)=[xo xo xo xo];
+    yy(:,k)=[0 Width(k) Width(k) 0];
 end
 %%
 counter=1;
@@ -134,9 +136,12 @@ for t=0:round(Time_step_frames*3600):length(time)*Dt
     hold on
     patch(x,yb,zb,colorp)%Bottom face
     patch(x,yb,zt,'w','FaceAlpha',0.02)%Top face,optional 'FaceColor','none'
-    patch(x,yf,z,'w','FaceAlpha',0.02) %Front face
+%     patch(x,yf,z,'w','FaceAlpha',0.02) %Front face
+%     hh=patch(x,yf,z,colorp); %Front face;
+    hh=patch(xx,yy,z,colorp);
+    uistack(hh,'bottom')
     bar=colorbar('CLim',[0 1.2]);
-    colorbar('XTick',[0:0.2:1.2],'YTickLabel',[0:0.2:1.2])
+    colorbar('XTick',[0:0.2:1.2],'XTickLabel',[0:0.2:1.2])
     bar=colorbar('location','NorthOutside');
     set(get(bar,'xlabel'),'String', 'Cell Velocity [m/s]');clear bar;%Velocity=Vmag
     bar=findobj(gcf,'Tag','Colorbar');
@@ -147,19 +152,20 @@ for t=0:round(Time_step_frames*3600):length(time)*Dt
     xlim([0 CumlDistance(Fcell)]); 
     ylim([0 max(Width(1:Fcell))]);
     zlim([-max(Depth(1:Fcell)) 0]);
+    set(gca,'YTick',[0 round(max(Width(1:Fcell)))],'YTickLabel',[0 round(max(Width(1:Fcell)))]);
     %% Aspect
     %   zamp=0.07;%0.07
     %   yamp=3;%3
     %   daspect([0.1 yamp zamp])
     %   daspect([1 450 3000])
-    daspect([1 100 1])
+    daspect([1 20 1])
     grid off
     box on
     view([-13 21])
     %%
-    xlabel('Distance in X(km)','FontSize',fontsize);
-    ylabel('Width(m)','FontSize',fontsize);
-    zlabel('Water depth(m)','FontSize',fontsize);
+    xlabel('Distance in X(km)','FontSize',fontsize-1);
+    ylabel('Width(m)','FontSize',fontsize-1);
+    zlabel({'Depth (m)'},'FontSize',fontsize-1);
     set(gca,'FontSize',fontsize-1)
     %%
     M(counter)=getframe(gcf);
@@ -179,6 +185,8 @@ axis off
 %% Save the movie
 %[file,path] = uiputfile('*.avi','Save the movie as');
 %strFilename=fullfile(path,file);
+%Add here option for when you open the results gui from the tools menu
+%folderName= uigetdir('./results','Folder name to save results')
 hFluEggGui=getappdata(0,'hFluEggGui');
 Folderpath=getappdata(hFluEggGui, 'Folderpath');
 movie2avi(M,[Folderpath,'animation' '.avi'], 'compression', 'None','fps',2);%Saving the movie

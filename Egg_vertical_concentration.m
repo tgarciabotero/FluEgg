@@ -210,7 +210,7 @@ xlim([1 500])
 ylim([0 1])
 set(gca,'XTick',[0 10 50 100 500],'XTickLabel',[0 10 50 100 500]);
 xlabel('log C_z/C [%]');
-ylabel('z/h');
+ylabel('z/h+1');
 legend('FluEgg simulation','Location','NorthWest')
 %% Grid ON-OFF
 gridon=get(handles.Grid_on_checkbox,'Value');  %Need to comment this for now

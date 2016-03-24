@@ -255,7 +255,7 @@ figure('Name','Normalized vertical position of the centroid of the egg mass','Nu
     'color','w','position',[8 scnsize(4)/2.6 scnsize(3)/2.1333 scnsize(4)/2]);
 %h=figure('color','w','position',[50 170 600 365]);h=axes('Parent',h);
 subaxis(1,1,1,'SpacingVert',0,'MR',0.1,'ML',0.102,'MB',0.13,'MT',0.21);
-plot((meanX)/1000,meanZ_H,'r','linewidth',1.5);
+plot((meanX)/1000,meanZ_H,'r','linewidth',1);
 hold on
 ax1=gca;
 %% Time
@@ -299,10 +299,10 @@ for i=1:length(CumlDistance)
     end
 end
 xlabel('Average downstream distance from spawning location [km]','FontName','Arial','FontSize',12);
-ylabel('Normalized vertical position (z/h) [ ]','FontName','Arial','FontSize',12);
+ylabel('Normalized vertical position (z/h+1) [ ]','FontName','Arial','FontSize',12);
 set(gca,'TickDir','in','TickLength',[0.021 0.021],'FontName','Arial','FontSize',12)   
 ylim([0 1])
-%xlim([0 max(CumlDistance)])
+xlim([0 max(CumlDistance)])
  %% Water surface
 annotation('line',[0.901 1],[0.79 0.79]);
 annotation('line',[0.93 0.97],[0.78 0.78]);%annotation('line',[0.92 0.98](x location),[0.88 0.88](y location));
@@ -430,7 +430,7 @@ figure('Name','Percentage of eggs distributed in the vertical','Color',[1 1 1],.
 subaxis(1,1,1,'MR',0.1,'ML',0.1,'MB',0.13,'MT',0.08);
 barh(0.025:0.05:1,N*100/sum(N),1,'FaceColor',[1,0.5,0.5])
 set(gca,'YTick',0:0.1:1,'YTickLabel',0:0.1:1);
-ylabel('Normalized vertical position (z/h) [ ]','FontName','Arial','FontSize',12);
+ylabel('Normalized vertical position (z/h+1) [ ]','FontName','Arial','FontSize',12);
 xlabel('Percentage of eggs [%]','FontName','Arial','FontSize',12);
 set(gca,'TickDir','in','TickLength',[0.021 0.021],'FontName','Arial','FontSize',12)   
 %% Text
@@ -468,8 +468,8 @@ diary off
 function Distribution_of_Eggs_at_a_distance()
 ed=downDist();
 uiwait(ed);
-hFluEggGui=getappdata(0,'hFluEggGui'); 
-dX=getappdata(hFluEggGui,'dX'); 
+handleResults=getappdata(0,'handleResults'); 
+dX=getappdata(handleResults,'dX'); 
 %% From Results Gui
 handleResults=getappdata(0,'handleResults'); 
 ResultsSim=getappdata(handleResults,'ResultsSim');
@@ -507,7 +507,7 @@ figure('Name','Percentage of eggs distributed in the vertical','Color',[1 1 1],.
 subaxis(1,1,1,'MR',0.1,'ML',0.1,'MB',0.13,'MT',0.08);
 barh(0.025:0.05:1,N*100/sum(N),1,'FaceColor',[1,0.5,0.5])
 set(gca,'YTick',0:0.1:1,'YTickLabel',0:0.1:1);
-ylabel('Normalized vertical position (z/h) [ ]','FontName','Arial','FontSize',12);
+ylabel('Normalized vertical position (z/h+1) [ ]','FontName','Arial','FontSize',12);
 xlabel('Percentage of eggs [%]','FontName','Arial','FontSize',12);
 set(gca,'TickDir','in','TickLength',[0.021 0.021],'FontName','Arial','FontSize',12)   
 %% Text
@@ -587,7 +587,7 @@ Nbot=t_Dist_X(Z_Dist_X<0.05);
 %%
 k=round(2*size(X,2)^(1/3));%Number of bins
 edges=min(t_Dist_X):(max(t_Dist_X)+0.01-min(t_Dist_X))/k:max(t_Dist_X)+0.01;
-bids=(edges(1:end-1)+edges(2:end))/2;
+bids=(edges(1:end-1)+edges(2:end))/2;bids=bids';
 %%
 Nsusp=histc(Nsusp,edges);Nsusp=Nsusp(1:end-1)';%here we dont include numbers greater than the max edge
 Nbot=histc(Nbot,edges);Nbot=Nbot(1:end-1)';%here we dont include numbers greater than the max edge
@@ -629,15 +629,16 @@ if TimeToHatch*60*60<time(end)
     text(TimeToHatch*0.995,ylimits(end)*1.02, '\downarrow','FontWeight','normal','FontName','Arial')
     text(TimeToHatch,ylimits(end)*1.19, {'Hatching time','at an average',['temperature of ', num2str(round(AvgTemp*10)/10),' \circC'],['(',num2str(floor(TimeToHatch*10)/10),' hours)']},'HorizontalAlignment','center','FontName','Arial')
     %%
-    N=Nsusp+Nbot;
-    leadingEdge=0.89*bids(N==max(N));
-    TrailingEdge=leadingEdge+2000000/(3600*1025*(bids(N==max(N)))^-0.887);
-    plot([leadingEdge leadingEdge],ylimits,'color',[241 29 26]/255,'linewidth',1.3)
-    plot([TrailingEdge TrailingEdge],ylimits,'color',[0 64 222]/255,'linewidth',1.3)
-    text(leadingEdge*0.95,ylimits(end)*0.74, {'LE'},'HorizontalAlignment','center','FontName','Arial','rotation',90)
-    text(TrailingEdge*0.97,ylimits(end)*0.74, {'TE'},'HorizontalAlignment','center','FontName','Arial','rotation',90)
-    leg1 = legend('In suspension', 'Near the bottom','location','SouthEast');
-    set(leg1,'box','off','color','none')
+     N=Nsusp+Nbot;
+%     id=find(N==max(N));id=id(1);
+%     leadingEdge=0.89*bids(id);
+%     TrailingEdge=leadingEdge+2000000/(3600*1025*bids(id)^-0.887);
+%     plot([leadingEdge leadingEdge],ylimits,'color',[241 29 26]/255,'linewidth',1.3)
+%     plot([TrailingEdge TrailingEdge],ylimits,'color',[0 64 222]/255,'linewidth',1.3)
+%     text(leadingEdge*0.95,ylimits(end)*0.74, {'LE'},'HorizontalAlignment','center','FontName','Arial','rotation',90)
+%     text(TrailingEdge*0.97,ylimits(end)*0.74, {'TE'},'HorizontalAlignment','center','FontName','Arial','rotation',90)
+     leg1 = legend('In suspension', 'Near the bottom','location','SouthEast');
+%     set(leg1,'box','off','color','none')
     %% Eggs at risk of hatching
     if max(bids)>=TimeToHatch
         hatchingIndex=find(bids>=TimeToHatch);hatchingIndex=hatchingIndex(1);
