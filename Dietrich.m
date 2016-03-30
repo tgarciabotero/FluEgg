@@ -7,5 +7,5 @@ Rep=(D*sqrt((SG-1)*g*D))/viscosity;
 Rf=exp(-b1+(b2*(log(Rep)))-(b3*((log(Rep))^2))...
 -(b4*((log(Rep))^3))+(b5*((log(Rep))^4)));
 vs=Rf*sqrt((SG-1)*g*D);
-end
+
 

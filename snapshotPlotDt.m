@@ -68,8 +68,18 @@ end
 
 % --- Executes on button press in SaveTimestep_button.
 function SaveTimestep_button_Callback(hObject, eventdata, handles)
-guidata(hObject, handles);
-SnapshotEvolution(hObject, eventdata, handles);
+try
+    SnapshotEvolution(hObject, eventdata, handles);
+catch
+    if str2double(get(handles.TimeStep_Snapshot,'String'))==0
+    ed = errordlg('Zero values are not allowed','Error');
+    set(ed, 'WindowStyle', 'modal');
+    uiwait(ed);
+    end
+end
+close(handles.figure1)
+
+
 
          
 function SnapshotEvolution(~, ~, handles)
@@ -112,9 +122,9 @@ No=length(Depth);
 %% Text
 text(-0.12,0.15, '\downarrow','FontWeight','bold','FontName','Arial')
 text(-2.5,0.5, 'Fish spawn here','FontWeight','normal','FontName','Arial')
-text(CumlDistance(end)/2.4,0.2,texlabel('Water surface'),'FontWeight','normal','FontName','Arial')
-text(CumlDistance(fix(No/3)),-Depth(fix(No/3)+1)-1,'\uparrow','FontWeight','normal','FontName','Arial','FontSize',20)
-text(CumlDistance(fix(No/3))-1,-Depth(fix(No/3)+1)-1.5, 'River bed','FontWeight','normal','FontName','Arial')
+text(double(CumlDistance(end)/2.4),0.2,texlabel('Water surface'),'FontWeight','normal','FontName','Arial')
+text(double(CumlDistance(fix(No/3))),double(-Depth(fix(No/3)+1)-1),'\uparrow','FontWeight','normal','FontName','Arial','FontSize',20)
+text(double(CumlDistance(fix(No/3))-1),double(-Depth(fix(No/3)+1)-1.5), 'River bed','FontWeight','normal','FontName','Arial')
 set(gca,'XMinorTick','on')
 %% Cell labels ON-OFF
 label_on=get(handles.Labelcheckbox,'Value');  %Need to comment this for now
@@ -136,8 +146,3 @@ diary off
 
 % --- Executes on button press in Labelcheckbox.
 function Labelcheckbox_Callback(hObject, eventdata, handles)
-% hObject    handle to Labelcheckbox (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    structure with handles and user data (see GUIDATA)
-
-% Hint: get(hObject,'Value') returns toggle state of Labelcheckbox

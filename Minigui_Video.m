@@ -173,7 +173,11 @@ for t=0:round(Time_step_frames*3600):length(time)*Dt
     if t==0
         Message= msgbox('Your video is now being created. Please wait','FluEgg is creating the video','help');
         pause(2.2)
+         try
         delete(Message)
+        catch
+            %continue
+        end
     end
     end
 end  
@@ -183,16 +187,16 @@ end
 set(hf,'Position', [8 scnsize(4)/2.6 w h]);
 axis off
 %% Save the movie
-%[file,path] = uiputfile('*.avi','Save the movie as');
-%strFilename=fullfile(path,file);
-%Add here option for when you open the results gui from the tools menu
-%folderName= uigetdir('./results','Folder name to save results')
-hFluEggGui=getappdata(0,'hFluEggGui');
-Folderpath=getappdata(hFluEggGui, 'Folderpath');
-movie2avi(M,[Folderpath,'animation' '.avi'], 'compression', 'None','fps',2);%Saving the movie
+handleResults=getappdata(0,'handleResults'); 
+pathname=getappdata(handleResults,'pathname');
+movie2avi(M,[pathname,'animation' '.avi'], 'compression', 'None','fps',2);%Saving the movie
 Message= msgbox('Your video is completed. It is available in the results folder','FluEgg','help');
 pause(3)
-delete(Message)
+ try
+     delete(Message)
+catch
+    %continue
+end
 delete(hf)
 diary off
 
@@ -207,3 +211,5 @@ set(handles.Display_text,'String',['The video will display one frame every ',spr
 % --- Executes on button press in Video_button.
 function Video_button_Callback(hObject, eventdata, handles)
  video(hObject, eventdata, handles);
+ close(handles.figure1);
+

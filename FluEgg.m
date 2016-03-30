@@ -14,7 +14,7 @@ function varargout = FluEgg(varargin)
 %-------------------------------------------------------------------------%
 %   Created by      : Tatiana Garcia                                      %
 %   Date            : May 20, 2010                                        %
-%   Last Modified   : July 26, 2013  
+%   Last Modified   : March 20, 2014  
 %:::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::%
 %
 %      H = FLUEGG returns the handle to a new FLUEGG or the handle to
@@ -34,7 +34,7 @@ function varargout = FluEgg(varargin)
 
 % Edit the above text to modify the response to help FluEgg
 
-% Last Modified by GUIDE v2.5 10-Oct-2013 10:35:43
+% Last Modified by GUIDE v2.5 20-Mar-2014 16:43:54
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
@@ -59,9 +59,12 @@ end
 function FluEgg_OpeningFcn(hObject, ~, handles, varargin)
 handles.output = hObject;
 %% Figures and icons
+axes(handles.FluEgg_Logo); imshow('logo.png');
 axes(handles.riverfig); imshow('riverfig.png');
 axes(handles.eggsfig); imshow('eggsfig2.png');
 axes(handles.bottom); imshow('asiancarp.png');
+%% Settings
+handles.settings=FluEgg_Settings;
 guidata(hObject, handles);% Update handles structure
 
 % --- Outputs from this function are returned to the command line.
@@ -73,7 +76,13 @@ varargout{1} = handles.output;
 % --- Executes on button press in Load_River_Input.
 function Load_River_Input_Callback(hObject,eventdata, handles)
 delete('./results/FluEgg_LogFile.txt')
-diary('./results/FluEgg_LogFile.txt')
+try
+    diary('./results/FluEgg_LogFile.txt')
+catch
+    ed = errordlg(' File ./results/FluEgg_LogFile.txt not found','Error');
+    set(ed, 'WindowStyle', 'modal');
+    uiwait(ed);  
+end
 workpath = pwd;setappdata(0,'workpath',workpath);
 %% Main handles
 setappdata(0,'hFluEggGui',gcf);
@@ -96,7 +105,7 @@ set(handles.Summary_panel,'Visible','on');
     set(handles.MaxH,'Visible','on');
     set(handles.MaxW,'Visible','on');
     set(handles.MaxX,'Visible','on');
-set(handles.Simulation_setup,'Visible','on');
+ set(handles.Simulation_setup,'Visible','on');
     set(handles.Totaltime,'Visible','on');
     set(handles.text11,'Visible','on');
     set(handles.Dt,'Visible','on');
@@ -107,11 +116,23 @@ set(handles.Running,'Visible','on');
 %% Make Results Invisible
 set(handles.panel_Results,'Visible','off');
 set(handles.NewSim_Button,'Visible','off');
+%% Set running time
+%%Eggs biological properties
+ specie=get(handles.Silver,'Value');  %Need to comment this for now
+if specie==1
+     specie={'Silver'};
+else
+     specie={'Bighead'};
+end
+%%
+Temp=load('./Temp/temp_variables.mat');temp_variables=Temp.temp_variables;clear Temp;Temp=single(temp_variables.Temp);
+handles.userdata.Max_Sim_Time=single(floor(ceil(HatchingTime(Temp,specie)*100))/100);
+set(handles.Totaltime,'String',handles.userdata.Max_Sim_Time);
 guidata(hObject, handles);% Update handles structure
 
 function popup_roughness_Callback(hObject, ~, handles)
 guidata(hObject,handles)
-function popup_roughness_CreateFcn(hObject, ~, handles)
+function popup_roughness_CreateFcn(hObject, ~, ~)
 if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
     set(hObject,'BackgroundColor','white');
 end
@@ -147,7 +168,7 @@ load './Temp/temp_variables.mat'
 Width=temp_variables.Width;
 set(handles.Yi_input,'String',floor(Width(1)*100/2)/100);
 guidata(hObject, handles);% Update handles structure
-function Yi_input_CreateFcn(hObject, eventdata, handles)
+function Yi_input_CreateFcn(hObject, ~, ~)
 if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
     set(hObject,'BackgroundColor','white');
 end
@@ -167,7 +188,7 @@ C=find(Xi<CumlDistance*1000);C=C(1);
 %% Update Yi
 set(handles.Yi_input,'String',floor(Width(C)*100/2)/100);
 guidata(hObject, handles);% Update handles structure
-function Xi_input_CreateFcn(hObject, eventdata, handles)
+function Xi_input_CreateFcn(hObject, ~, handles)
 if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
     set(hObject,'BackgroundColor','white');
 end
@@ -208,25 +229,25 @@ if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgr
     set(hObject,'BackgroundColor','white');
 end
 
-function ConstD_Callback(hObject, eventdata, handles)
+function ConstD_Callback(hObject, ~, ~)
 function ConstD_CreateFcn(hObject, eventdata, handles)
 if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
     set(hObject,'BackgroundColor','white');
 end
 
 function PostferT_Callback(~, ~, handles)
-function PostferT_CreateFcn(hObject, eventdata, handles)
+function PostferT_CreateFcn(hObject, eventdata, ~)
 if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
     set(hObject,'BackgroundColor','white');
 end
 
-function ConstRhoe_Callback(hObject, eventdata, handles)
-function ConstRhoe_CreateFcn(hObject, eventdata, handles)
+function ConstRhoe_Callback(~, ~, ~)
+function ConstRhoe_CreateFcn(hObject, ~, ~)
 if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
     set(hObject,'BackgroundColor','white');
 end
 
-function Tref_Callback(hObject, eventdata, handles)
+function Tref_Callback(hObject, ~, ~)
 function Tref_CreateFcn(hObject, eventdata, handles)
 if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
     set(hObject,'BackgroundColor','white');
@@ -234,12 +255,14 @@ end
 
 %% Simulation setup Getting Input data ::::::::::::::::::::::::::::::::::::::::::::::::::::%
 function Totaltime_Callback(hObject, eventdata, handles)
-function Totaltime_CreateFcn(hObject, eventdata, handles)
+function Totaltime_CreateFcn(hObject, ~, handles)
 if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
     set(hObject,'BackgroundColor','white');
 end
 
 function Dt_Callback(hObject, eventdata, handles)
+
+%
 function Dt_CreateFcn(hObject, eventdata, handles)
 if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
     set(hObject,'BackgroundColor','white');
@@ -263,67 +286,118 @@ handles.userdata.Dt=str2double(get(handles.Dt,'String'));
 handles.userdata.Totaltime=str2double(get(handles.Totaltime,'String'));
 %% Get Data from Main GUI
 hFluEggGui=getappdata(0,'hFluEggGui');
-Batch=getappdata(hFluEggGui,'Batch');  %Getting info from Batch GUI
-No=getappdata(hFluEggGui,'No');  %Getting info from Batch GUI;
-if Batch==1
-for k=1:No
-FluEgggui(hObject, eventdata,handles);
-Vert_Dist
-load './results/Vertdist.mat'
-if k==1
-    batchresults=Vertdist;
-else
-    batchresults=[batchresults Vertdist(:,2)];
+if length(get(handles.edit_River_name, 'String'))<2
+    ed = errordlg('Please input the river name','Error');
+    set(ed, 'WindowStyle', 'modal');
+    uiwait(ed);
+    return
 end
-save('./results/Vertdist.mat','batchresults','-append')
+minDt=FluEgggui(hObject, eventdata,handles);
+%% If Simulation time greater than hatching time
+if minDt==0
+    return
 end
-else
-     if length(get(handles.edit_River_name, 'String'))<2
-         ed = errordlg('Please input the river name','Error');
-         set(ed, 'WindowStyle', 'modal');
-         uiwait(ed);
-         return
-     end
-    FluEgggui(hObject, eventdata,handles);
-   % Vert_Dist %% need to comment this out later-->this is to produce%results without using the results gui
+%% Checking Dt
+if handles.userdata.Dt>minDt  % If we exit the running function because Dt is to large, correct Dt 
+  set(handles.Dt,'String',minDt);
+  handles.userdata.Dt=minDt;
+  FluEgggui(hObject, eventdata,handles);
 end
-beep
-%% Make invisible
+try
+% Make invisible
 set(handles.Running,'Visible','off');
-%% Make Results Visible
+% Make Results Visible
 set(handles.panel_Results,'Visible','on');
-    set(handles.Results,'Visible','on');
+set(handles.Results,'Visible','on');
 set(handles.NewSim_Button,'Visible','on');
 diary off
-guidata(hObject, handles);
+guidata(handles.figure1, handles);
+catch
+    %If there was an error during the simulation (FluEgggui)
+    msgbox('An unexpected error occurred, FluEgg is going to close','FluEgg error','error')
+    pause(4)
+end
 
 %% Analyze the Results::::::::::::::::::::::::::::::::::::::::::::::::::::::%
 function Results_Callback(hObject, eventdata, handles)
 Results();
 
-function NewSim_Button_Callback(hObject, eventdata, handles)
+function NewSim_Button_Callback(hObject, ~, handles)
 set(handles.Summary_panel,'Visible','off');
 set(handles.Simulation_setup,'Visible','off');
 set(handles.simulation_panel,'Visible','off');
 set(handles.panel_Results,'Visible','off');
 guidata(hObject, handles);
 
-function Batch_button_Callback(hObject, eventdata, handles)
-Batch();
-set(handles.Batch_button,'Value',1) 
-display(get(handles.popup_EggsChar,'Value'))
-guidata(hObject, handles);
+% function Batch_button_Callback(hObject, ~, handles)
+% Batch();
+% set(handles.Batch_button,'Value',1) 
+% %display(get(handles.popup_EggsChar,'Value'))
+% guidata(hObject, handles);
 
 
 % --------------------------------------------------------------------
 function Analyze_Results_Callback(hObject, eventdata, handles)
-% hObject    handle to Analyze_Results (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    structure with handles and user data (see GUIDATA)
 Results();
 
 % --------------------------------------------------------------------
 function tools_Callback(hObject, eventdata, handles)
-% hObject    handle to tools (see GCBO)
+% --------------------------------------------------------------------
+function Ht_Callback(hObject, eventdata, handles)
+load './Temp/temp_variables.mat' 
+Temp=temp_variables.Temp;
+specie=get(handles.Silver,'Value');  %Need to comment this for now
+if specie==1
+     specie={'Silver'};
+else
+     specie={'Bighead'};
+end
+TimeToHatch = HatchingTime(Temp,specie);
+msgbox(['The estimated hatching time for an averaged temperature of ',num2str(floor(mean(Temp)*10)/10),' C is ', num2str(floor(round(TimeToHatch*10))/10), ' hours.'],'FluEgg','none');
+
+
+% --------------------------------------------------------------------
+function Help_Callback(hObject, eventdata, handles)
+% hObject    handle to Help (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
+
+% --------------------------------------------------------------------
+function Website_Callback(hObject, eventdata, handles)
+diary('./results/FluEgg_LogFile.txt')
+web('http://asiancarp.illinois.edu/')
+
+function settings=FluEgg_Settings
+settings.version='v1.2';
+
+
+% --------------------------------------------------------------------
+function Check_for_updates_Callback(hObject, eventdata, handles)
+%% Check FluEgg Version
+try
+FluEgg_Latest_Version=urlread('http://publish.illinois.edu/tgarciaweb/files/2014/03/FluEgg_version.txt');
+if strcmpi(FluEgg_Latest_Version,handles.settings.version)
+    h=msgbox('The FluEgg version you are using is up to date, no updates available','Checking for Update..');
+else
+    h=msgbox('The FluEgg version you are using is out of date, please vistit the FluEgg website to download the newest version','Checking for Update..');
+end
+uiwait(h)
+catch
+   msgbox('error connection failed','FluEgg error','error')
+end
+
+% --------------------------------------------------------------------
+function About_FluEgg_Callback(~, ~, handles)
+set(0,'Units','pixels') ;
+scnsize = get(0,'ScreenSize');
+About=figure('Name','Percentage of eggs distributed in the vertical','Color',[1 1 1],...%[0.9412 0.9412 0.9412],...
+    'Name','About FluEgg',...
+   'position',[scnsize(3)/2 scnsize(4)/2.6 scnsize(3)/3 scnsize(4)/2]);
+AboutBackground=axes('Parent',About,'Units','Normalized','Position',[0 -0.1 1 1]);
+imshow('AboutBackground.png','InitialMagnification','fit');
+set(About,'MenuBar','none')
+textAbout1=uicontrol(About,'Style','text','String',{['FluEgg ', num2str(handles.settings.version)];'64-bits'},...
+    'Units','Normalized','Position',[0.1 0.79 0.8 0.2],'FontSize',14,'BackgroundColor',[1 1 1],'ForegroundColor',[0.039 0.141 0.416]);
+textAbout2=uicontrol(About,'Style','text',...
+    'String',{'Copyright 2009-2013 University of Illinois at Urbana-Champaign. This program is distributed in the hope that it will be useful,but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU General Public License for more details.'},...
+    'Units','Normalized','Position',[0 0.68 1 0.15],'FontSize',6,'BackgroundColor',[1 1 1]);

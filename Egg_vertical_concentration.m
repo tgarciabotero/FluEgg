@@ -157,7 +157,7 @@ Dist_X=str2double(get(handles.X_editBox,'String'))*1000;
 cell=find((CumlDistance)*1000>=Dist_X);cell=cell(1);
 H=Depth(cell);
 %%
-c=0;[a b]=size(X);
+c=0;[~,b]=size(X);
 check=0;%Have all the eggs arrive to distance X???
 for i=1:b 
     tind=find(X(:,i)>=Dist_X);
@@ -179,7 +179,7 @@ Nodes=sort(Nodes(:,1),'ascend');
 z_o_H_midd=z_over_H(1:end-1)+(diff(z_over_H)/2);%in dimensionless form z/H middle points
 hightLayers=[abs(diff(Nodes))];%in m
 N=histc(Z_Dist_X,Nodes);N=N(1:end-1)';
-Nmatrix=[sort(z_o_H_midd,'ascend') N];
+%Nmatrix=[sort(z_o_H_midd,'ascend') N];
 %%
 Cy=(N./hightLayers)*100;
 Cavg=sum(N)/H;
@@ -190,13 +190,15 @@ handleResults=getappdata(0,'handleResults');
 fullpath_result=getappdata(handleResults,'fullpath_result');
 save(fullpath_result,'Vertdist','-mat','-append');
 %% Saving results as text file 
-Folderpath=uigetdir('./results','Select output folder');
-if Folderpath~= 0
-    set(findobj('Tag','editOutputDir'),'String',Folderpath);
-end
+handleResults=getappdata(0,'handleResults'); 
+pathname=getappdata(handleResults,'pathname');
+% Folderpath=uigetdir('./results','Select output folder');
+% if Folderpath~= 0
+%     set(findobj('Tag','editOutputDir'),'String',Folderpath);
+% end
 hdr={'Z/H','Log Cz/Cavg'};
-dlmwrite([Folderpath,'VertDist' '.txt'],[sprintf('%s\t',hdr{:}) ''],'');
-dlmwrite([Folderpath,'VertDist' '.txt'],Vertdist,'-append','delimiter','\t','precision', 6);
+dlmwrite([pathname,'VertDist' '.txt'],[sprintf('%s\t',hdr{:}) ''],'');
+dlmwrite([pathname,'VertDist' '.txt'],Vertdist,'-append','delimiter','\t','precision', 6);
 %%
 %if Batch==0
 set(0,'Units','pixels') ;
@@ -223,3 +225,4 @@ end
 h = msgbox([num2str(sum(N)) ' eggs passed by ' num2str(Dist_X/1000) ' km downstream from the virtual spawning location during the simulation time'],'FluEgg Message');
 diary off
 end
+close(handles.figure1);

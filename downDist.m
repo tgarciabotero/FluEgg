@@ -22,7 +22,7 @@ function varargout = downDist(varargin)
 
 % Edit the above text to modify the response to help downDist
 
-% Last Modified by GUIDE v2.5 28-Aug-2013 10:11:14
+% Last Modified by GUIDE v2.5 06-Mar-2014 15:35:18
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
@@ -45,17 +45,8 @@ end
 
 
 % --- Executes just before downDist is made visible.
-function downDist_OpeningFcn(hObject, eventdata, handles, varargin)
-% This function has no output args, see OutputFcn.
-% hObject    handle to figure
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    structure with handles and user data (see GUIDATA)
-% varargin   command line arguments to downDist (see VARARGIN)
-
-% Choose default command line output for downDist
+function downDist_OpeningFcn(hObject, ~, handles, varargin)
 handles.output = hObject;
-
-% Update handles structure
 guidata(hObject, handles);
 
 % UIWAIT makes downDist wait for user response (see UIRESUME)
@@ -63,34 +54,15 @@ guidata(hObject, handles);
 
 
 % --- Outputs from this function are returned to the command line.
-function varargout = downDist_OutputFcn(hObject, eventdata, handles) 
-% varargout  cell array for returning output args (see VARARGOUT);
-% hObject    handle to figure
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    structure with handles and user data (see GUIDATA)
-
-% Get default command line output from handles structure
+function varargout = downDist_OutputFcn(~, ~, handles) 
 varargout{1} = handles.output;
 
 
 
-function dX_Callback(hObject, eventdata, handles)
-% hObject    handle to dX (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    structure with handles and user data (see GUIDATA)
-
-% Hints: get(hObject,'String') returns contents of dX as text
-%        str2double(get(hObject,'String')) returns contents of dX as a double
-
+function dX_Callback(~, ~, ~)
 
 % --- Executes during object creation, after setting all properties.
 function dX_CreateFcn(hObject, eventdata, handles)
-% hObject    handle to dX (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    empty - handles not created until after all CreateFcns called
-
-% Hint: edit controls usually have a white background on Windows.
-%       See ISPC and COMPUTER.
 if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
     set(hObject,'BackgroundColor','white');
 end
@@ -111,6 +83,3 @@ end
 setappdata(handleResults, 'dX', dX); 
 close;
  
-
-
-

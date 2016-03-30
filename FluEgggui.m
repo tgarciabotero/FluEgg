@@ -1,47 +1,73 @@
-function [handles]=FluEgggui(hObject, eventdata,handles)
+function [minDt]=FluEgggui(~, ~,handles)
 %=========================================================================
+%% Fluvial Egg Drift Simulator
 %% Lagrangian Random Walk Model for Silver Carp Eggs Transport
 %
 % Written by Tatiana Garcia, University of Illinois, 2011
-% Version 4.0
-% Take out central figure
-%tic
+% Version 1.2
+% 
+%With nested functions and single precision and uint8 data types
 %% Iniciate Waitbar
+% try
+tic
+profile -memory on
 h = waitbar(0,'Initializing variables...','Name','Eggs drifting...',...
             'CreateCancelBtn',...
             'setappdata(gcbf,''canceling'',1)');
 setappdata(h,'canceling',0)
 %%
-alivemodel=0;  %if alivemodel=1 the eggs would not die
+alivemodel=1;  %if alivemodel=1 the eggs would not die
 %% =======================================================================
-load './Temp/temp_variables.mat' 
-CumlDistance=temp_variables.CumlDistance;
-Depth=temp_variables.Depth;
-Q=temp_variables.Q;
-VX=temp_variables.VX;
-Vlat=temp_variables.Vlat;
-Vvert=temp_variables.Vvert;
-Ustar=temp_variables.Ustar;
-Temp=temp_variables.Temp;
-Width=temp_variables.Width;
-ks=temp_variables.ks;
+
+Temp=load('./Temp/temp_variables.mat');temp_variables=Temp.temp_variables;clear Temp;
+CumlDistance=single(temp_variables.CumlDistance);
+Depth=single(temp_variables.Depth);
+%Q=temp_variables.Q;
+VX=single(temp_variables.VX);
+Vlat=single(temp_variables.Vlat);
+Vvert=single(temp_variables.Vvert);
+Ustar=single(temp_variables.Ustar);
+Temp=single(temp_variables.Temp);
+Width=single(temp_variables.Width);
+ks=single(temp_variables.ks);clear temp_variables
 %===========
-Eggs=handles.userdata.Num_Eggs;%make sure you can take the cubic root of it.(e.g 27,64,125)
-Xi=handles.userdata.Xi;Yi=handles.userdata.Yi;Zi=handles.userdata.Zi;%Spawning location in m
+Eggs=single(handles.userdata.Num_Eggs);%make sure you can take the cubic root of it.(e.g 27,64,125)
+Xi=single(handles.userdata.Xi);Yi=single(handles.userdata.Yi);Zi=single(handles.userdata.Zi);%Spawning location in m
 %% =======================================================================
-%% Delta t is constant
-Totaltime=handles.userdata.Totaltime*3600;%seconds
-Dt=handles.userdata.Dt; %time step in seconds
-Steps=Totaltime/Dt;
-time=0:Dt:Totaltime;t=1; %Time is in seconds
+%% Time
+% If Simulation time greater than hatching time warn the user!!
+if handles.userdata.Totaltime>handles.userdata.Max_Sim_Time
+    choice = questdlg('Error, the simulation time overpasses the estimated hatching time, do you want FluEgg to use the hatching time as the simulation time?'...
+        ,'Simulation time Error','Yes','No','Yes');
+    switch choice
+        case 'Yes'
+            Totaltime=handles.userdata.Max_Sim_Time;
+            set(handles.Totaltime,'String',handles.userdata.Max_Sim_Time);
+        case 'No'
+            minDt=0;
+            delete(h)
+            return
+    end
+end
+Totaltime=single(handles.userdata.Totaltime*3600);%seconds
+Dt=single(handles.userdata.Dt); %time step in seconds
+minDt=Dt; % initialize the variable
+Steps=single(round(Totaltime/Dt));
+time=single(0:Dt:Totaltime);t=single(1); time=time(1:Steps);%Time is in seconds
 %% =======================================================================
 %% pre-allocate memory and intialization of variables
-X=zeros(Steps+1,Eggs);Y=zeros(Steps+1,Eggs);Z=zeros(Steps+1,Eggs);
-alive=ones(Steps+1,Eggs);celldead=zeros(Eggs,1);cell=zeros(Eggs,1);
-Vx=cell;Vy=cell;Vz=cell;H=cell;W=cell;DH=cell;ustar=cell;SG=cell;T=cell;%Vx=cell
-X(1,:)=Xi;Y(1,:)=Yi;Z(1,:)=Zi;Dead_t=cell;KS=cell;Rhoe=cell;
-touch=zeros(Steps+1,Eggs);%counter to calculate how many eggs touched the bottom every time step
-VsT=zeros(Steps,Eggs);
+X=zeros(Steps,Eggs,'single');Y=zeros(Steps,Eggs,'single');Z=zeros(Steps,Eggs,'single');cell=zeros(Eggs,1,'single');
+Vx=zeros(Eggs,1,'single');Vy=Vx;Vz=Vx;H=Vx;W=Vx;DH=Vx;ustar=Vx;SG=Vx;T=Vx;%Vx=cell
+X(1,:)=Xi;Y(1,:)=Yi;Z(1,:)=Zi;KS=Vx;Rhoe=Vx;%VsT=zeros(Steps,Eggs,'single');
+alive=ones(Steps,Eggs,'single');cellsExtended=int8(0);
+
+if alivemodel==0
+    %Check int 8 for this case
+    Dead_t=cell;
+    touch=zeros(Steps,Eggs,'int8');%counter to calculate how many eggs touched the bottom every time step
+    celldead=zeros(Eggs,1,'int8');
+end
+
 %% ========================================================================
 waitbar(0,h,['Please wait....' 'Running growth model']);   
 %%Eggs biological properties
@@ -58,58 +84,431 @@ val=get(handles.popup_EggsChar,'Value');
 switch str{val};
     case 'Use constant egg diameter and density' %%model would use a constant Rhoe and D 
         D=str2double(get(handles.ConstD,'String'));%mm
-        D=D*ones(length(time),1);
-        Rhoe_ref=str2double(get(handles.ConstRhoe,'String'));
-        Rhoe_ref=Rhoe_ref*ones(length(time),1);      
+        D=single(D*ones(length(time),1));
+        Rhoe_ref=single(str2double(get(handles.ConstRhoe,'String')));
+        Rhoe_ref=Rhoe_ref*ones(length(time),1,'single');      
         Tref=str2double(get(handles.Tref,'String'));
     case 'Use diameter and egg density time series (Chapman, 2011)'
         Tref=22; %C
-       [D,Rhoe_ref]=EggBio(time,specie); %include bighead   
+        [D,Rhoe_ref]=EggBio; %include bighead   
 end
 %% Calculate water density
 Rhow=density(Temp); %Here we calculate the water density in every cell
 %% Channel geometry and initial data
-for i=1:Eggs
-    C=find(X(t,i)<CumlDistance*1000);cell(i)=C(1);
-    Vx(i)=VX(cell(i)); %m/s 
-    Vz(i)=Vvert(cell(i)); %m/s 
-    Vy(i)=Vlat(cell(i)); %m/s 
-    H(i)=Depth(cell(i)); %m
-    W(i)=Width(cell(i)); %m    
-    ustar(i)=Ustar(cell(i));
-    T(i)=Temp(cell(i));
-    KS(i)=ks(cell(i)); %mm
-    %% Calculating the SG of esggs
-    %Rhoe(i)=(1004.5-0.20646*Temp(cell(i)))-((1004.5-0.20646*Tref)-Rhoe_ref(t));
-    Rhoe(i)=Rhoe_ref(t)+0.20646*(Tref-Temp(cell(i)));
-    SG(i)=Rhoe(i)/Rhow(cell(i));%dimensionless
+for l=1:Eggs
+    C=find(X(t,l)<CumlDistance*1000);cell(l)=C(1);
+    Vx(l)=VX(cell(l)); %m/s 
+    Vz(l)=Vvert(cell(l)); %m/s 
+    Vy(l)=Vlat(cell(l)); %m/s 
+    H(l)=Depth(cell(l)); %m
+    W(l)=Width(cell(l)); %m    
+    ustar(l)=Ustar(cell(l));
+    T(l)=Temp(cell(l));
+    KS(l)=ks(cell(l)); %mm
+    %% Calculating the SG of eggs
+    Rhoe(l)=Rhoe_ref(t)+0.20646*(Tref-Temp(cell(l)));
+    SG(l)=Rhoe(l)/Rhow(cell(l));%dimensionless
+   %clear Rhoe_ref; clear Rhoe;
     %======================================================================      
     %% Explicit Lagrangian Horizontal Diffusion
-    DH(i)=0.6*H(i)*ustar(i);
-end  
+    DH(l)=0.6*H(l)*ustar(l);
+end   
 %% Calculating Fall velocity
 %% Dietrich's
-Vzpart=-Dietrich(D(t),SG(1),T(1))/100;%D should be in mm, vs output is in cm/s, then we convert it to m
-%display(max(Vzpart))%used to calculate Dt
-%% Iterative method
-%Vzpart=-fzero(@(vs) vfallfun(vs,D(t),SG(1),T(1)),20)/100;  % Call optimizer, D should be in mm, vs output is in cm/s, then we convert it to m
-% if isnan(Vzpart)
-%     ed = errordlg('There is a problem trying to find Vs, please contact the administrator','Error');
-%     set(ed, 'WindowStyle', 'modal');
-%     uiwait(ed);
-% end
-
-Vzpart=Vzpart*ones(Eggs,1); %Initially all the eggs have the same Vs
+Vzpart=single(-Dietrich(D(t),SG(1),T(1))/100);%D should be in mm, vs output is in cm/s, then we convert it to m
 %%
-clear Xi Yi Zi Dmin Vsmax DiamStd VsStd Diam vs C
-%Rhoet(t)=Rhoe(1);
-VsT(t,:)=Vzpart';
-Jump(Steps,time,Totaltime,h,alivemodel,handles,X,Dt,DH,Y,Vy,W,D,Vz,Z,Vzpart,H,ustar,alive,celldead,T,KS,touch,cell,Rhoe,SG,VsT,Tref,Rhoe_ref,Rhow,temp_variables,specie);   
-%toc;
-%display(toc)
+%% Checking Dt
+minDt = Checking_Dt; 
+if Dt>minDt
+    waitfor(msgbox(['The selected time step is too large, A value of Dt=', num2str(minDt), ' seconds it is going to be used in the simulation'],'FluEgg Warning','warn'));
+    delete(h)
+    return
+end
+Vzpart=Vzpart*ones(Eggs,1,'single'); %Initially all the eggs have the same Vs
+%%
+clear Dmin Vsmax DiamStd VsStd Diam vs C str val
+%VsT(t,:)=Vzpart';
+Jump;  
 
 % Total_perTime=sum(touch,2);
 % plot(time(2:end),Total_perTime);
 % bar(time(2:end),Total_perTime);
-% 
+
+% catch
+% set(0,'ShowHiddenHandles','on')
+% delete(get(0,'Children'))
+% return
+% end
+
+%%
+function [D,Rhoe_ref]=EggBio()
+% In this function we estimate the eggs growth based on Chapman's
+% experiments.  The SG was back-calculated using Dietrich equation.  The
+% density of the eggs was standardized at a temperature of to 22C.
+%% Initialize variables
+Dvar=ones(length(time),1);Rhoevar=Dvar;
+%%
+if strcmp(specie,'Silver')%if specie=='Silver'
+    Dmin=1.6980;% mm
+    Rhoe_max=1036.1;% Kg/m^3 at 22C  
+    %% Diameter fit
+    a=4.66;b=2635.9;D=a*(1-exp(-time/b));%R2 = 0.87 for silver carp eggs
+    %% Density of eggs fit Standardized to 22C
+    a=24.98;b=1570.1;c=999.5;Rhoe_ref=(a*exp(-time/b))+c;%R-square: 0.9859 for silver carp eggs
+else
+    Dmin=1.5970;% mm
+    Rhoe_max=1040.4e+03;% Kg/m^3 at 22C  
+    %% Diameter fit
+    a=5.82;b=3506.7;D=a*(1-exp(-time/b));%R2 = 0.85 for BC eggs
+    %% Density of eggs fit Standardized to 22C
+    a=23.12;b= 2164.9;c=999.2;Rhoe_ref=(a*exp(-time/b))+c;%R-square: 0.9969 for BC eggs 
+end
+%% Checking for min D and max Rhoegg
+D(D<Dmin)=Dmin;%diameter (mm) as a function of time in seconds %y(x) = a (1 - exp( - x / b))-->R = 0.89018 
+Rhoe_ref(Rhoe_ref>Rhoe_max)=Rhoe_max;
+
+for tt=1:length(D) %because the counter of the array starts from 1
+    if strcmp(specie,'Silver')%if specie=='Silver'
+        %% STD
+        if time(tt)/3600<4
+            DiamStd=0.9868;%mm 
+        else
+            DiamStd=0.3512;%mm
+        end
+        if time(tt)/3600<1
+            RhoeStd=8.2231;%Kg/m^3 at 22C
+        else
+            RhoeStd=0.7780;%Kg/m^3 at 22C
+        end
+        %%
+    else
+        %% STD
+        if time(tt)/3600<4
+            DiamStd=1.1311;%mm 
+        else
+            DiamStd=0.4549;%mm
+        end
+        if time(tt)/3600<1
+            RhoeStd=4.1293;%Kg/m^3 at 22C
+        else
+            RhoeStd=0.2777;%Kg/m^3 at 22C
+        end
+        %% 
+    end
+%% Diameter fit + scatter
+Dvar(tt,1)=single(normrnd(D(tt),DiamStd));
+while (Dvar(tt)>=D(tt)+DiamStd)||(Dvar(tt)<=D(tt)-DiamStd)
+    Dvar(tt)=single(normrnd(D(tt),DiamStd));
+end
+%% Fitted density of the eggs  + scatter
+Rhoevar(tt,1)=single(normrnd(Rhoe_ref(tt),RhoeStd));
+while (Rhoevar(tt)>=Rhoe_ref(tt)+RhoeStd)||(Rhoevar(tt)<=Rhoe_ref(tt)-RhoeStd)
+    Rhoevar(tt)=single(normrnd(Rhoe_ref(tt),RhoeStd));
+end
+end
+Rhoe_ref=Rhoevar;
+if strcmp(specie,'Silver')%if specie=='Silver'
+    Rhoe_min1 =  1.0010e+03; %Kg/m3 SC
+    Rhoe_min2 =  998.7680; %Kg/m3 SC
+else
+    Rhoe_min1 =  998.6404; %Kg/m3 BC
+    Rhoe_min2 =  998.6240; %Kg/m3 BC
+end
+Time_index=find(time/3600>=1);
+if ~isempty(Time_index) %If the simulation time is less than 1 hour
+Time_index=Time_index(1);
+Rhoe_ref(Rhoe_ref(1:Time_index)<Rhoe_min1)=Rhoe_min1;
+Rhoe_ref(Rhoe_ref(Time_index:end)<Rhoe_min2)=Rhoe_min2;
+else
+    Rhoe_ref(Rhoe_ref<Rhoe_min1)=Rhoe_min1;
+end
+D=Dvar;
+end %EggBio
+
+%%
+function [minDt] = Checking_Dt
+%% Preallocate memory
+Dt_cells=zeros(size(Rhoe_ref,1),size(CumlDistance,1),'single'); B_cells=Dt_cells;
+SG_cells=ones(length(time),length(CumlDistance),'single');
+Vzpart_cells=ones(length(time),length(CumlDistance),'single');
+for Time=1:length(time)
+     SG_cells(Time,:)=(Rhoe_ref(Time)+0.20646*(Tref-Temp))./Rhow;
+        for dist=1:length(CumlDistance)
+        Vzpart_cells(Time,dist)=Dietrich(D(Time),SG_cells(Time,dist),Temp(dist))/100;
+        end
+        B_cells(Time,:)=1+(2*((abs(Vzpart_cells(Time,:))./Ustar').^2));
+        B_cells(Time,abs(Vzpart_cells(Time,:)./Ustar')>1)=3;%3
+        Dt_cells(Time,:)=Depth'./(2*B_cells(Time,:)*0.41.*Ustar');
+end
+ minDt=round(min(min(Dt_cells)));
+end
+%%
+
+%%
+function Jump
+Kprime=zeros(size(DH),'single');Kz=Kprime;%Memory allocation
+Mortality=0;
+waitstep = floor((Steps)/100);
+alpha=2.51;%1.9;%1.3;%
+beta=2.47;%1.8;%1.2;%
+for t=2:Steps
+    %%
+    if ~mod(t, waitstep) || t==Steps
+        fill=time(t)/Totaltime;
+    % Check for Cancel button press
+    if getappdata(h,'canceling')
+        close(h);
+        return; 
+    end
+    % Report current estimate in the waitbar's message field
+    waitbar(fill,h,['Please wait....' sprintf('%12.1f',fill*100) '%']);   
+    end
+%%
+%a=Z(t-1,:)>0;
+if alivemodel==0 %If we are simulating eggs dying
+    a=alive(t-1,:)==1; %a =1 for eggs that are alive in the previous time step
+else
+    a=Z(t-1,:)'>-2*H;
+end
+%a=Z(t-1,:)'>-H;%Are they alive???
+%
+d=0.5*(D(t)+D(t-1))/1000; %D -->diameter (mm)to m
+
+%% Vertical velocity profile
+viscosity=(1.79e-6)./(1+(0.03368*T(a))+(0.00021*(T(a).^2)));%m^2/s
+Zb=Z(t-1,a)'+H(a);Zb(Zb<0.00001)=0.00001;
+% Determine the selected data set.
+str=get(handles.popup_roughness, 'String');
+val=get(handles.popup_roughness,'Value');
+% Set current data to the selected data set.
+switch str{val};
+    case 'Log Law Smooth Bottom Boundary (Case flumes)'  
+        Vxz=ustar(a).*((1/0.41)*log((ustar(a).*Zb)./viscosity)+5.5);
+        Vxz(Vxz<0)=0; %Non slip boundary condition;
+    case 'Log Law Rough Bottom Boundary (Case rivers)' 
+        Vxz=ustar(a).*((1/0.41)*log(Zb./KS(a))+8.5);%Vxz of alive eggs
+        Vxz(Vxz<0)=0; %Non slip boundary condition;
+end
+%% Streamwise velocity distribution in the transverse direction
+Vxz=Vxz.*betapdf(Y(t-1,a)'./W(a),alpha,beta);
+%% X
+X(t,a)=X(t-1,a)'+(Dt*Vxz)+(normrnd(0,1,sum(a),1).*sqrt(2*DH(a)*Dt));
+%reflecting Boundary
+check=X(t,a);check(check<d/2)=d-check(check<d/2);X(t,a)=check;check=[];
+X(t,~a)=X(t-1,~a);%If they were already dead,leave them in the same position.
+%% Y
+Y(t,a)=Y(t-1,a)'+(Dt*Vy(a))+(normrnd(0,1,sum(a),1).*sqrt(2*DH(a)*Dt));
+Y(t,~a)=Y(t-1,~a);%If they were already dead,leave them in the same position.
+%% Calculate Vertical dispersion
+[Kprime,Kz]=calculateKz;
+%% Movement in Z
+Z(t,a)=Z(t-1,a)'+Dt*(Vz(a)+Vzpart(a)+Kprime)+(normrnd(0,1,sum(a),1).*sqrt(2*Kz*Dt));%m
+Z(t,~a)=-H(~a)+d/2;%If they were already dead,leave them in the bottom.
+%% Check if eggs are in a new cell in this jump
+Check_if_egg_isin_newcell   
+%% Reflective Boundary   
+
+   %% Reflective in Z
+   %% If it overpasses the top 
+   beggs=false(size(Z,2),1);
+   btop=Z(t,:)'>-d/2;%surface -->calculated based on the total No of eggs
+   while sum(btop)>0
+       Z(t,btop)=-d-Z(t,btop);
+       b=Z(t,:)'<-H(:)+d/2;% Is any egg overpasses the bottom
+       if sum(b)>0 %if any egg touch the bottom get reflected...
+           Z(t,b)=-Z(t,b)'-2*(H(b)-d/2);
+           beggs=beggs|b; %this are the eggs that touched the bottom
+       end
+       btop=Z(t,:)'>-d/2;
+   end
+      %% If it overpasses the bottom
+      b=Z(t,:)'<-H(:)+d/2;% Bottom _>need to check this outside the while too.  This is in case we overpassed just the bottom
+   while sum(b)>0
+       Z(t,b)=-Z(t,b)'-2*(H(b)-d/2);
+       beggs=beggs|b;
+       btop=Z(t,:)'>-d/2;%surface  
+       if sum(btop)>0
+           Z(t,btop)=-d-Z(t,btop);
+       end
+       b=Z(t,:)'<-H(:)+d/2;% Bottom
+   end
+
+   %% Reflective in Y
+   check=Y(t,a);check(check<d/2)=d-check(check<d/2);Y(t,a)=check;check=[];
+   check=Y(t,a);w=W(a)';check(check>w-d/2)=2*w(check>w-d/2)-d-check(check>w-d/2);Y(t,a)=check;check=[];
+   Y(t,~a)=Y(t-1,~a);%If they were already dead,leave them in the same position.
+
+%% Alive or dead ??
+if alivemodel==0
+    [alive]=mortality_model;
+end %mortality model
+
+end
+%% DELETE the waitbar; 
+delete(h)
+%%
+M=msgbox('Please wait FluEgg is saving the results','FluEgg','help');
+%%
+if ~exist(['./results/Results_', get(handles.edit_River_name, 'String'),'_',get(handles.Totaltime, 'String'),'h_',get(handles.Dt, 'String'),'s'],'dir')
+mkdir('./results',['Results_', get(handles.edit_River_name, 'String'),'_',get(handles.Totaltime, 'String'),'h_',get(handles.Dt, 'String'),'s']);
+end
+Folderpath=['./results/Results_', get(handles.edit_River_name, 'String'),'_',get(handles.Totaltime, 'String'),'h_', ...
+                            get(handles.Dt, 'String'),'s/'];
+
+%%
+outputfile=[Folderpath,'Results_', get(handles.edit_River_name, 'String'),'_',get(handles.Totaltime, 'String'),'h_', ...
+                            get(handles.Dt, 'String'),'s' '.mat'];
+hFluEggGui=getappdata(0,'hFluEggGui');
+setappdata(hFluEggGui, 'outputfile', outputfile);
+%%                        
+ResultsSim.X=X;
+ResultsSim.Y=Y;
+ResultsSim.Z=Z;
+ResultsSim.time=time;
+%ResultsSim.touch=touch;
+ResultsSim.D=D;
+%ResultsSim.alive=alive;
+ResultsSim.CumlDistance=CumlDistance;
+ResultsSim.Depth=Depth;
+ResultsSim.Width=Width;
+ResultsSim.VX=VX;
+ResultsSim.Temp=Temp;
+ResultsSim.specie=specie;
+ResultsSim.Spawning=[Xi,Yi,Zi];
+%save(outputfile,'X','Y','Z','time','D','CumlDistance','Depth','Width','VX','Temp','specie','Xi','Yi','Zi')
+%save(outputfile,'ResultsSim','-mat','-v7.3');
+savefast(outputfile,'ResultsSim');
+%folderName= uigetdir('./results','Folder name to save results');
+% %% SAVE RESULTS AS TEXT FILE
+% save([Folderpath,'X' '.txt'],'X', '-ASCII');
+% save([Folderpath,'Y' '.txt'],'Y', '-ASCII');
+% save([Folderpath,'Z' '.txt'],'Z', '-ASCII');
+% save([Folderpath,'time' '.txt'],'time', '-ASCII');
+% hFluEggGui=getappdata(0,'hFluEggGui');
+% setappdata(hFluEggGui, 'Folderpath', Folderpath);        
+% hdr={'Specie=',specie;'Dt_s=',Dt;'Simulation time_h=',time(end)/3600};
+% dlmcell([Folderpath,'Simulation info' '.txt'],hdr,' ');    
+delete(M)
+%
+    function [Kprime,Kz]=calculateKz
+        %% Determine the selected Turbulent diffusivity model.
+        %B(a)=1;%1
+        if ustar(a)==0
+            ed = errordlg('u* can not be equal to zero, try using a very small number different than zero','Error');
+            set(ed, 'WindowStyle', 'modal');
+            uiwait(ed);
+            return
+        end
+        %%
+        B=1+(2*((abs(Vzpart(a))./ustar(a)).^2));
+        outrange=abs(Vzpart(a))./ustar(a);outrange=outrange>1;%Out of the function range
+        B(outrange)=3;%3
+        %%
+        ZR=Z(t-1,a)'+H(a);%ZR(ZR<0.1)=0.1;ZR(ZR>H(1)-0.1)=H(1)-0.1;
+        %%
+        str=get(handles.popupDiffusivity, 'String');
+        val=get(handles.popupDiffusivity,'Value');
+        switch str{val};
+            case 'Constant Turbulent Diffusivity' 
+                Kz=B.*(1/15).*H(a).*ustar(a);
+                Kprime(a)=0;
+                Kz(Kz<B.*viscosity)=B(Kz<B.*viscosity).*viscosity(Kz<B.*viscosity);  %If eddy diffusivity is less than the water viscosity, use the water viscosity
+            case 'Parabolic Turbulent Diffusivity'
+                Kprime=B.*0.41.*ustar(a).*(1-(2*ZR./H(a)));
+                Zprime=ZR+(0.5*Kprime*Dt);
+                Kz=B.*0.41.*ustar(a).*Zprime.*(1-(Zprime./H(a)));%Calculated at ofset location 0.5K'Dt
+                Kz(Kz<B.*viscosity)=B(Kz<B.*viscosity).*viscosity(Kz<B.*viscosity);  %If eddy diffusivity is less than the water viscosity, use the water viscosity
+            case 'Parabolic-Constant Turbulent Diffusivity'
+                Kprime=B.*0.41.*ustar(a).*(1-(2*ZR./H(a)));%dimensionless
+                Kprime(ZR./H(a)>=0.5)=0;  %constant portion
+                Zprime=ZR+(0.5*Kprime*Dt);
+                Kz=B.*0.41.*ustar(a).*Zprime.*(1-(Zprime./H(a)));%Calculated at ofset location 0.5K'Dt  %% Parabolic function
+                Kz(ZR./H(a)>=0.5)=B(ZR./H(a)>=0.5).*0.25*0.41.*ustar(ZR./H(a)>=0.5).*H(ZR./H(a)>=0.5);  %% Constant
+                Kz(Kz<B.*viscosity)=B(Kz<B.*viscosity).*viscosity(Kz<B.*viscosity);  %If eddy diffusivity is less than the water viscosity, use the water viscosity
+        end %switch
+    end %calculateKz
+end %Function Jump
+%%
+    function Check_if_egg_isin_newcell
+        %% Check if eggs are in a new cell in this jump
+        [c,~]=find(X(t,:)'>(CumlDistance(cell)*1000));
+        for i=1:length(c)
+            C=find(X(t,c(i))<CumlDistance*1000);
+            if isempty(C)
+                if cellsExtended==0
+                    msgbox('The last cell was extended to allow the eggs to drift during the simulation time','FluEgg message','Warn');
+                    cellsExtended=1;
+                end
+                %ed = errordlg('The cells domain have being exceeded please decrease the simulation time or add more cells to the domain','Error');
+                %set(ed, 'WindowStyle', 'modal');
+                %uiwait(ed);
+                %% Continue in the drift
+            else
+                cell(c(i))=C(1);Cell=cell(c(i));%cell is the cell were an egg is
+                %Vx(c(i))=VX(Cell); %m/s 
+                Vz(c(i))=Vvert(Cell); %m/s 
+                Vy(c(i))=Vlat(Cell); %m/s 
+                H(c(i))=Depth(Cell); %m
+                W(c(i))=Width(Cell); %m
+                DH(c(i))=0.6*Depth(Cell)*Ustar(Cell);
+                ustar(c(i))=Ustar(Cell);
+                T(c(i))=Temp(Cell); 
+                KS(c(i))=ks(Cell); %mm
+                %%
+                %% Calculating the SG of esggs
+                Rhoe(c(i))=(0.5*(Rhoe_ref(t)+Rhoe_ref(t-1)))+0.20646*(Tref-Temp(cell(i)));%Calculated at half timestep
+                SG(c(i))=Rhoe(c(i))/Rhow(Cell);%dimensionless
+                if SG(c(i))<1
+                    Vzpart(c(i))=0;
+                end
+                %% Dietrich
+                Vzpart(c(i))=-Dietrich(0.5*(D(t)+D(t-1)),SG(c(i)),T(c(i)))/100;
+            end
+        end
+    end %New cell
+    
+    function [alive]=mortality_model
+        alive(t,:)=alive(t-1,:);%If it was dead...it continue dead
+    Mortality_model=2;
+    switch Mortality_model
+        case 1
+            %% Case 1
+            %How many eggs are in the danger zone???
+            bed=(0.05*H)-H;% in model coordinates;
+            EggsInDanger=Z(t,:)'<bed-d/2&a';%Eggs in the danger zone that are alive
+            Mortality=Mortality+0.01*sum(EggsInDanger);
+            if  fix(Mortality)>=1
+                index=randperm(sum(EggsInDanger));%randomly organize eggs that can die
+                [Id,~]=find(EggsInDanger==1);%Tells the Id of eggs in danger
+                for k=1:Mortality
+                    alive(t,Id(index(k)))=0; %randomly select one egg in danger Id(index(k))
+                end
+            end
+            Mortality=Mortality-fix(Mortality);
+            case 2
+            %% Case 2
+            % Consequtive entries to the danger zone
+            bed=(0.05*H)-H;% in model coordinates;
+            EggsInDanger=Z(t,:)'<bed-d/2;%Eggs in the danger zone 
+            touch(t,EggsInDanger)=1;
+            case 3
+            %% Case 3
+            % A percentage of the eggs that touched the bottom are killed
+            EggsInDanger=beggs;%Eggs in risk of dying that are still alive
+            Mortality=Mortality+0.01*sum(EggsInDanger);
+            if  fix(Mortality)>=1
+                index=randperm(sum(EggsInDanger));%randomly organize eggs that can die
+                [Id,~]=find(EggsInDanger==1);%Tells the Id of eggs in danger
+                for k=1:Mortality
+                    alive(t,Id(index(k)))=0; %randomly select one egg in danger Id(index(k))
+                end
+            end
+            Mortality=Mortality-fix(Mortality);
+    end
+%% At which cell the egg dye??
+    celldead(alive(t,:)==0)=cell(alive(t,:)==0);
+    end %mortality model
+toc
+profreport
+end %FluEgg function
 
