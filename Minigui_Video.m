@@ -99,8 +99,10 @@ opengl('software')
 set(0,'Units','pixels') ;
 scnsize = get(0,'ScreenSize');
 hf=figure('Name','3D animation of eggs transport (video)','NumberTitle','off',...
-    'color','w','position',[8 scnsize(4)/2.6 scnsize(3)/2.1333 scnsize(4)/2]);
-subaxis(1,1,1,'MR',0.04,'ML',0.134,'MB',0.4,'MT',0.3);
+    'color','w','position',[8 scnsize(4)/11 scnsize(3)/1.1 scnsize(4)/1.289]);
+%    'color','w','position',[8 scnsize(4)/2.6 scnsize(3)/2.1333 scnsize(4)/2]);
+
+subaxis(1,1,1,'MR',0.02,'ML',0.03,'MB',0.4,'MT',0.19);
 axis off
 font='Helvetica'; fontsize = 10;
 %% Drawing cells
@@ -158,10 +160,13 @@ for t=0:round(Time_step_frames*3600):length(time)*Dt
     %   yamp=3;%3
     %   daspect([0.1 yamp zamp])
     %   daspect([1 450 3000])
-    daspect([1 20 1])
+    %%
+    %daspect([1 20 1])
+    daspect([1 80 3])
     grid off
     box on
-    view([-13 21])
+    %view([-13 21])
+    view([17 19])
     %%
     xlabel('Distance in X(km)','FontSize',fontsize-1);
     ylabel('Width(m)','FontSize',fontsize-1);

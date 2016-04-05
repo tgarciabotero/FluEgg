@@ -47,67 +47,74 @@ strFilename=fullfile(PathName,FileName);
 if PathName==0 %if the user pressed cancelled, then we exit this callback
     return
 else
-   if FileName~=0
-       % Load River input file
-       m=msgbox('Please wait, loading file...','FluEgg');
-       set(handles.Riverinput_filename,'string',fullfile(FileName));
-       extension=regexp(FileName, '\.', 'split');
-           if (strcmp(extension(end),'xls') == 1 || strcmp(extension(end),'xlsx') == 1)
-               %% If xlsread fails
-               try %Eddited TGB 03/21/14
-               [Riverinputfile, Riverinputfile_hdr] = xlsread(strFilename); 
-               close(m);
-           catch
-               close(m);
+    if FileName~=0
+        % Load River input file
+        m=msgbox('Please wait, loading file...','FluEgg');
+        set(handles.Riverinput_filename,'string',fullfile(FileName));
+        extension=regexp(FileName, '\.', 'split');
+        if (strcmp(extension(end),'xls') == 1 || strcmp(extension(end),'xlsx') == 1)
+            %% If xlsread fails
+            try %Eddited TGB 03/21/14
+                [Riverinputfile, Riverinputfile_hdr] = xlsread(strFilename); 
+                close(m);
+            catch
+                close(m);
                 m=msgbox('Unexpected error, please try again','FluEgg error','error');
                 uiwait(m)
                 return
-               end
-           %%
-    elseif strcmp(extension(end),'csv') == 1%|| strcmp(extension(end),'txt') == 1
-       Riverinputfile=importdata(strFilename);   
-       Riverinputfile_hdr=Riverinputfile.textdata;
-       Riverinputfile=Riverinputfile.data;
-       close(m);
-      elseif strcmp(extension(end),'txt') == 1
-       Riverinputfile=importdata(strFilename);
-       if  isstruct(Riverinputfile)
-       Riverinputfile_hdr=Riverinputfile.textdata; 
-       Riverinputfile_hdr=regexp(Riverinputfile_hdr, '\t', 'split');
-       Riverinputfile_hdr=Riverinputfile_hdr{1,1};
-       Riverinputfile=Riverinputfile.data;
-       else
-           ed = errordlg('Please fill all the data required in the river input file, and load the file again','Error');
-            set(ed, 'WindowStyle', 'modal');
-            uiwait(ed);
+            end
+            %%
+        elseif strcmp(extension(end),'csv') == 1%|| strcmp(extension(end),'txt') == 1
+            Riverinputfile=importdata(strFilename);   
+            Riverinputfile_hdr=Riverinputfile.textdata;
+            Riverinputfile=Riverinputfile.data;
+            close(m);
+        elseif strcmp(extension(end),'txt') == 1
+            Riverinputfile=importdata(strFilename);
+            if  isstruct(Riverinputfile)
+                Riverinputfile_hdr=Riverinputfile.textdata; 
+                Riverinputfile_hdr=regexp(Riverinputfile_hdr, '\t', 'split');
+                Riverinputfile_hdr=Riverinputfile_hdr{1,1};
+                Riverinputfile=Riverinputfile.data;
+            else
+                ed = errordlg('Please fill all the data required in the river input file, and load the file again','Error');
+                set(ed, 'WindowStyle', 'modal');
+                uiwait(ed);
+                close(m)
+                return
+            end
             close(m)
+            %%
+        else
+            msgbox('The file extension is unrecognized, please select another file','FluEgg Error','Error');
             return
-       end
-       close(m)
-       %%
-           else
-               msgbox('The file extension is unrecognized, please select another file','FluEgg Error','Error');
-               return
-           end
-    try
-        handles.userdata.Riverinputfile=Riverinputfile(:,1:9); 
-        handles.userdata.Riverinputfile_hdr=Riverinputfile_hdr(:,1:9);
-        if sum(strcmp(Riverinputfile_hdr(:,1:9),{'CellNumber','CumlDistance_km','Depth_m','Q_cms','Vmag_mps','Vvert_mps','Vlat_mps','Ustar_mps','Temp_C'}))<9
-            msgbox('Incorrect river input file, please select another file','FluEgg Error','Error');
-            return
-        end
-        set(handles.RiverInputFile,'Data',handles.userdata.Riverinputfile(:,1:9));
-        Riverin_DataPlot(handles);
-    catch
-        if size(Riverinputfile,2) ~= 9
-            ed = errordlg('Please fill all the data required in the river input file, and load the file again','Error');
-            set(ed, 'WindowStyle', 'modal');
-            uiwait(ed);
-            return
-        end
+        end %Checking file extension
+        try
+            handles.userdata.Riverinputfile=Riverinputfile(:,1:9); 
+            handles.userdata.Riverinputfile_hdr=Riverinputfile_hdr(:,1:9);
+            if size(Riverinputfile_hdr)~=[1 9]
+                ed = msgbox('Incorrect river input file, please select another file','FluEgg Error','Error');
+                set(ed, 'WindowStyle', 'modal');
+                uiwait(ed);
+                return
+            elseif sum(strcmp(Riverinputfile_hdr(:,1:9),{'CellNumber','CumlDistance_km','Depth_m','Q_cms','Vmag_mps','Vvert_mps','Vlat_mps','Ustar_mps','Temp_C'}))<9
+                ed = msgbox('Incorrect river input file, please select another file','FluEgg Error','Error');
+                set(ed, 'WindowStyle', 'modal');
+                uiwait(ed);
+                return
+            end
+            set(handles.RiverInputFile,'Data',handles.userdata.Riverinputfile(:,1:9));
+            Riverin_DataPlot(handles);
+        catch
+            if size(Riverinputfile,2) ~= 9
+                ed = errordlg('Please fill all the data required in the river input file, and load the file again','Error');
+                set(ed, 'WindowStyle', 'modal');
+                uiwait(ed);
+                return
+            end
+        end %try
     end
-   end
-end
+end %if user pres cancel
 guidata(hObject, handles);% Update handles structure
 
 function [ks]=Ks_calculate(handles,VX)
@@ -251,12 +258,12 @@ save './Temp/temp_variables.mat' 'temp_variables'
    set(handlesmain.Yi_input,'String',floor(Width(1)*100/2)/100);
    guidata(hObject, handles);% Update handles structure
 %% Updating River Geometry Summary
-set(handlesmain.MinX,'String',floor(min(CumlDistance)*100)/100);
-set(handlesmain.MaxX,'String',floor(max(CumlDistance)*100)/100);
-set(handlesmain.MinW,'String',floor(min(Width)*100)/100);
-set(handlesmain.MaxW,'String',floor(max(Width)*100)/100);
-set(handlesmain.MinH,'String',floor(min(Depth)*100)/100);
-set(handlesmain.MaxH,'String',floor(max(Depth)*100)/100);
+set(handlesmain.MinX,'String',floor(min(CumlDistance)*10)/10);
+set(handlesmain.MaxX,'String',floor(max(CumlDistance)*10)/10);
+set(handlesmain.MinW,'String',floor(min(Width)*10)/10);
+set(handlesmain.MaxW,'String',floor(max(Width)*10)/10);
+set(handlesmain.MinH,'String',floor(min(Depth)*10)/10);
+set(handlesmain.MaxH,'String',floor(max(Depth)*10)/10);
 diary off
 close();
 

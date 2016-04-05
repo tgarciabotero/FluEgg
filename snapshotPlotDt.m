@@ -27,11 +27,11 @@ function varargout = snapshotPlotDt(varargin)
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
 gui_State = struct('gui_Name',       mfilename, ...
-                   'gui_Singleton',  gui_Singleton, ...
-                   'gui_OpeningFcn', @snapshotPlotDt_OpeningFcn, ...
-                   'gui_OutputFcn',  @snapshotPlotDt_OutputFcn, ...
-                   'gui_LayoutFcn',  [] , ...
-                   'gui_Callback',   []);
+    'gui_Singleton',  gui_Singleton, ...
+    'gui_OpeningFcn', @snapshotPlotDt_OpeningFcn, ...
+    'gui_OutputFcn',  @snapshotPlotDt_OutputFcn, ...
+    'gui_LayoutFcn',  [] , ...
+    'gui_Callback',   []);
 if nargin && ischar(varargin{1})
     gui_State.gui_Callback = str2func(varargin{1});
 end
@@ -47,7 +47,7 @@ end
 % --- Executes just before snapshotPlotDt is made visible.
 function snapshotPlotDt_OpeningFcn(hObject, ~, handles, varargin)
 diary('./results/FluEgg_LogFile.txt')
-handleResults=getappdata(0,'handleResults'); 
+handleResults=getappdata(0,'handleResults');
 ResultsSim=getappdata(handleResults,'ResultsSim');
 time=ResultsSim.time;
 set(handles.TimeStep_Snapshot,'String',round(10*time(end)/3600/10)/10)
@@ -71,19 +71,22 @@ function SaveTimestep_button_Callback(hObject, eventdata, handles)
 try
     SnapshotEvolution(hObject, eventdata, handles);
 catch
-    if str2double(get(handles.TimeStep_Snapshot,'String'))==0
-    ed = errordlg('Zero values are not allowed','Error');
-    set(ed, 'WindowStyle', 'modal');
-    uiwait(ed);
+    handleResults=getappdata(0,'handleResults');
+    ResultsSim=getappdata(handleResults,'ResultsSim');
+    TimeStep_Snapshot=str2double(get(handles.TimeStep_Snapshot,'String'));
+    if TimeStep_Snapshot==0
+        ed = errordlg('Dt=0 is not allowed','Error');
+        set(ed, 'WindowStyle', 'modal');
+        uiwait(ed);
     end
 end
 close(handles.figure1)
 
 
 
-         
+
 function SnapshotEvolution(~, ~, handles)
-handleResults=getappdata(0,'handleResults'); 
+handleResults=getappdata(0,'handleResults');
 ResultsSim=getappdata(handleResults,'ResultsSim');
 TimeStep_Snapshot=str2double(get(handles.TimeStep_Snapshot,'String'));
 %%
@@ -103,15 +106,15 @@ Dt=time(2)-time(1);
 Legends=cell(1,fix(1+time(end)/(3600*TimeStep_Snapshot)));i=1;
 for t=0:3600*TimeStep_Snapshot:time(end)%(length(X)-1)*Dt
     if t==0
-            scatter((X(round(t/Dt+1),:)/1000),Z(round(t/Dt+1),:),30,'filled');
-            hold all
+        scatter((X(round(t/Dt+1),:)/1000),Z(round(t/Dt+1),:),30,'filled');
+        hold all
     else
-    scatter((X(round(t/Dt+1),:)/1000),Z(round(t/Dt+1),:),5);%,'filled')
-    %time(round(t/Dt+1));display(time(round(t/Dt+1))/3600)
+        scatter((X(round(t/Dt+1),:)/1000),Z(round(t/Dt+1),:),5);%,'filled')
+        %time(round(t/Dt+1));display(time(round(t/Dt+1))/3600)
     end
     Legends{i}=[num2str(t/3600) 'h'];i=i+1;
 end
-box on 
+box on
 stairs([0; CumlDistance],[-Depth; -Depth(end)],'color','k','linewidth',1.5);
 set(gca,'TickDir','in','TickLength',[0.021 0.021],'FontSize',12);
 xlabel('Distance [km]','FontName','Arial','FontSize',12);
@@ -122,24 +125,24 @@ No=length(Depth);
 %% Text
 text(-0.12,0.15, '\downarrow','FontWeight','bold','FontName','Arial')
 text(-2.5,0.5, 'Fish spawn here','FontWeight','normal','FontName','Arial')
-text(double(CumlDistance(end)/2.4),0.2,texlabel('Water surface'),'FontWeight','normal','FontName','Arial')
-text(double(CumlDistance(fix(No/3))),double(-Depth(fix(No/3)+1)-1),'\uparrow','FontWeight','normal','FontName','Arial','FontSize',20)
-text(double(CumlDistance(fix(No/3))-1),double(-Depth(fix(No/3)+1)-1.5), 'River bed','FontWeight','normal','FontName','Arial')
+text(CumlDistance(end)/2.4,0.2,texlabel('Water surface'),'FontWeight','normal','FontName','Arial')
+text(CumlDistance(fix(No/3)),-Depth(fix(No/3)+1)-1,'\uparrow','FontWeight','normal','FontName','Arial','FontSize',20)
+text(CumlDistance(fix(No/3))-1,-Depth(fix(No/3)+1)-1.5, 'River bed','FontWeight','normal','FontName','Arial')
 set(gca,'XMinorTick','on')
 %% Cell labels ON-OFF
 label_on=get(handles.Labelcheckbox,'Value');  %Need to comment this for now
 if label_on==1
-
-for i=1:length(CumlDistance)
-    if i==1
+    
+    for i=1:length(CumlDistance)
+        if i==1
             text(CumlDistance(i)/5.5,-Depth(i)*1.4,texlabel(num2str(i)),'FontWeight','normal','FontName','Arial','FontSize',8)
-    else
-    text(CumlDistance(i)-(CumlDistance(i)-CumlDistance(i-1))/1.1,-Depth(i)-0.2,texlabel(num2str(i)),'FontWeight','normal','FontName','Arial','FontSize',8)
+        else
+            text(CumlDistance(i)-(CumlDistance(i)-CumlDistance(i-1))/1.1,-Depth(i)-0.2,texlabel(num2str(i)),'FontWeight','normal','FontName','Arial','FontSize',8)
+        end
     end
-end
-text(CumlDistance(1)/3,-Depth(1)*2.5,texlabel('Cell #'),'FontWeight','normal','FontName','Arial','FontSize',8)
-% text(38.34,0.15, '\downarrow','FontWeight','normal','FontName','Arial')
-% text(32.14,0.4, 'Lake Michigan','FontWeight','normal','FontName','Arial')
+    text(CumlDistance(1)/3,-Depth(1)*2.5,texlabel('Cell #'),'FontWeight','normal','FontName','Arial','FontSize',8)
+    % text(38.34,0.15, '\downarrow','FontWeight','normal','FontName','Arial')
+    % text(32.14,0.4, 'Lake Michigan','FontWeight','normal','FontName','Arial')
 end
 diary off
 
