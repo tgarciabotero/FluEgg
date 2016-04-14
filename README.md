@@ -1,17 +1,15 @@
 #Fluvial Egg Drift Simulator (FluEgg)
-A three-dimensional Lagrangian model capable of evaluating the influence of flow velocity, shear dispersion and turbulent diffusion on the transport and dispersal patterns of Asian carp eggs is presented. The model�s variables include not only biological behavior (growth rate, density changes) but also the physical characteristics of the flow field, such as mean velocities and eddy diffusivities.
+A three-dimensional Lagrangian model capable of evaluating the influence of flow velocity, shear dispersion and turbulent diffusion on the transport and dispersal patterns of Asian carp eggs is presented. The model’s variables include not only biological behavior (growth rate, density changes) but also the physical characteristics of the flow field, such as mean velocities and eddy diffusivities.
 
 #Code Structure
 The Graphical User Inter Interface (GUI) code for the FluEgg is FluEgg.m and FluEgg.fig. The Main function of FluEgg is called FluEgggui.
 
-#Motivation
-=======
 # Fluvial Egg Drift Simulator (FluEgg)
-A three-dimensional Lagrangian model capable of evaluating the influence of flow velocity, shear dispersion and turbulent diffusion on the transport and dispersal patterns of Asian carp eggs is presented. The model’s variables include not only biological behavior (growth rate, density changes) but also the physical characteristics of the flow field, such as mean velocities and eddy diffusivities.
+A three-dimensional Lagrangian model capable of evaluating the influence of flow velocity, shear dispersion and turbulent diffusion on the transport and dispersal patterns of Asian carp eggs is presented. The modelâ€™s variables include not only biological behavior (growth rate, density changes) but also the physical characteristics of the flow field, such as mean velocities and eddy diffusivities.
+
 # Code Structure
 The Graphical User Inter Interface (GUI) code for the FluEgg is FluEgg.m and FluEgg.fig. 
-The Main function of FluEgg is called FluEgggui, this function uses the Jump function, in this function particles move (jump) every time step following the random walk and random displacement approach
-.
+The Main function of FluEgg is called FluEgggui, this function uses the Jump function, in this function particles move (jump) every time step following the random walk and random displacement approach.
 
 # Motivation
 
@@ -23,10 +21,10 @@ Egg lateral distributions give information about dead zones, provided the input 
 
 #References
 
-Garcia, T., Jackson, P.R.,Murphy, E.A., Valocchi, A.J., Garcia, M.H., 2013. Development of a Fluvial Egg Drift Simulator to evaluate the transport and dispersion of Asian carp eggs in rivers. Ecol. Model. 263, 211�222
+Garcia, T., Jackson, P.R.,Murphy, E.A., Valocchi, A.J., Garcia, M.H., 2013. Development of a Fluvial Egg Drift Simulator to evaluate the transport and dispersion of Asian carp eggs in rivers. Ecol. Model. 263, 211–222
 
 #Installation
-The FluEgg model iswritten in the MATLAB� programming language (Mathworks, Natick, MA,USA). It requires the statistics and image processing toolboxes.
+The FluEgg model iswritten in the MATLAB® programming language (Mathworks, Natick, MA,USA). It requires the statistics and image processing toolboxes.
 
 #FluEgg Release License
 Copyright (c) 2016 Tatiana Garcia All rights reserved.
@@ -71,10 +69,10 @@ dlmcell Roland Pfister FluEgg_Git_Repo\dlmcell.m
 parseArgs.m Aslak Grinsted FluEgg_Git_Repo\parseArgs.m
 subaxis.m Aslak Grinsted FluEgg_Git_Repo\subaxis.m
 =======
-Garcia, T., Jackson, P.R.,Murphy, E.A., Valocchi, A.J., Garcia, M.H., 2013. Development of a Fluvial Egg Drift Simulator to evaluate the transport and dispersion of Asian carp eggs in rivers. Ecol. Model. 263, 211–222
+Garcia, T., Jackson, P.R.,Murphy, E.A., Valocchi, A.J., Garcia, M.H., 2013. Development of a Fluvial Egg Drift Simulator to evaluate the transport and dispersion of Asian carp eggs in rivers. Ecol. Model. 263, 211â€“222
 
 # Installation
-The FluEgg model iswritten in the MATLAB® programming language (Mathworks, Natick, MA,USA). It requires the statistics and image processing toolboxes.
+The FluEgg model iswritten in the MATLABÂ® programming language (Mathworks, Natick, MA,USA). It requires the statistics and image processing toolboxes.
 
 ==============================================================================
 FluEgg Release License
@@ -163,8 +161,8 @@ dlmcell               Roland Pfister                                  FluEgg_Git
 parseArgs.m           Aslak Grinsted                                  FluEgg_Git_Repo\parseArgs.m              Used in Subaxis.m
 subaxis.m             Aslak Grinsted                                  FluEgg_Git_Repo\subaxis.m                This function is used to reduce spacing between figure border and figure axis
 savefast.m            Timothy E. Holy                                 FluEgg_Git_Repo\savefast.m               Used in FluEgggui.m
-pcscurvature.m        Inci-Burak G�neralp,Prolific Oven,Palo Alto,CA  FluEgg_Git_Repo\pcscurvature.m           Used in google_earth.m-->Parametric cubic spline interpolation of digitized data points of meandering rivers
-reorient.m            Inci-Burak G�neralp,Prolific Oven,Palo Alto,CA  FluEgg_Git_Repo\reorient.m               Used in pcscurvature.m
+pcscurvature.m        Inci-Burak Güneralp,Prolific Oven,Palo Alto,CA  FluEgg_Git_Repo\pcscurvature.m           Used in google_earth.m-->Parametric cubic spline interpolation of digitized data points of meandering rivers
+reorient.m            Inci-Burak Güneralp,Prolific Oven,Palo Alto,CA  FluEgg_Git_Repo\reorient.m               Used in pcscurvature.m
 savitzkyGolayFilt.m   R. Losada                                       FluEgg_Git_Repo\savitzkyGolayFilt.m      Used in pcscurvature.m
 savitzkyGolay.m       Jianwen Luo,Tsinghua University                 FluEgg_Git_Repo\savitzkyGolay.m          Used in savitzkyGolayFilt.m 
 deg2utm.m             Rafael Palacios,Universidad Pontificia Comillas FluEgg_Git_Repo\deg2utm.m                Used in google_earth.m-->Function to convert lat/lon vectors into UTM coordinates
