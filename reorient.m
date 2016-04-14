@@ -2,7 +2,7 @@ function y=reorient(b);
 %   Recalculates the coordinates by moving the first coordinates
 %   (i.e. {b(1,1),b(1,2)}) to the origin {0,0}
 %
-%                           Inci-Burak Güneralp
+%                           ?nci-Burak Güneralp
 %                           March 24, 2007
 %                           Prolific Oven, Palo Alto, CA
 

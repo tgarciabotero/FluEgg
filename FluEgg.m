@@ -34,7 +34,7 @@ function varargout = FluEgg(varargin)
 
 % Edit the above text to modify the response to help FluEgg
 
-% Last Modified by GUIDE v2.5 19-Nov-2015 10:06:19
+% Last Modified by GUIDE v2.5 21-May-2015 15:29:18
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
@@ -114,7 +114,7 @@ set(handles.simulation_panel,'Visible','on');
 set(handles.Running,'Visible','on');
 %% Make Results Invisible
 set(handles.panel_Results,'Visible','off');
-set(handles.NewSim_Button,'Visible','on');
+set(handles.NewSim_Button,'Visible','off');
 guidata(hObject, handles);% Update handles structure
 
 function popup_roughness_Callback(hObject, ~, handles)
@@ -266,6 +266,7 @@ Running_Callback(hObject, eventdata, handles);
 %% Running the model::::::::::::::::::::::::::::::::::::::::::::::::::::::%
 function Running_Callback(hObject, eventdata, handles)
 %% Get data from Handles
+handles.userdata.Larvae=get(handles.Larvae,'Checked');
 handles.userdata.Num_Eggs=str2double(get(handles.Num_Eggs,'String'));
 handles.userdata.Xi=str2double(get(handles.Xi_input,'String'));
 handles.userdata.Yi=str2double(get(handles.Yi_input,'String'));
@@ -374,8 +375,11 @@ Results();
 function tools_Callback(hObject, eventdata, handles)
 % --------------------------------------------------------------------
 function Ht_Callback(hObject, eventdata, handles)
-load './Temp/temp_variables.mat'
-Temp=temp_variables.Temp;
+Larvaemode=get(handles.Larvae,'Checked');
+Temp=load('./Temp/temp_variables.mat');
+CumlDistance=single(Temp.temp_variables.CumlDistance);
+Temp=single(Temp.temp_variables.Temp);
+Initial_Cell=find(CumlDistance*1000>=str2double(get(handles.Xi_input,'String')));Initial_Cell=Initial_Cell(1); % Updated TG May,2015
 if get(handles.Silver,'Value')==1
     specie={'Silver'};
 elseif get(handles.Bighead,'Value')==1
@@ -383,7 +387,7 @@ elseif get(handles.Bighead,'Value')==1
 else
     specie={'Grass'};
 end
-TimeToHatch = HatchingTime(Temp,specie);
+TimeToHatch = HatchingTime(Temp(Initial_Cell:end),specie);
 msgbox(['The estimated hatching time for an averaged temperature of ',num2str(round(mean(Temp)*10)/10),' C is ', num2str(TimeToHatch), ' hours.'],'FluEgg','none');
 
 
@@ -399,7 +403,7 @@ diary('./results/FluEgg_LogFile.txt')
 web('http://asiancarp.illinois.edu/')
 
 function settings=FluEgg_Settings
-settings.version='V2.0';
+settings.version='V2.0_Beta';
 
 
 % --------------------------------------------------------------------
@@ -434,8 +438,7 @@ textAbout2=uicontrol(About,'Style','text',...
     'Units','Normalized','Position',[0 0.68 1 0.15],'FontSize',6,'BackgroundColor',[1 1 1]);
 
 
-% --- Executes on button press in set_to_hatching.
-function set_to_hatching_Callback(hObject, eventdata, handles)
+function set_to_stage_button_Callback(hObject, eventdata, handles)
 %% Set running time
 %%Eggs biological properties
 if get(handles.Silver,'Value')==1
@@ -445,20 +448,64 @@ elseif get(handles.Bighead,'Value')==1
 else
     specie={'Grass'};
 end
-%%
-Temp=load('./Temp/temp_variables.mat');temp_variables=Temp.temp_variables;clear Temp;Temp=single(temp_variables.Temp);
-set(handles.Totaltime,'String',HatchingTime(Temp,specie));
+%%=========================================================================
+Larvaemode=get(handles.Larvae,'Checked');
+Temp=load('./Temp/temp_variables.mat');
+CumlDistance=single(Temp.temp_variables.CumlDistance);
+Temp=single(Temp.temp_variables.Temp);
+Initial_Cell=find(CumlDistance*1000>=str2double(get(handles.Xi_input,'String')));Initial_Cell=Initial_Cell(1); % Updated TG May,2015
+
+switch Larvaemode %:Updated TG May,2015
+    %======================================================================
+     case 'on'
+        if strcmp(specie,'Silver')%if specie=='Silver'
+            Tmin2=13.3;%C
+            MeanCTU_Gas_bladder=1084.59;
+            %STD=97.04;
+        elseif strcmp(specie,'Bighead')
+            Tmin2=13.4;%C
+            MeanCTU_Gas_bladder=1161.07;
+            %STD=79.72;
+        else %case Grass Carp :
+            Tmin2=13.3;%C
+            MeanCTU_Gas_bladder=1100.82;
+            %STD=49.853;
+        end
+        T2_Gas_bladder=single(str2double(num2str(round(MeanCTU_Gas_bladder*10/(mean(Temp(Initial_Cell:end))-Tmin2))/10)));%h
+        handles.userdata.Max_Sim_Time=T2_Gas_bladder;
+        set(handles.Totaltime,'String',handles.userdata.Max_Sim_Time);
+        
+        %======================================================================
+    case 'off'
+        handles.userdata.Max_Sim_Time=HatchingTime(mean(Temp(Initial_Cell:end)),specie);
+        set(handles.Totaltime,'String',handles.userdata.Max_Sim_Time);
+        %======================================================================
+end
+guidata(hObject, handles);
+
 
 
 % --------------------------------------------------------------------
-function Untitled_1_Callback(hObject, eventdata, handles)
-% hObject    handle to Untitled_1 (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    structure with handles and user data (see GUIDATA)
+function Options_Callback(hObject, eventdata, handles)
+
 
 
 % --------------------------------------------------------------------
-function Save_output_Callback(hObject, eventdata, handles)
-% hObject    handle to Save_output (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    structure with handles and user data (see GUIDATA)
+function Larvae_Callback(hObject, eventdata, handles)
+% Turn ON or OFF larvae drift
+Larvaemode=get(handles.Larvae,'Checked');
+switch Larvaemode %:Updated TG May,2015
+    %======================================================================
+    case 'on' %If its set on, that means the user wants to turn it off.
+        set(handles.Larvae, 'Checked','off')
+        set(handles.set_to_stage_button,'String','Set to hatching time');
+    case 'off'
+        set(handles.Larvae, 'Checked','on')
+        set(handles.set_to_stage_button,'String','Set to time to reach Gas bladder');
+end
+handles.userdata.Larvae=get(handles.Larvae,'Checked');
+
+%======================================================================
+
+% --------------------------------------------------------------------
+function Mortality_model_Callback(hObject, eventdata, handles)

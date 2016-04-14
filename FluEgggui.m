@@ -8,9 +8,6 @@ function [minDt,CheckDt,Exit]=FluEgggui(~, ~,handles,CheckDt)
 %
 %With nested functions and single precision and uint8 data types
 %% Iniciate Waitbar
-% try
-%tic
-%profile -memory on
 h = waitbar(0,'Initializing variables...','Name','Eggs drifting...',...
     'CreateCancelBtn',...
     'setappdata(gcbf,''canceling'',1)');
@@ -20,6 +17,7 @@ if getappdata(h,'canceling')
     Exit=1;
     return;
 end
+
 %%
 alivemodel=1;  %if alivemodel=1 the eggs would not die
 Exit=0; %If we exit the code
@@ -48,24 +46,72 @@ elseif get(handles.Bighead,'Value')==1
 else
     specie={'Grass'};
 end
+
 %% Time
-% If Simulation time greater than hatching time warn the user!!
-Temp=load('./Temp/temp_variables.mat');temp_variables=Temp.temp_variables;clear Temp;Temp=single(temp_variables.Temp);
-handles.userdata.Max_Sim_Time=single(HatchingTime(Temp,specie));
-if handles.userdata.Totaltime>(round(handles.userdata.Max_Sim_Time*100)/100)+0.000001
-    choice = questdlg('Error, the simulation time overpasses the estimated hatching time, do you want FluEgg to use the hatching time as the simulation time?'...
-        ,'Simulation time Error','Yes','No','Yes');
-    switch choice
-        case 'Yes'
-            Totaltime=handles.userdata.Max_Sim_Time;
-            set(handles.Totaltime,'String',handles.userdata.Max_Sim_Time);
-        case 'No'
-            minDt=0;
-            delete(h)
-            Exit=1;
-            return
-    end
+
+% If Simulation time is greater than time to reach a given stage warn the user!!
+
+%% Calculate maximum simulation time.
+Initial_Cell=find(CumlDistance*1000>=str2double(get(handles.Xi_input,'String')),1,'first'); % Updated TG May,2015
+T2_Hatching=HatchingTime(mean(Temp(Initial_Cell:end)),specie);
+Larvaemode=handles.userdata.Larvae;
+switch Larvaemode %:Updated TG May,2015
+    %======================================================================
+    case 'on'
+        if strcmp(specie,'Silver')%if specie=='Silver'
+            Tmin2=13.3;%C
+            MeanCTU_Gas_bladder=1084.59;
+            %STD=97.04;
+        elseif strcmp(specie,'Bighead')
+            Tmin2=13.4;%C
+            MeanCTU_Gas_bladder=1161.07;
+            %STD=79.72;
+        else %case Grass Carp :
+            Tmin2=13.3;%C
+            MeanCTU_Gas_bladder=1100.82;
+            %STD=49.853;
+        end
+        T2_Gas_bladder=str2double(num2str(round(MeanCTU_Gas_bladder*10/(mean(Temp(Initial_Cell:end))-Tmin2))/10));%h
+        handles.userdata.Max_Sim_Time=T2_Gas_bladder;
+        
+        %==================================================================
+%         if handles.userdata.Totaltime>(handles.userdata.Max_Sim_Time+0.000001)
+%             choice = questdlg('Error, the simulation time overpasses the estimated time to reach gas bladder stage, do you want FluEgg to use the estimated time to reach gas bladder stage as the simulation time?'...
+%                 ,'Simulation time Error','Yes','No','Yes');
+%             switch choice
+%                 case 'Yes'
+%                     Totaltime=handles.userdata.Max_Sim_Time;
+%                     set(handles.Totaltime,'String',handles.userdata.Max_Sim_Time);
+%                 case 'No'
+%                     minDt=0;
+%                     delete(h)
+%                     Exit=1;
+%                     return
+%             end
+%         end
+        %======================================================================
+    case 'off'
+         T2_Gas_bladder=0;
+        handles.userdata.Max_Sim_Time=T2_Hatching;
+        
+        %==================================================================
+        if handles.userdata.Totaltime>(round(handles.userdata.Max_Sim_Time*100)/100)+0.000001
+            choice = questdlg('Error, the simulation time overpasses the estimated hatching time, do you want FluEgg to use the hatching time as the simulation time?'...
+                ,'Simulation time Error','Yes','No','Yes');
+            switch choice
+                case 'Yes'
+                    Totaltime=handles.userdata.Max_Sim_Time;
+                    set(handles.Totaltime,'String',handles.userdata.Max_Sim_Time);
+                case 'No'
+                    minDt=0;
+                    delete(h)
+                    Exit=1;
+                    return
+            end
+        end
+        %======================================================================
 end
+
 Totaltime=single(handles.userdata.Totaltime*3600);%seconds
 Dt=single(handles.userdata.Dt); %time step in seconds
 minDt=Dt; % initialize the variable
@@ -74,7 +120,7 @@ Steps=single(length(time));
 %% =======================================================================
 %% pre-allocate memory and intialization of variables
 X=zeros(Steps,Eggs,'single');Y=zeros(Steps,Eggs,'single');Z=zeros(Steps,Eggs,'single');cell=zeros(Eggs,1,'single');
-Vx=zeros(Eggs,1,'single');Vy=Vx;Vz=Vx;H=Vx;W=Vx;DH=Vx;ustar=Vx;SG=Vx;T=Vx;%Vx=cell
+Vx=zeros(Eggs,1,'single');Vy=Vx;Vz=Vx;H=Vx;W=Vx;DH=Vx;ustar=Vx;SG=Vx;T=Vx;Vswim=Vx;
 X(1,:)=Xi;Y(1,:)=Yi;Z(1,:)=Zi;KS=Vx;Rhoe=Vx;%VsT=zeros(Steps,Eggs,'single');
 alive=ones(Steps,Eggs,'single');
 %cellsExtended=int8(0);
@@ -84,6 +130,7 @@ if alivemodel==0
     Dead_t=cell;
     touch=zeros(Steps,Eggs,'int8');%counter to calculate how many eggs touched the bottom every time step
     celldead=zeros(Eggs,1,'int8');
+    count_mortality_at_hatching=0;
 end
 
 %% ========================================================================
@@ -103,7 +150,7 @@ switch str{val};
         Tref=str2double(get(handles.Tref,'String'));
     case 'Use diameter and egg density time series (Chapman and George (2011, 2014))'
         Tref=22; %C
-        [D,Rhoe_ref]=EggBio; 
+        [D,Rhoe_ref]=EggBio;
 end
 %% Calculate water density
 Rhow=density(Temp); %Here we calculate the water density in every cell
@@ -126,10 +173,12 @@ for l=1:Eggs
     %% Explicit Lagrangian Horizontal Diffusion
     DH(l)=0.6*H(l)*ustar(l);
 end
-%% Calculating Fall velocity
+
+%% Calculating initial fall velocity
 %% Dietrich's
 Vzpart=single(-Dietrich(D(t),SG(1),T(1))/100);%D should be in mm, vs output is in cm/s, then we convert it to m
 %%
+
 %% Checking Dt
 if  CheckDt==0
     [minDt,CheckDt] = Checking_Dt;
@@ -139,10 +188,10 @@ if Dt>minDt
     delete(h)
     return
 end
+
 Vzpart=Vzpart*ones(Eggs,1,'single'); %Initially all the eggs have the same Vs
 %%
 clear Dmin Vsmax DiamStd VsStd Diam vs C str val
-%VsT(t,:)=Vzpart';
 Jump;
 
 % Total_perTime=sum(touch,2);
@@ -175,7 +224,7 @@ Jump;
         elseif strcmp(specie,'Bighead')%:Updated TG March,2015
             Dmin=1.5970;% mm
             Dmax=7.1334;% mm
-            Rhoe_max=1040.4e+03;% Kg/m^3 at 22C
+            Rhoe_max=1040.4;% Kg/m^3 at 22C
             Rhoe_min=998.5357;% Kg/m^3 at 22C
             %% Diameter fit
             a=5.82;b=3506.7;D=a*(1-exp(-time/b));%R2 = 0.85 for BC eggs
@@ -183,7 +232,7 @@ Jump;
             a=30.58;b= 1716;c=999.4;Rhoe_ref=(a*exp(-time/b))+c;%R-square: 0.84 for BC eggs
         else %case Grass Carp : TG March,2015
             Dmin=1.2250;% mm
-            Dmax=5.6750;% mm 
+            Dmax=5.6750;% mm
             Rhoe_max= 1.0473e+03;% Kg/m^3 at 22C
             Rhoe_min= 998.4118;% Kg/m^3 at 22C
             %% Diameter fit
@@ -191,9 +240,9 @@ Jump;
             %% Density of eggs fit Standardized to 22C
             a=29.09;b= 1812;c=999.8;Rhoe_ref=(a*exp(-time/b))+c;%R-square: 0.58 for GC eggs
         end
-        %% Checking for min D 
+        %% Checking for min D
         D(D<Dmin)=Dmin;%min diameter (mm)
-               
+        
         for tt=1:length(D) %because the counter of the array starts from 1
             if strcmp(specie,'Silver')%if specie=='Silver'
                 %% STD
@@ -208,7 +257,7 @@ Jump;
                     RhoeStd=0.7780;%Kg/m^3 at 22C
                 end
                 %%
-             elseif strcmp(specie,'Bighead')
+            elseif strcmp(specie,'Bighead')
                 %% STD
                 if time(tt)/3600<4
                     DiamStd=1.1311;%mm
@@ -221,7 +270,7 @@ Jump;
                     RhoeStd=0.2777;%Kg/m^3 at 22C
                 end
                 %%
-             else %case Grass Carp : TG March,2015
+            else %case Grass Carp : TG March,2015
                 if time(tt)/3600<5
                     DiamStd=1.0161;%mm
                 else
@@ -231,7 +280,7 @@ Jump;
                     RhoeStd=8.7916;%Kg/m^3 at 22C
                 else
                     RhoeStd=1.7663;%Kg/m^3 at 22C
-                end                
+                end
             end
             %% Diameter fit + scatter
             Dvar(tt,1)=single(normrnd(D(tt),DiamStd));
@@ -280,6 +329,8 @@ Jump;
         waitstep = floor((Steps)/100);
         alpha=2.51;%1.9;%1.3;%
         beta=2.47;%1.8;%1.2;%
+
+%%=================================================================================================
         for t=2:Steps
             %%
             if ~mod(t, waitstep) || t==Steps
@@ -332,7 +383,19 @@ Jump;
             %% Calculate Vertical dispersion
             [Kprime,Kz]=calculateKz;
             %% Movement in Z
-            Z(t,a)=Z(t-1,a)'+Dt*(Vz(a)+Vzpart(a)+Kprime)+(normrnd(0,1,sum(a),1).*sqrt(2*Kz*Dt));%m
+            
+            %% if larvae gas bladder stage
+            if time(t)>T2_Hatching*3600  %after hatching
+                Vzpart(a)=zeros(length(Vzpart(a)),1);
+                Vswim(a)=zeros(length(Vzpart(a)),1);
+            else %% if egg stage
+                Vswim(a)=zeros(length(Vzpart(a)),1);
+            end        
+            
+            Z(t,a)=Z(t-1,a)'+Dt*(Vz(a)+Vswim(a)+Vzpart(a)+Kprime)+(normrnd(0,1,sum(a),1).*sqrt(2*Kz*Dt));%m
+
+%% Movement in Z
+%             Z(t,a)=Z(t-1,a)'+Dt*(Vz(a)+Vzpart(a)+Kprime)+(normrnd(0,1,sum(a),1).*sqrt(2*Kz*Dt));%m
             Z(t,~a)=-H(~a)+d/2;%If they were already dead,leave them in the bottom.
             %% Check if eggs are in a new cell in this jump
             Check_if_egg_isin_newcell
@@ -368,8 +431,8 @@ Jump;
             end
             
             %% Reflective in Y
-%             check=Y(t,a);check(check<d/2)=d-check(check<d/2);Y(t,a)=check;check=[];
-%             check=Y(t,a);w=W(a)';check(check>w-d/2)=2*w(check>w-d/2)-d-check(check>w-d/2);Y(t,a)=check;check=[];
+            %             check=Y(t,a);check(check<d/2)=d-check(check<d/2);Y(t,a)=check;check=[];
+            %             check=Y(t,a);w=W(a)';check(check>w-d/2)=2*w(check>w-d/2)-d-check(check>w-d/2);Y(t,a)=check;check=[];
             %% double check after first jump
             check=Y(t,a);
             w=W(a)';
@@ -387,7 +450,7 @@ Jump;
             
             %% Alive or dead ??
             if alivemodel==0
-                [alive]=mortality_model;
+                [alive]=mortality_model(alive,d,a);
             end %mortality model
             
         end
@@ -419,7 +482,7 @@ Jump;
         ResultsSim.time=time;
         %ResultsSim.touch=touch;
         ResultsSim.D=D;
-        %ResultsSim.alive=alive;
+        ResultsSim.alive=alive;
         ResultsSim.CumlDistance=CumlDistance;
         ResultsSim.Depth=Depth;
         ResultsSim.Width=Width;
@@ -427,17 +490,17 @@ Jump;
         ResultsSim.Temp=Temp;
         ResultsSim.specie=specie;
         ResultsSim.Spawning=[Xi,Yi,Zi];
+        ResultsSim.T2_Hatching=T2_Hatching;
+        ResultsSim. T2_Gas_bladder= T2_Gas_bladder;       
         %save(outputfile,'X','Y','Z','time','D','CumlDistance','Depth','Width','VX','Temp','specie','Xi','Yi','Zi')
         %save(outputfile,'ResultsSim','-mat','-v7.3');
         savefast(outputfile,'ResultsSim');
         %folderName= uigetdir('./results','Folder name to save results');
         % %% SAVE RESULTS AS TEXT FILE
-%         if get(handles.Save_output,'Selected')
-%         save([Folderpath,'X' '.txt'],'X', '-ASCII');
-%         save([Folderpath,'Y' '.txt'],'Y', '-ASCII');
-%         save([Folderpath,'Z' '.txt'],'Z', '-ASCII');
-%         save([Folderpath,'time' '.txt'],'time', '-ASCII');
-%         end
+        % save([Folderpath,'X' '.txt'],'X', '-ASCII');
+        % save([Folderpath,'Y' '.txt'],'Y', '-ASCII');
+        % save([Folderpath,'Z' '.txt'],'Z', '-ASCII');
+        % save([Folderpath,'time' '.txt'],'time', '-ASCII');
         % hFluEggGui=getappdata(0,'hFluEggGui');
         % setappdata(hFluEggGui, 'Folderpath', Folderpath);
         % hdr={'Specie=',specie;'Dt_s=',Dt;'Simulation time_h=',time(end)/3600};
@@ -524,9 +587,15 @@ Jump;
         end
     end %New cell
 
-    function [alive]=mortality_model
+    function [alive]=mortality_model(alive,d,a)
+        %% Load parameters
+        Mp=0;   %By predators
+        Mb=0;   %By burial or egg damage
+        Mc=0;   %Custom mortality e.g. case of a Dam
+        Mortality=Mp+Mb+Mc;
+        %% ================================================================
         alive(t,:)=alive(t-1,:);%If it was dead...it continue dead
-        Mortality_model=2;
+        Mortality_model=4;
         switch Mortality_model
             case 1
                 %% Case 1
@@ -561,7 +630,18 @@ Jump;
                     end
                 end
                 Mortality=Mortality-fix(Mortality);
-        end
+            case 4
+              %if it was near the bottom at hatching time, eggs will be dead. 
+              %at the end of the previous time step before hatching
+              if time(t)>(T2_Hatching*3600-Dt)&&count_mortality_at_hatching==0
+                alive(t,:)=alive(t-1,:);%If it was dead...it continue dead
+                %How many eggs are in the danger zone???
+                bed=(0.05*H)-H;% in model coordinates;
+                EggsInDanger=Z(t,:)'<bed-d/2&a';%Eggs in the danger zone that are alive
+                alive(t,EggsInDanger)=0; 
+                count_mortality_at_hatching=1;
+              end
+        end %switch
         %% At which cell the egg dye??
         celldead(alive(t,:)==0)=cell(alive(t,:)==0);
     end %mortality model

@@ -22,7 +22,7 @@ function varargout = google_earth(varargin)
 
 % Edit the above text to modify the response to help google_earth
 
-% Last Modified by GUIDE v2.5 27-May-2015 13:26:32
+% Last Modified by GUIDE v2.5 15-Jan-2016 16:08:34
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
@@ -50,7 +50,11 @@ axes(handles.bottom); imshow('asiancarp.png');
 %%=========================================================================
 handleResults=getappdata(0,'handleResults');
 ResultsSim=getappdata(handleResults,'ResultsSim');
-T2_Gas_bladder=ResultsSim. T2_Gas_bladder;
+if isfield(ResultsSim, 'T2_Gas_bladder')==0%This is for results files from previous FluEgg versions
+    T2_Gas_bladder=0;
+else
+T2_Gas_bladder=ResultsSim.T2_Gas_bladder;
+end
 Menu_labels={'Egg location at hatching time and at gass bladder inflation stage';'Longitudinal distribution of eggs at hatching time and at gass bladder inflation stage'};
 if T2_Gas_bladder>0
     set(handles.FluEgg_results_menu,'String',Menu_labels);
@@ -130,11 +134,21 @@ end %function
 
 function create_regular_grid_centerline_button_Callback(hObject,eventdata,handles)
 % Read the input KML file to a MapStruct
+if isfield(handles, 'inputfile')==0%This is for results files from previous FluEgg versions
+    ed = errordlg('Please load river centerline','Error');
+    set(ed, 'WindowStyle', 'modal');
+    uiwait(ed);
+    return
+else
 indata = kml2struct(handles.inputfile);
-
+end
 % Extract centerline Lat/Lon and convert to UTM
 lat = indata.Lat;
 lon = indata.Lon;
+if get(handles.Flip_centerline,'value')==1
+    lat=flipud(lat);
+    lon=flipud(lon);
+end
 [x,y,utmzone] = deg2utm(lat,lon);
 
 % Fit PCS and create a regular centerline with spacing ~ds
@@ -165,7 +179,11 @@ selected_life_stage=getappdata(handleResults, 'selected_life_stage');
 
 X=ResultsSim.X;Xi=min(min(X));
 %T2_Hatching=ResultsSim.T2_Hatching;
-T2_Gas_bladder=ResultsSim. T2_Gas_bladder;
+if isfield(ResultsSim, 'T2_Gas_bladder')==0%This is for results files from previous FluEgg versions
+    T2_Gas_bladder=0;
+else
+T2_Gas_bladder=ResultsSim.T2_Gas_bladder;
+end
 utmzone=handles.utmzone;
 x=handles.x;
 y=handles.y;
@@ -183,7 +201,12 @@ Spawning_Location=[Lat_susp Lon_susp];
 str=get(handles.FluEgg_results_menu, 'String');
 val=get(handles.FluEgg_results_menu,'Value');
 % Set current data to the selected data set.
-
+if isfield(ResultsSim, 'T2_Gas_bladder')==0%This is for results files from previous FluEgg versions
+            T2_Gas_bladder=0;
+        else
+            T2_Gas_bladder=ResultsSim.T2_Gas_bladder;
+end
+        
 switch val;
     %% ========================================================================
     case 1 %'Egg location
@@ -224,16 +247,30 @@ handleResults=getappdata(0,'handleResults');
 ResultsSim=getappdata(handleResults,'ResultsSim');
 X=ResultsSim.X;
 Z=ResultsSim.Z;
-%specie=ResultsSim.specie;
-%Temp=ResultsSim.Temp;
-time=ResultsSim.time;
-T2_Hatching=ResultsSim.T2_Hatching;
 CumlDistance=ResultsSim.CumlDistance;
 Depth=ResultsSim.Depth;
 x=handles.x;
 y=handles.y;
 utmzone=handles.utmzone;
 pathname=getappdata(handleResults,'pathname');
+%specie=ResultsSim.specie;
+%Temp=ResultsSim.Temp;
+time=ResultsSim.time;
+%T2_Hatching=ResultsSim.T2_Hatching;
+        if isfield(ResultsSim, 'T2_Hatching')==0%This is for results files from previous FluEgg versions
+            Temp=ResultsSim.Temp;
+            Initial_Cell=find(CumlDistance*1000>=X(1),1,'first'); % Updated TG Jan 2016
+            specie=ResultsSim.specie;
+            T2_Hatching = HatchingTime(Temp(Initial_Cell:end),specie);
+        else
+            T2_Hatching=ResultsSim.T2_Hatching;
+        end
+        %=========================================
+% if isfield(ResultsSim, 'T2_Gas_bladder')==0%This is for results files from previous FluEgg versions
+%     T2_Gas_bladder=0;
+% else
+% T2_Gas_bladder=ResultsSim.T2_Gas_bladder;
+% end
 
 %% Eggs in suspension =====================================================================================
 
@@ -322,7 +359,16 @@ X=ResultsSim.X;
 Z=ResultsSim.Z;
 %alive=ResultsSim.alive;
 time=ResultsSim.time;
-T2_Hatching=ResultsSim.T2_Hatching;
+%T2_Hatching=ResultsSim.T2_Hatching;
+ if isfield(ResultsSim, 'T2_Hatching')==0%This is for results files from previous FluEgg versions
+            Temp=ResultsSim.Temp;
+            Initial_Cell=find(CumlDistance*1000>=X(1),1,'first'); % Updated TG Jan 2016
+            specie=ResultsSim.specie;
+            T2_Hatching = HatchingTime(Temp(Initial_Cell:end),specie);
+        else
+            T2_Hatching=ResultsSim.T2_Hatching;
+        end
+        %=========================================
 %T2_Gas_bladder=ResultsSim. T2_Gas_bladder;%h
 x=handles.x;
 y=handles.y;
@@ -405,4 +451,14 @@ bids=(edges(1:end-1)+edges(2:end))/2;bids=bids';
     Gass_bladder_Larvae=Gass_bladder_Larvae(id:id_end)*100/size(X(end,alive(end,:)==1),2);
  %% Generating the GEplot_3D
     GEplot_3D([pathname get(handles.outputfilename,'String') ' distribution of larvae at gas bladder inflation stage'],Lat_Larvae,Lon_larvae,Gass_bladder_Larvae*scale_factor,'-m',[],[],[],'-c',[],Spawning_Location,T2_Gas_bladder,'LineWidth',3); 
+end
+
+
+% --- Executes on button press in Flip_centerline.
+function Flip_centerline_Callback(hObject, eventdata, handles)
+% hObject    handle to Flip_centerline (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+% Hint: get(hObject,'Value') returns toggle state of Flip_centerline
 end

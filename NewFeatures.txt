@@ -1,0 +1,12 @@
+New Features as of Dec 16, 2015
+
+-Larvae transport untill Gas Bladder Inflation Stage
+-Rearranged post-processing tools by: 
+                                     *Longitudinal 
+                                     *Vertical
+                                     *Temporal
+                                     *Mixed
+-Added Google Earth funcionality
+-Longitudinal distribution:
+                           *Added stats summary to longitudinal distribution.
+                           *Added a tool for outputting results in different units.
