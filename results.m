@@ -754,7 +754,7 @@ end
 %% Plot
 set(0,'Units','pixels') ;
 scnsize = get(0,'ScreenSize');
-h=figure('Name','Longitudinal distribution of the eggs at hatching time','Color',[1 1 1],...
+h=figure('Name','Longitudinal distribution of the eggs at a given time','Color',[1 1 1],...
     'position',[scnsize(3)/2 scnsize(4)/2.6 scnsize(3)/2.1333 scnsize(4)/2]);
 subaxis(1,1,1,'MR',0.1,'ML',0.095,'MB',0.12,'MT',0.05);
 %%

@@ -384,7 +384,7 @@ diary('./results/FluEgg_LogFile.txt')
 web('http://asiancarp.illinois.edu/')
 
 function settings=FluEgg_Settings
-settings.version='v1.3';
+settings.version='v1.4';
 
 
 % --------------------------------------------------------------------
@@ -406,9 +406,8 @@ end
 function About_FluEgg_Callback(~, ~, handles)
 set(0,'Units','pixels') ;
 scnsize = get(0,'ScreenSize');
-About=figure('Name','Percentage of eggs distributed in the vertical','Color',[1 1 1],...%[0.9412 0.9412 0.9412],...
-    'Name','About FluEgg',...
-    'position',[scnsize(3)/2 scnsize(4)/2.6 scnsize(3)/3 scnsize(4)/2]);
+About=figure('Name','About FluEgg','Color',[1 1 1],...%[0.9412 0.9412 0.9412],...
+        'position',[scnsize(3)/2 scnsize(4)/2.6 scnsize(3)/3 scnsize(4)/2]);
 AboutBackground=axes('Parent',About,'Units','Normalized','Position',[0 -0.1 1 1]);
 imshow('AboutBackground.png','InitialMagnification','fit');
 set(About,'MenuBar','none')

@@ -354,8 +354,21 @@ Jump;
             end
             
             %% Reflective in Y
-            check=Y(t,a);check(check<d/2)=d-check(check<d/2);Y(t,a)=check;check=[];
-            check=Y(t,a);w=W(a)';check(check>w-d/2)=2*w(check>w-d/2)-d-check(check>w-d/2);Y(t,a)=check;check=[];
+%             check=Y(t,a);check(check<d/2)=d-check(check<d/2);Y(t,a)=check;check=[];
+%             check=Y(t,a);w=W(a)';check(check>w-d/2)=2*w(check>w-d/2)-d-check(check>w-d/2);Y(t,a)=check;check=[];
+            %% double check after first jump
+            check=Y(t,a);
+            w=W(a)';
+            while ~isempty(check(check<d/2))||~isempty(check(check>w-d/2))
+                if ~isempty(check(check<d/2))
+                    check(check<d/2)=d-check(check<d/2);Y(t,a)=check;check=[];check=Y(t,a);
+                end
+                if ~isempty(check(check>w-d/2))
+                    w=W(a)';check(check>w-d/2)=2*w(check>w-d/2)-d-check(check>w-d/2);Y(t,a)=check;check=[];check=Y(t,a);
+                end
+            end
+            check=[];
+            %%
             Y(t,~a)=Y(t-1,~a);%If they were already dead,leave them in the same position.
             
             %% Alive or dead ??
@@ -448,7 +461,7 @@ Jump;
                     Kprime(ZR./H(a)>=0.5)=0;  %constant portion
                     Zprime=ZR+(0.5*Kprime*Dt);
                     Kz=B.*0.41.*ustar(a).*Zprime.*(1-(Zprime./H(a)));%Calculated at ofset location 0.5K'Dt  %% Parabolic function
-                    Kz(ZR./H(a)>=0.5)=B(ZR./H(a)>=0.5).*0.25*0.41.*ustar(ZR./H(a)>=0.5).*H(ZR./H(a)>=0.5);  %% Constant
+                    Kz(ZR./H(a)>=0.5)=B(ZR./H(a)>=0.5).*0.25*0.41.*ustar(ZR./H(a)>=0.5).*H(ZR./H(a)>=0.5);  %% Constant part, corresponding to max diffisivity, refference Van Rijin
                     Kz(Kz<B.*viscosity)=B(Kz<B.*viscosity).*viscosity(Kz<B.*viscosity);  %If eddy diffusivity is less than the water viscosity, use the water viscosity
             end %switch
         end %calculateKz

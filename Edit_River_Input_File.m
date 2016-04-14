@@ -24,7 +24,7 @@ diary('./results/FluEgg_LogFile.txt')
 handles.output = hObject;
 guidata(hObject, handles);
 
-function varargout = Edit_River_Input_File_OutputFcn(~, eventdata, handles) 
+function varargout = Edit_River_Input_File_OutputFcn(~,~, handles) 
 diary off
 varargout{1} = handles.output;
 
@@ -36,7 +36,7 @@ if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgr
     set(hObject,'BackgroundColor','white');
 end
 
-function loadfromfile_Callback(hObject, eventdata, handles)
+function loadfromfile_Callback(hObject,~, handles)
 %%::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
 [FileName,PathName]=uigetfile({'*.*',  'All Files (*.*)';
    '*.xls;*.xlsx'     , 'Microsoft Excel Files (*.xls,*.xlsx)'; ...
@@ -121,9 +121,9 @@ function [ks]=Ks_calculate(handles,VX)
 %% Input data needed to calculate ks
 	Riverinputfile=handles.userdata.Riverinputfile;
 	Depth=Riverinputfile(:,3);        %m
-	Vmag=Riverinputfile(:,5);         %m/s
-	Vlat=Riverinputfile(:,6);         %m/s
-	Vvert=Riverinputfile(:,7);        %m/s
+	%Vmag=Riverinputfile(:,5);         %m/s
+	%Vlat=Riverinputfile(:,6);         %m/s
+	%Vvert=Riverinputfile(:,7);        %m/s
 	Ustar=Riverinputfile(:,8);        %m/s
 %%
 	%VX=sqrt(Vmag.^2-Vlat.^2-Vvert.^2);%m/s
@@ -233,6 +233,45 @@ Vmag=Riverinputfile(:,5);           %m/s
 Vlat=Riverinputfile(:,6);              %m/s
 Vvert=Riverinputfile(:,7);            %m/s
 Ustar=Riverinputfile(:,8);            %m/s
+%==========================================================================
+%% Error  %Code audit 03/2015 TG
+if  any(CumlDistance<=0)
+   ed = errordlg('Invalid negative or zero value for attribute cumulative distance','Error');
+   set(ed, 'WindowStyle', 'modal');
+   uiwait(ed); 
+   return
+end
+if  any(Depth<=0)
+   ed = errordlg('Invalid negative or zero value for attribute depth','Error');
+   set(ed, 'WindowStyle', 'modal');
+   uiwait(ed); 
+   return
+end
+if  any(Vmag<0)
+   ed = errordlg('Invalid negative value for attribute velocity magnitud','Error');
+   set(ed, 'WindowStyle', 'modal');
+   uiwait(ed); 
+   return
+end
+if  any(Vmag==0)
+   ed = errordlg('Invalid zero value for attribute velocity magnitud. You may use a very small value for Vmag, but it still must be greater than zero.','Error');
+   set(ed, 'WindowStyle', 'modal');
+   uiwait(ed); 
+   return
+end
+if  any(Ustar<0)
+   ed = errordlg('Invalid negative value for attribute shear velocity','Error');
+   set(ed, 'WindowStyle', 'modal');
+   uiwait(ed); 
+   return
+end
+if  any(Vmag==0)
+   ed = errordlg('Invalid zero value for attribute shear velocity. You may use a very small value for Ustar, but it still must be greater than zero.','Error');
+   set(ed, 'WindowStyle', 'modal');
+   uiwait(ed); 
+   return
+end
+%==========================================================================
 %%
 Width=abs(Q./(Vmag.*Depth));           %m
 VX=sqrt(Vmag.^2-Vlat.^2-Vvert.^2);%m/s
@@ -287,5 +326,3 @@ function tools_ks_Callback(hObject, eventdata, handles)
 %:::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::%
 %% <<<<<<<<<<<<<<<<<<<<<<<<< END OF FUNCTION >>>>>>>>>>>>>>>>>>>>>>>>>>>>%%
 %:::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::%
-
-
