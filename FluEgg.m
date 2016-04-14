@@ -34,7 +34,7 @@ function varargout = FluEgg(varargin)
 
 % Edit the above text to modify the response to help FluEgg
 
-% Last Modified by GUIDE v2.5 28-Jul-2014 13:31:57
+% Last Modified by GUIDE v2.5 21-May-2015 15:29:18
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
@@ -112,7 +112,6 @@ set(handles.Dt,'Visible','on');
 set(handles.text12,'Visible','on');
 set(handles.simulation_panel,'Visible','on');
 set(handles.Running,'Visible','on');
-set(handles.Running,'Visible','on');
 %% Make Results Invisible
 set(handles.panel_Results,'Visible','off');
 set(handles.NewSim_Button,'Visible','off');
@@ -152,9 +151,9 @@ if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgr
 end
 
 function Yi_input_Callback(hObject, ~, handles)
-load './Temp/temp_variables.mat'
-Width=temp_variables.Width;
-set(handles.Yi_input,'String',floor(Width(1)*100/2)/100);
+% load './Temp/temp_variables.mat'
+% Width=temp_variables.Width;
+% set(handles.Yi_input,'String',floor(Width(1)*100/2)/100);
 guidata(hObject, handles);% Update handles structure
 function Yi_input_CreateFcn(hObject, ~, ~)
 if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
@@ -190,7 +189,7 @@ str = get(handles.popup_EggsChar, 'String');
 val = get(handles.popup_EggsChar,'Value');
 % Set current data to the selected data set.
 switch str{val};
-    case 'Use diameter and egg density time series (Chapman, 2011)'
+    case 'Use diameter and egg density time series (Chapman and George (2011, 2014))'
         set(handles.textDiameter,'Visible','off');
         set(handles.ConstD,'Visible','off');
         set(handles.textDensity,'Visible','off');
@@ -267,6 +266,7 @@ Running_Callback(hObject, eventdata, handles);
 %% Running the model::::::::::::::::::::::::::::::::::::::::::::::::::::::%
 function Running_Callback(hObject, eventdata, handles)
 %% Get data from Handles
+handles.userdata.Larvae=get(handles.Larvae,'Checked');
 handles.userdata.Num_Eggs=str2double(get(handles.Num_Eggs,'String'));
 handles.userdata.Xi=str2double(get(handles.Xi_input,'String'));
 handles.userdata.Yi=str2double(get(handles.Yi_input,'String'));
@@ -275,11 +275,25 @@ handles.userdata.Dt=str2double(get(handles.Dt,'String'));
 handles.userdata.Totaltime=str2double(get(handles.Totaltime,'String'));
 CheckDt=0;
 %% Get Data from Main GUI
+%==========================================================================
 hFluEggGui=getappdata(0,'hFluEggGui');
 if length(get(handles.edit_River_name, 'String'))<2
     ed = errordlg('Please input the river name','Error');
     set(ed, 'WindowStyle', 'modal');
     uiwait(ed);
+    return
+end
+if isnan(handles.userdata.Num_Eggs)||isnan(handles.userdata.Xi)||isnan(handles.userdata.Yi)||isnan(handles.userdata.Zi)||isnan(handles.userdata.Dt)||isnan(handles.userdata.Totaltime)
+    msgbox('Empty input field. Please make sure all required fields are filled out correctly ','FluEgg Error: Empty fields','error');
+    return
+end
+if handles.userdata.Num_Eggs<0||handles.userdata.Xi<0||handles.userdata.Yi<0||handles.userdata.Dt<0||any(handles.userdata.Totaltime<0)
+    msgbox('Incorrect negative value. Please make sure all required fields are filled out correctly ','FluEgg Error: Incorrect negative value','error');
+    return
+end
+
+if handles.userdata.Zi>0
+    msgbox('Incorrect input value. Water surface is located at Zi=0, Zi must be equal or less than zero.','FluEgg Error: Incorrect input value','error');
     return
 end
 %%
@@ -343,6 +357,7 @@ set(handles.Summary_panel,'Visible','off');
 set(handles.Simulation_setup,'Visible','off');
 set(handles.simulation_panel,'Visible','off');
 set(handles.panel_Results,'Visible','off');
+set(handles.Results,'Visible','off');
 guidata(hObject, handles);
 
 % function Batch_button_Callback(hObject, ~, handles)
@@ -360,15 +375,19 @@ Results();
 function tools_Callback(hObject, eventdata, handles)
 % --------------------------------------------------------------------
 function Ht_Callback(hObject, eventdata, handles)
-load './Temp/temp_variables.mat'
-Temp=temp_variables.Temp;
-specie=get(handles.Silver,'Value');  %Need to comment this for now
-if specie==1
+Larvaemode=get(handles.Larvae,'Checked');
+Temp=load('./Temp/temp_variables.mat');
+CumlDistance=single(Temp.temp_variables.CumlDistance);
+Temp=single(Temp.temp_variables.Temp);
+Initial_Cell=find(CumlDistance*1000>=str2double(get(handles.Xi_input,'String')));Initial_Cell=Initial_Cell(1); % Updated TG May,2015
+if get(handles.Silver,'Value')==1
     specie={'Silver'};
-else
+elseif get(handles.Bighead,'Value')==1
     specie={'Bighead'};
+else
+    specie={'Grass'};
 end
-TimeToHatch = HatchingTime(Temp,specie);
+TimeToHatch = HatchingTime(Temp(Initial_Cell:end),specie);
 msgbox(['The estimated hatching time for an averaged temperature of ',num2str(round(mean(Temp)*10)/10),' C is ', num2str(TimeToHatch), ' hours.'],'FluEgg','none');
 
 
@@ -384,15 +403,15 @@ diary('./results/FluEgg_LogFile.txt')
 web('http://asiancarp.illinois.edu/')
 
 function settings=FluEgg_Settings
-settings.version='v1.3';
+settings.version='V2.0_Beta';
 
 
 % --------------------------------------------------------------------
 function Check_for_updates_Callback(hObject, eventdata, handles)
 %% Check FluEgg Version
 try
-    FluEgg_Latest_Version=urlread('http://publish.illinois.edu/tgarciaweb/files/2014/05/FluEgg_version1.txt');
-    if strcmpi(FluEgg_Latest_Version,handles.settings.version)
+    FluEgg_Latest_Version=urlread('http://asiancarp.illinois.edu/Files/FluEgg_version.txt');
+    if strcmpi(FluEgg_Latest_Version(2:10),handles.settings.version)
         h=msgbox('The FluEgg version you are using is up to date, no updates available','Checking for Update..');
     else
         h=msgbox('The FluEgg version you are using is out of date, please vistit the FluEgg website to download the newest version','Checking for Update..');
@@ -419,16 +438,74 @@ textAbout2=uicontrol(About,'Style','text',...
     'Units','Normalized','Position',[0 0.68 1 0.15],'FontSize',6,'BackgroundColor',[1 1 1]);
 
 
-% --- Executes on button press in set_to_hatching.
-function set_to_hatching_Callback(hObject, eventdata, handles)
+function set_to_stage_button_Callback(hObject, eventdata, handles)
 %% Set running time
 %%Eggs biological properties
-specie=get(handles.Silver,'Value');  %Need to comment this for now
-if specie==1
+if get(handles.Silver,'Value')==1
     specie={'Silver'};
-else
+elseif get(handles.Bighead,'Value')==1
     specie={'Bighead'};
+else
+    specie={'Grass'};
 end
-%%
-Temp=load('./Temp/temp_variables.mat');temp_variables=Temp.temp_variables;clear Temp;Temp=single(temp_variables.Temp);
-set(handles.Totaltime,'String',HatchingTime(Temp,specie));
+%%=========================================================================
+Larvaemode=get(handles.Larvae,'Checked');
+Temp=load('./Temp/temp_variables.mat');
+CumlDistance=single(Temp.temp_variables.CumlDistance);
+Temp=single(Temp.temp_variables.Temp);
+Initial_Cell=find(CumlDistance*1000>=str2double(get(handles.Xi_input,'String')));Initial_Cell=Initial_Cell(1); % Updated TG May,2015
+
+switch Larvaemode %:Updated TG May,2015
+    %======================================================================
+     case 'on'
+        if strcmp(specie,'Silver')%if specie=='Silver'
+            Tmin2=13.3;%C
+            MeanCTU_Gas_bladder=1084.59;
+            %STD=97.04;
+        elseif strcmp(specie,'Bighead')
+            Tmin2=13.4;%C
+            MeanCTU_Gas_bladder=1161.07;
+            %STD=79.72;
+        else %case Grass Carp :
+            Tmin2=13.3;%C
+            MeanCTU_Gas_bladder=1100.82;
+            %STD=49.853;
+        end
+        T2_Gas_bladder=single(str2double(num2str(round(MeanCTU_Gas_bladder*10/(mean(Temp(Initial_Cell:end))-Tmin2))/10)));%h
+        handles.userdata.Max_Sim_Time=T2_Gas_bladder;
+        set(handles.Totaltime,'String',handles.userdata.Max_Sim_Time);
+        
+        %======================================================================
+    case 'off'
+        handles.userdata.Max_Sim_Time=HatchingTime(mean(Temp(Initial_Cell:end)),specie);
+        set(handles.Totaltime,'String',handles.userdata.Max_Sim_Time);
+        %======================================================================
+end
+guidata(hObject, handles);
+
+
+
+% --------------------------------------------------------------------
+function Options_Callback(hObject, eventdata, handles)
+
+
+
+% --------------------------------------------------------------------
+function Larvae_Callback(hObject, eventdata, handles)
+% Turn ON or OFF larvae drift
+Larvaemode=get(handles.Larvae,'Checked');
+switch Larvaemode %:Updated TG May,2015
+    %======================================================================
+    case 'on' %If its set on, that means the user wants to turn it off.
+        set(handles.Larvae, 'Checked','off')
+        set(handles.set_to_stage_button,'String','Set to hatching time');
+    case 'off'
+        set(handles.Larvae, 'Checked','on')
+        set(handles.set_to_stage_button,'String','Set to time to reach Gas bladder');
+end
+handles.userdata.Larvae=get(handles.Larvae,'Checked');
+
+%======================================================================
+
+% --------------------------------------------------------------------
+function Mortality_model_Callback(hObject, eventdata, handles)

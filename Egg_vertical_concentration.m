@@ -113,6 +113,7 @@ handleResults=getappdata(0,'handleResults');
 ResultsSim=getappdata(handleResults,'ResultsSim');
 CumlDistance=ResultsSim.CumlDistance;
 Depth=ResultsSim.Depth;
+
 %% From Current Gui
 Dist_X=str2double(get(handles.X_editBox,'String'))*1000;% It is in km and then we convert it to m
 if Dist_X>CumlDistance(end)*1000
@@ -144,6 +145,16 @@ Nodes=get(handles.LayerNodes_table,'Data');%Nodes=Nodes(:,1);
 function Plot_Vertical_Distribution(hObject, eventdata, handles)
 % This function generates the plot of the vertical concentration
 % distribution
+%% Error checking==========================================================
+if isempty(str2double(get(handles.X_editBox,'String')))||isempty(str2double(get(handles.Nlayers_editBox,'String')))||isnan(str2double(get(handles.X_editBox,'String')))||isnan(str2double(get(handles.Nlayers_editBox,'String')))
+    msgbox('Empty input field. Please make sure all required fields are filled out correctly ','FluEgg Error: Empty fields','error');
+    return
+end
+if str2double(get(handles.X_editBox,'String'))<=0||str2double(get(handles.Nlayers_editBox,'String'))<=0
+    msgbox('Incorrect negative or zero value. Please make sure all required fields are filled out correctly','FluEgg Error: Incorrect negative or zero value','error');
+    return
+end
+%==========================================================================  
 %% From Results Gui
 handleResults=getappdata(0,'handleResults'); 
 ResultsSim=getappdata(handleResults,'ResultsSim');

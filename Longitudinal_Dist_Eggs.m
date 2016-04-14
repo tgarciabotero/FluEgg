@@ -77,20 +77,54 @@ ResultsSim=getappdata(handleResults,'ResultsSim');
 Temp=ResultsSim.Temp;
 specie=ResultsSim.specie;
 CalculateEggs_at_risk_hatching=(get(handles.Hatchingrisk,'value'));
-    if SetTime==0
-        ed = errordlg('Time=0 is not allowed','Error');
-        set(ed, 'WindowStyle', 'modal');
-        uiwait(ed);
-    elseif SetTime>str2double(num2str(round(ResultsSim.time(end)*10/3600)/10)) 
-        ed = errordlg('Time exceeds simulation time','Error');
-        set(ed, 'WindowStyle', 'modal');
-        uiwait(ed);
+%% Error checking==========================================================
+if isempty(SetTime)||isnan(SetTime)
+    ed=msgbox('Empty input field. Please make sure all required fields are filled out correctly ','FluEgg Error: Empty fields','error');
+    try
+    rmappdata(handleResults,'SetTime') 
+    catch
+        %If the handle does not exist, dont do anything
     end
-    if (CalculateEggs_at_risk_hatching==1)&(SetTime<str2double(num2str(round(HatchingTime(Temp,specie)*10)/10)))
-        ed = errordlg('The time is less than the estimated hatching time, the eggs at risk of hatching can not be calculated','Error');
-        set(ed, 'WindowStyle', 'modal');
-        uiwait(ed);
+    set(ed, 'WindowStyle', 'modal');
+    uiwait(ed); 
+    return
+end
+if SetTime<=0
+    ed=msgbox('Incorrect negative or zero value. Please make sure all required fields are filled out correctly','FluEgg Error: Incorrect negative or zero value','error');
+     try
+    rmappdata(handleResults,'SetTime') 
+    catch
+        %If the handle does not exist, dont do anything
     end
+    set(ed, 'WindowStyle', 'modal');
+    uiwait(ed);
+    return
+end
+if SetTime>str2double(num2str(round(ResultsSim.time(end)*10/3600)/10)) 
+  ed = errordlg('Time exceeds simulation time','FluEgg Error: incorrect input value');
+   try
+    rmappdata(handleResults,'SetTime') 
+    catch
+        %If the handle does not exist, dont do anything
+    end
+    set(ed, 'WindowStyle', 'modal');
+    uiwait(ed); 
+    return
+end
+if (CalculateEggs_at_risk_hatching==1)&(SetTime<str2double(num2str(ResultsSim.T2_Hatching)))
+    ed = errordlg('The time is less than the estimated hatching time, the eggs at risk of hatching cannot be calculated','FluEgg Error: incorrect input value');
+    try
+        rmappdata(handleResults,'SetTime')
+    catch
+        %If the handle does not exist, dont do anything
+    end
+    set(ed, 'WindowStyle', 'modal');
+    uiwait(ed);
+    return
+end
+%==========================================================================
+  
+    
 setappdata(handleResults, 'SetTime', SetTime); 
 setappdata(handleResults, 'CalculateEggs_at_risk_hatching', CalculateEggs_at_risk_hatching); 
 
@@ -103,8 +137,5 @@ function Hatchingrisk_Callback(hObject, eventdata, handles)
 function Set_2_hatching_time_Callback(hObject, eventdata, handles)
 handleResults=getappdata(0,'handleResults');
 ResultsSim=getappdata(handleResults,'ResultsSim');
-Temp=ResultsSim.Temp;
-%%Eggs biological properties
-specie=ResultsSim.specie;
 %%
-set(handles.SetTime,'String',HatchingTime(Temp,specie));
+set(handles.SetTime,'String',ResultsSim.T2_Hatching);
