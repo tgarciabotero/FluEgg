@@ -77,12 +77,21 @@ to endorse or promote products derived from this Software.
 The following pieces of software have additional or alternate copyrights,
 licenses, and/or restrictions:
 
-Program/Function              Developer                                      Directory                       
-----------------              ---------                                      ---------                       
-FluEgg 1.3                    Tatiana Garcia, University of Illinois         FluEgg_Git_Repo\license_FluEgg_1.3.txt
-voxel.m                       Suresh Joel                                    FluEgg_Git_Repo\voxel.m  
-cells.m                       Suresh Joel                                    FluEgg_Git_Repo\voxel.m  
-dlmcell                       Roland Pfister                                 FluEgg_Git_Repo\dlmcell.m  
-parseArgs.m                   Aslak Grinsted                                 FluEgg_Git_Repo\parseArgs.m  
-subaxis.m                     Aslak Grinsted    FluEgg_Git_Repo\subaxis.m  
-
+Program/Function      Developer                                       Directory                               Notes               
+----------------      ---------                                       ---------                               ---------
+FluEgg 1.3            Tatiana Garcia, University of Illinois          FluEgg_Git_Repo\license_FluEgg_1.3.txt
+voxel.m               Suresh Joel                                     FluEgg_Git_Repo\voxel.m  
+cells.m               Suresh Joel                                     FluEgg_Git_Repo\voxel.m  
+dlmcell               Roland Pfister                                  FluEgg_Git_Repo\dlmcell.m                Used in FluEgggui.m 
+parseArgs.m           Aslak Grinsted                                  FluEgg_Git_Repo\parseArgs.m              Used in Subaxis.m
+subaxis.m             Aslak Grinsted                                  FluEgg_Git_Repo\subaxis.m                This function is used to reduce spacing between figure border and figure axis
+savefast.m            Timothy E. Holy                                 FluEgg_Git_Repo\savefast.m               Used in FluEgggui.m
+pcscurvature.m        Inci-Burak Güneralp,Prolific Oven,Palo Alto,CA  FluEgg_Git_Repo\pcscurvature.m           Used in google_earth.m-->Parametric cubic spline interpolation of digitized data points of meandering rivers
+reorient.m            Inci-Burak Güneralp,Prolific Oven,Palo Alto,CA  FluEgg_Git_Repo\reorient.m               Used in pcscurvature.m
+savitzkyGolayFilt.m   R. Losada                                       FluEgg_Git_Repo\savitzkyGolayFilt.m      Used in pcscurvature.m
+savitzkyGolay.m       Jianwen Luo,Tsinghua University                 FluEgg_Git_Repo\savitzkyGolay.m          Used in savitzkyGolayFilt.m 
+deg2utm.m             Rafael Palacios,Universidad Pontificia Comillas FluEgg_Git_Repo\deg2utm.m                Used in google_earth.m-->Function to convert lat/lon vectors into UTM coordinates
+GEplot_3D.m           Modif by P.R. Jackson and Tatiana Garcia        FluEgg_Git_Repo\GEplot_3D.m              Used in google_earth.m. Initial version (GEplot) developed by Rafael Palacios, Universidad Pontificia Comillas.
+kml2struct.m          James Slegers                                                                            Used in google_earth.m
+sn2xy.m                                                               FluEgg_Git_Repo\sn2xy_License.txt        Used in google_earth.m-->Transform curvilinear orthogonal to cartesian coordinates
+utm2deg.m             Rafael Palacios,Universidad Pontificia Comillas FluEgg_Git_Repo\deg2utm.m                Used in google_earth.m and GEplot_3D-->Function to convert vectors of UTM coordinates into Lat/Lon vectors (WGS84).
