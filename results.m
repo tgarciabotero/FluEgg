@@ -118,6 +118,14 @@ uiwait(ed);
 %%
 gray=[128 128 128]/255;
 lightgray=[211 211 211]/255;
+%==========================================================================
+Message= msgbox('Please wait while your figure is being generated','help');
+pause(2.2)
+try
+    delete(Message)
+catch
+end
+%==========================================================================
 %% Generate Normalized plot
 %% Load data
 [label_on,Temp,specie,time,Xi]=load_data;
@@ -270,6 +278,14 @@ diary off
 end %Function egg mass centroid
 
 function [] = temporal_and_spatial_dispersion()
+%==========================================================================
+Message= msgbox('Please wait while your figure is being generated','help');
+pause(2.2)
+try
+    delete(Message)
+catch
+end
+%==========================================================================
 %% Colors
 Dark_Gray=[113 113 113]/255;
 %% Alpha-->A*STD
@@ -503,6 +519,10 @@ ed=downDist();
 uiwait(ed);
 handleResults=getappdata(0,'handleResults');
 dX=getappdata(handleResults,'dX');
+% If error in dX input
+if isempty(dX)
+    return
+end
 %% From Results Gui
 handleResults=getappdata(0,'handleResults');
 ResultsSim=getappdata(handleResults,'ResultsSim');
@@ -584,6 +604,10 @@ uiwait(ed);
 %% From Results Gui
 handleResults=getappdata(0,'handleResults');
 dX=getappdata(handleResults,'dX');
+% If error in dX input
+if isempty(dX)
+    return
+end
 ResultsSim=getappdata(handleResults,'ResultsSim');
 CumlDistance=ResultsSim.CumlDistance;
 X=ResultsSim.X;
@@ -707,17 +731,21 @@ ed=Longitudinal_Dist_Eggs();
 uiwait(ed);
 handleResults=getappdata(0,'handleResults');
 SetTime=getappdata(handleResults,'SetTime');
+% If error in SetTime input
+if isempty(SetTime)
+    return
+end
 CalculateEggs_at_risk_hatching=getappdata(handleResults,'CalculateEggs_at_risk_hatching');
 %% From Results Gui
 %% Time to hatch
-[X,Z,CumlDistance,Depth,time]=load_data;
+[X,Z,Y,CumlDistance,Depth,time,Width]=load_data; %TG 05/15
 %TimeToHatch = HatchingTime(Temp,specie);
 %% Where are the eggs when hatching occurs?
 %TimeIndex=find(time>=round(TimeToHatch*3600));TimeIndex=TimeIndex(1);
 TimeIndex=find(time>=SetTime*3600);TimeIndex=TimeIndex(1);
 X_at_hatching(:,1)=X(TimeIndex,:);%or at a given t
 Z_at_hatching(:,1)=Z(TimeIndex,:);
-
+Y_at_hatching(:,1)=Y(TimeIndex,:);%TG 05/15
 %%
 Cell=zeros(size(X_at_hatching));
 h=zeros(size(X_at_hatching));
@@ -728,8 +756,10 @@ for e=1:size(X_at_hatching,1)
         C=find(X_at_hatching(e)<CumlDistance*1000);Cell(e)=C(1);
     end
     h(e)=Depth(Cell(e)); %m
+    w(e)=Width(Cell(e)); %m %TG 05/15
 end
 Z_at_hatching_H=(Z_at_hatching+h)./h;
+n=Y_at_hatching-w'/2;
 X_at_hatching=X_at_hatching/1000; %In Km
 %% Define eggs in suspension and settled
 Nsusp=X_at_hatching(Z_at_hatching_H>0.05);
@@ -771,7 +801,7 @@ set(bar1(1),'FaceColor',[0.6,0.6,0.6]);
 position_axes1= get(gca,'position');
 ylim([0 round(1.2*max([Nsusp+Nbot]*100/size(X_at_hatching,1)))])
 ylabel('Percentage of eggs [%]','FontName','Arial','FontSize',12);
-xlabel('Downstream distance from spawning location [Km]','FontName','Arial','FontSize',12);
+xlabel('Downstream distance [Km]','FontName','Arial','FontSize',12);
 set(gca,'TickDir','in','TickLength',[0.021 0.021],'FontName','Arial','FontSize',12)
 set(gca, 'box','off');set(gca,'YaxisLocation','left');
 xlim_axis1=get(gca,'Xlim');
@@ -797,16 +827,18 @@ text(double(bids(end)*0.88),94, {['Approximately ' num2str(round((cdf_Nsusp(end)
 
 end
 %%
-    function [X,Z,CumlDistance,Depth,time]=load_data
+    function [X,Z,Y,CumlDistance,Depth,time,Width]=load_data %TG 05/15
         handleResults=getappdata(0,'handleResults');
         ResultsSim=getappdata(handleResults,'ResultsSim');
         X=ResultsSim.X;
         Z=ResultsSim.Z;
+        Y=ResultsSim.Y; %TG 05/15
         %         Temp=ResultsSim.Temp;
         %         specie=ResultsSim.specie;
         time=ResultsSim.time;
         CumlDistance=ResultsSim.CumlDistance;
         Depth=ResultsSim.Depth;
+        Width=ResultsSim.Width; %TG 05/15
     end %load_data
 %%
 end

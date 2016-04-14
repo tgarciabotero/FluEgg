@@ -41,11 +41,12 @@ Eggs=single(handles.userdata.Num_Eggs);%make sure you can take the cubic root of
 Xi=single(handles.userdata.Xi);Yi=single(handles.userdata.Yi);Zi=single(handles.userdata.Zi);%Spawning location in m
 %% =======================================================================
 %% Specie
-specie=get(handles.Silver,'Value');  %Need to comment this for now
-if specie==1
+if get(handles.Silver,'Value')==1
     specie={'Silver'};
-else
+elseif get(handles.Bighead,'Value')==1
     specie={'Bighead'};
+else
+    specie={'Grass'};
 end
 %% Time
 % If Simulation time greater than hatching time warn the user!!
@@ -100,9 +101,9 @@ switch str{val};
         Rhoe_ref=single(str2double(get(handles.ConstRhoe,'String')));
         Rhoe_ref=Rhoe_ref*ones(length(time),1,'single');
         Tref=str2double(get(handles.Tref,'String'));
-    case 'Use diameter and egg density time series (Chapman, 2011)'
+    case 'Use diameter and egg density time series (Chapman and George (2011, 2014))'
         Tref=22; %C
-        [D,Rhoe_ref]=EggBio; %include bighead
+        [D,Rhoe_ref]=EggBio; 
 end
 %% Calculate water density
 Rhow=density(Temp); %Here we calculate the water density in every cell
@@ -162,25 +163,37 @@ Jump;
         %% Initialize variables
         Dvar=ones(length(time),1);Rhoevar=Dvar;
         %%
-        if strcmp(specie,'Silver')%if specie=='Silver'
+        if strcmp(specie,'Silver')%if specie=='Silver' :Updated TG March,2015
             Dmin=1.6980;% mm
+            Dmax=5.6000;% mm    TG 03/2015
             Rhoe_max=1036.1;% Kg/m^3 at 22C
+            Rhoe_min=998.7680;% Kg/m^3 at 22C TG 03/2015
             %% Diameter fit
             a=4.66;b=2635.9;D=a*(1-exp(-time/b));%R2 = 0.87 for silver carp eggs
             %% Density of eggs fit Standardized to 22C
-            a=24.98;b=1570.1;c=999.5;Rhoe_ref=(a*exp(-time/b))+c;%R-square: 0.9859 for silver carp eggs
-        else
+            a=25.2;b=2259;c=999.3;Rhoe_ref=(a*exp(-time/b))+c;%R-square: 0.67 for silver carp eggs
+        elseif strcmp(specie,'Bighead')%:Updated TG March,2015
             Dmin=1.5970;% mm
+            Dmax=7.1334;% mm
             Rhoe_max=1040.4e+03;% Kg/m^3 at 22C
+            Rhoe_min=998.5357;% Kg/m^3 at 22C
             %% Diameter fit
             a=5.82;b=3506.7;D=a*(1-exp(-time/b));%R2 = 0.85 for BC eggs
             %% Density of eggs fit Standardized to 22C
-            a=23.12;b= 2164.9;c=999.2;Rhoe_ref=(a*exp(-time/b))+c;%R-square: 0.9969 for BC eggs
+            a=30.58;b= 1716;c=999.4;Rhoe_ref=(a*exp(-time/b))+c;%R-square: 0.84 for BC eggs
+        else %case Grass Carp : TG March,2015
+            Dmin=1.2250;% mm
+            Dmax=5.6750;% mm 
+            Rhoe_max= 1.0473e+03;% Kg/m^3 at 22C
+            Rhoe_min= 998.4118;% Kg/m^3 at 22C
+            %% Diameter fit
+            a=4.56;b=2314;D=a*(1-exp(-time/b));%R2 = 0.46 for GC eggs
+            %% Density of eggs fit Standardized to 22C
+            a=29.09;b= 1812;c=999.8;Rhoe_ref=(a*exp(-time/b))+c;%R-square: 0.58 for GC eggs
         end
-        %% Checking for min D and max Rhoegg
-        D(D<Dmin)=Dmin;%diameter (mm) as a function of time in seconds %y(x) = a (1 - exp( - x / b))-->R = 0.89018
-        Rhoe_ref(Rhoe_ref>Rhoe_max)=Rhoe_max;
-        
+        %% Checking for min D 
+        D(D<Dmin)=Dmin;%min diameter (mm)
+               
         for tt=1:length(D) %because the counter of the array starts from 1
             if strcmp(specie,'Silver')%if specie=='Silver'
                 %% STD
@@ -195,7 +208,7 @@ Jump;
                     RhoeStd=0.7780;%Kg/m^3 at 22C
                 end
                 %%
-            else
+             elseif strcmp(specie,'Bighead')
                 %% STD
                 if time(tt)/3600<4
                     DiamStd=1.1311;%mm
@@ -208,6 +221,17 @@ Jump;
                     RhoeStd=0.2777;%Kg/m^3 at 22C
                 end
                 %%
+             else %case Grass Carp : TG March,2015
+                if time(tt)/3600<5
+                    DiamStd=1.0161;%mm
+                else
+                    DiamStd= 0.5334;%mm
+                end
+                if time(tt)/3600<1
+                    RhoeStd=8.7916;%Kg/m^3 at 22C
+                else
+                    RhoeStd=1.7663;%Kg/m^3 at 22C
+                end                
             end
             %% Diameter fit + scatter
             Dvar(tt,1)=single(normrnd(D(tt),DiamStd));
@@ -221,22 +245,12 @@ Jump;
             end
         end
         Rhoe_ref=Rhoevar;
-        if strcmp(specie,'Silver')%if specie=='Silver'
-            Rhoe_min1 =  1.0010e+03; %Kg/m3 SC
-            Rhoe_min2 =  998.7680; %Kg/m3 SC
-        else
-            Rhoe_min1 =  998.6404; %Kg/m3 BC
-            Rhoe_min2 =  998.6240; %Kg/m3 BC
-        end
-        Time_index=find(time/3600>=1);
-        if ~isempty(Time_index) %If the simulation time is less than 1 hour
-            Time_index=Time_index(1);
-            Rhoe_ref(Rhoe_ref(1:Time_index)<Rhoe_min1)=Rhoe_min1;
-            Rhoe_ref(Rhoe_ref(Time_index:end)<Rhoe_min2)=Rhoe_min2;
-        else
-            Rhoe_ref(Rhoe_ref<Rhoe_min1)=Rhoe_min1;
-        end
         D=Dvar;
+        %% Checking for min D and max Rhoegg
+        D(D<Dmin)=Dmin;%min diameter (mm)
+        D(D>Dmax)=Dmax;%min diameter (mm)  TG 03/2015
+        Rhoe_ref(Rhoe_ref>Rhoe_max)=Rhoe_max;
+        Rhoe_ref(Rhoe_ref<Rhoe_min)=Rhoe_min;   %TG 03/2015
     end %EggBio
 
 %%
@@ -418,10 +432,12 @@ Jump;
         savefast(outputfile,'ResultsSim');
         %folderName= uigetdir('./results','Folder name to save results');
         % %% SAVE RESULTS AS TEXT FILE
-        % save([Folderpath,'X' '.txt'],'X', '-ASCII');
-        % save([Folderpath,'Y' '.txt'],'Y', '-ASCII');
-        % save([Folderpath,'Z' '.txt'],'Z', '-ASCII');
-        % save([Folderpath,'time' '.txt'],'time', '-ASCII');
+%         if get(handles.Save_output,'Selected')
+%         save([Folderpath,'X' '.txt'],'X', '-ASCII');
+%         save([Folderpath,'Y' '.txt'],'Y', '-ASCII');
+%         save([Folderpath,'Z' '.txt'],'Z', '-ASCII');
+%         save([Folderpath,'time' '.txt'],'time', '-ASCII');
+%         end
         % hFluEggGui=getappdata(0,'hFluEggGui');
         % setappdata(hFluEggGui, 'Folderpath', Folderpath);
         % hdr={'Specie=',specie;'Dt_s=',Dt;'Simulation time_h=',time(end)/3600};

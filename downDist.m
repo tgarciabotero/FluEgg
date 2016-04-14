@@ -74,12 +74,43 @@ dX=str2double(get(handles.dX,'String'))*1000;% It is in km and then we convert i
 handleResults=getappdata(0,'handleResults'); 
 ResultsSim=getappdata(handleResults,'ResultsSim');
 CumlDistance=ResultsSim.CumlDistance;
+
+%% Error checking==========================================================
+if isempty(dX)||isnan(dX)
+    ed=msgbox('Empty input field. Please make sure all required fields are filled out correctly ','FluEgg Error: Empty fields','error');
+    try
+    rmappdata(handleResults,'dX') 
+    catch
+        %If the handle does not exist, dont do anything
+    end
+    set(ed, 'WindowStyle', 'modal');
+    uiwait(ed); 
+    return
+end
+if dX<=0
+    ed=msgbox('Incorrect negative or zero value. Please make sure all required fields are filled out correctly','FluEgg Error: Incorrect negative or zero value','error');
+     try
+    rmappdata(handleResults,'dX') 
+    catch
+        %If the handle does not exist, dont do anything
+    end
+    set(ed, 'WindowStyle', 'modal');
+    uiwait(ed);
+    return
+end
 if dX>CumlDistance(end)*1000
   ed = errordlg('The longitudinal distance you input is out of the domain','Error');
-  return
-  set(ed, 'WindowStyle', 'modal');
-  uiwait(ed); 
+   try
+    rmappdata(handleResults,'dX') 
+    catch
+        %If the handle does not exist, dont do anything
+    end
+    set(ed, 'WindowStyle', 'modal');
+    uiwait(ed); 
+    return
 end
+%==========================================================================
+
 setappdata(handleResults, 'dX', dX); 
 close;
  

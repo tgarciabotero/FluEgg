@@ -87,9 +87,30 @@ function video(~, ~, handles)
     Depth=ResultsSim.Depth;
     Width=ResultsSim.Width;
     VX=ResultsSim.VX;
-    Fcell=str2double(get(handles.Fcell_edit,'String'));
     time=ResultsSim.time;%seconds
+    Fcell=str2double(get(handles.Fcell_edit,'String'));
     NoFrames=str2double(get(handles.Frames_edit,'String'));
+    %% Error checking==========================================================
+if isempty(Fcell)||isnan(Fcell)||isempty(NoFrames)||isnan(NoFrames)
+    ed=msgbox('Empty input field. Please make sure all required fields are filled out correctly ','FluEgg Error: Empty fields','error');
+    set(ed, 'WindowStyle', 'modal');
+    uiwait(ed); 
+    return
+end
+if Fcell<=0||NoFrames<=0
+    ed=msgbox('Incorrect negative or zero value. Please make sure all required fields are filled out correctly','FluEgg Error: Incorrect negative or zero value','error');
+    set(ed, 'WindowStyle', 'modal');
+    uiwait(ed);
+    return
+end 
+if Fcell>length(CumlDistance)
+    ed=msgbox('Incorrect input value. The number of cells to display exceeds the total number of cells in the domain','FluEgg Error: Incorrect input value','error');
+    set(ed, 'WindowStyle', 'modal');
+    uiwait(ed);
+    return
+end     
+%% ==========================================================================
+
 Videodata.Time_step_frames=time(end)/3600/NoFrames;%hours
 set(handles.Display_text,'String',['The video will display one frame every ',sprintf('%.1f',Videodata.Time_step_frames),' hour(s)'])
 

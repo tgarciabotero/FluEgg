@@ -74,16 +74,17 @@ catch
     handleResults=getappdata(0,'handleResults');
     ResultsSim=getappdata(handleResults,'ResultsSim');
     TimeStep_Snapshot=str2double(get(handles.TimeStep_Snapshot,'String'));
-    if TimeStep_Snapshot==0
-        ed = errordlg('Dt=0 is not allowed','Error');
-        set(ed, 'WindowStyle', 'modal');
-        uiwait(ed);
+    if isnan(TimeStep_Snapshot)
+        msgbox('Empty input field. Please make sure all required fields are filled out correctly ','FluEgg Error: Empty fields','error');
+        return
+    end
+    if TimeStep_Snapshot<=0
+        msgbox('Incorrect negative or zero value. Please make sure all required fields are filled out correctly','FluEgg Error: Incorrect negative or zero value','error');
+        return
     end
 end
+diary off
 close(handles.figure1)
-
-
-
 
 function SnapshotEvolution(~, ~, handles)
 handleResults=getappdata(0,'handleResults');
@@ -93,8 +94,10 @@ TimeStep_Snapshot=str2double(get(handles.TimeStep_Snapshot,'String'));
 X=ResultsSim.X;
 Z=ResultsSim.Z;
 time=ResultsSim.time;
-CumlDistance=ResultsSim.CumlDistance;
-Depth=ResultsSim.Depth;
+CumlDistance=double(ResultsSim.CumlDistance);
+Depth=double(ResultsSim.Depth);
+Xi=double(ResultsSim.Spawning(1,1));
+Zi=double(ResultsSim.Spawning(1,3));
 %%
 set(0,'Units','pixels') ;
 scnsize = get(0,'ScreenSize');
@@ -121,13 +124,14 @@ xlabel('Distance [km]','FontName','Arial','FontSize',12);
 ylabel('Vertical location of eggs [m]','FontName','Arial','FontSize',12);
 legend(Legends,'Location','Best','FontName','Arial','FontSize',8)
 xlim([0 max(CumlDistance)])
+ylim([-max(Depth)-0.15 0])
 No=length(Depth);
 %% Text
-text(-0.12,0.15, '\downarrow','FontWeight','bold','FontName','Arial')
-text(-2.5,0.5, 'Fish spawn here','FontWeight','normal','FontName','Arial')
-text(CumlDistance(end)/2.4,0.2,texlabel('Water surface'),'FontWeight','normal','FontName','Arial')
-text(CumlDistance(fix(No/3)),-Depth(fix(No/3)+1)-1,'\uparrow','FontWeight','normal','FontName','Arial','FontSize',20)
-text(CumlDistance(fix(No/3))-1,-Depth(fix(No/3)+1)-1.5, 'River bed','FontWeight','normal','FontName','Arial')
+text(Xi-CumlDistance(end)*0.007,Zi+Depth(end)*0.028, '\downarrow','FontWeight','bold','FontName','Arial')
+text(Xi-CumlDistance(end)*0.04,Zi+Depth(end)*0.07, 'Fish spawn here','FontWeight','normal','FontName','Arial')
+text(CumlDistance(end)/2.4,0.08,'Water surface','FontWeight','normal','FontName','Arial')
+text(CumlDistance(end)*0.9,-Depth(end)*0.95,'\downarrow','FontWeight','bold','FontName','Arial');%,'FontSize',20
+text(CumlDistance(end)*0.9,-Depth(end)*0.9, 'River bed','FontWeight','normal','FontName','Arial')
 set(gca,'XMinorTick','on')
 %% Cell labels ON-OFF
 label_on=get(handles.Labelcheckbox,'Value');  %Need to comment this for now
@@ -135,9 +139,9 @@ if label_on==1
     
     for i=1:length(CumlDistance)
         if i==1
-            text(CumlDistance(i)/5.5,-Depth(i)*1.4,texlabel(num2str(i)),'FontWeight','normal','FontName','Arial','FontSize',8)
+            text(CumlDistance(i)/5.5,-Depth(i)*1.03,texlabel(num2str(i)),'FontWeight','normal','FontName','Arial','FontSize',8)
         else
-            text(CumlDistance(i)-(CumlDistance(i)-CumlDistance(i-1))/1.1,-Depth(i)-0.2,texlabel(num2str(i)),'FontWeight','normal','FontName','Arial','FontSize',8)
+            text(CumlDistance(i)-(CumlDistance(i)-CumlDistance(i-1))/1.1,-Depth(i)*1.03,texlabel(num2str(i)),'FontWeight','normal','FontName','Arial','FontSize',8)
         end
     end
     text(CumlDistance(1)/3,-Depth(1)*2.5,texlabel('Cell #'),'FontWeight','normal','FontName','Arial','FontSize',8)
