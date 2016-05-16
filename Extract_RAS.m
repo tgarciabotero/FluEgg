@@ -16,7 +16,7 @@
 %-------------------------------------------------------------------------%
 % Inputs:
 % Outputs:
-%  Copyright 2016 Tatiana Garcia
+% Copyright 2016 Tatiana Garcia
 %:::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::%
 
 function [Riverinputfile]=Extract_RAS(strRASProject)
