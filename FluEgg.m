@@ -502,8 +502,6 @@ switch Larvaemode %:Updated TG May,2015
 end
 guidata(hObject, handles);
 
-
-
 % --------------------------------------------------------------------
 function Options_Callback(hObject, eventdata, handles)
 
