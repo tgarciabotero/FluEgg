@@ -257,7 +257,7 @@ handles.userdata.Yi=str2double(get(handles.Yi_input,'String'));
 handles.userdata.Zi=str2double(get(handles.Zi_input,'String'));
 handles.userdata.Dt=str2double(get(handles.Dt,'String'));
 handles.userdata.Totaltime=str2double(get(handles.Totaltime,'String'));
-CheckDt=0;
+CheckDt = 0;
 
 %% Get data from main GUI
 %==========================================================================
@@ -396,9 +396,6 @@ msgbox(['The estimated hatching time for an averaged temperature of ',num2str(ro
 
 % --------------------------------------------------------------------
 function Help_Callback(hObject, eventdata, handles)
-% hObject    handle to Help (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    structure with handles and user data (see GUIDATA)
 
 % Goes to website-------------------------------------------------------
 function Website_Callback(hObject, eventdata, handles)
@@ -427,7 +424,7 @@ end
 % --------------------------------------------------------------------
 function About_FluEgg_Callback(~, ~, handles)
 
-% Creates about s figure
+% Creates about background figure
 set(0,'Units','pixels') ;
 scnsize = get(0,'ScreenSize');
 About = figure('Name','Percentage of eggs distributed in the vertical',...
