@@ -1,25 +1,26 @@
-%=========================================================================
-%%                    Fluvial Egg Drift Simulator                         %
-%%      Lagrangian Random Walk Model for Silver Carp Eggs Transport       %
+%% FluEgg main function: FluEgggui.m
+% =========================================================================
+%                    Fluvial Egg Drift Simulator                          %
+%      Lagrangian Random Walk Model for Silver Carp Eggs Transport        %
 %                                                                         %
-%-------------------------------------------------------------------------%
+% ------------------------------------------------------------------------%
 % This is the main function of the FluEgg model, this function gets input %
-% data, sets the virtual spawning event, performs egg movement and
-% generates results.
-%-------------------------------------------------------------------------%
+% data, sets the virtual spawning event, performs egg movement and        %
+% generates results.                                                      %
+% ------------------------------------------------------------------------%
 %                                                                         %
-%-------------------------------------------------------------------------%
+% ------------------------------------------------------------------------%
 %   Created by      : Tatiana Garcia                                      %
 %   Last Modified   : May 31, 2016                                        %
-%-------------------------------------------------------------------------%
+% ------------------------------------------------------------------------%
 %                                                                         %
 % Copyright 2016 Tatiana Garcia                                           %
-%:::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::%
-% With nested functions and single precision and uint8 data types
+% ::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::%
+% With nested functions and single precision and uint8 data types         %
 %
 % The mortality model is under development, there are a lot of lines making
-% refference to alive or dead eggs, everything works as this module was
-% already implementes. TG
+% refference to alive or dead eggs, everything works as this module was   %
+% already implemented. TG                                                 %
 
 function [minDt,CheckDt,Exit]=FluEgggui(~, ~,handles,CheckDt)
 
@@ -36,11 +37,12 @@ end
 
 %% Switch to turn on or off mortality model
 %Right now we are assuming eggs don't die
+% The mortality model is under development
 alivemodel = 1;  %if alivemodel=1 the eggs would not die
 Exit = 0; %If we exit the code
+% =======================================================================
 
-%% =======================================================================
-% Imports input data from temp variable
+%% Imports input data from temp variables
 Temp = load('./Temp/temp_variables.mat');temp_variables=Temp.temp_variables;clear Temp;
 CumlDistance = single(temp_variables.CumlDistance);
 Depth = single(temp_variables.Depth);
@@ -52,13 +54,13 @@ Temp = single(temp_variables.Temp);
 Width = single(temp_variables.Width);
 ks = single(temp_variables.ks);clear temp_variables
 
-%% =======================================================================
+% =======================================================================
 % Gets input data from main GUI
 Eggs = single(handles.userdata.Num_Eggs);%make sure you can take the cubic root of it.(e.g 27,64,125)
 Xi = single(handles.userdata.Xi);Yi=single(handles.userdata.Yi);Zi=single(handles.userdata.Zi);%Spawning location in m
+% =======================================================================
 
-%% =======================================================================
-% Specie
+% Species
 if get(handles.Silver,'Value')==1
     specie = {'Silver'};
 elseif get(handles.Bighead,'Value')==1
@@ -66,18 +68,20 @@ elseif get(handles.Bighead,'Value')==1
 else
     specie = {'Grass'};
 end
-%% =======================================================================
+% =======================================================================
 
 %% Time
 % If Simulation time is greater than time to reach a given stage warn the user!!
-
 % Calculate maximum simulation time.
+
+% Initial cell location
 Initial_Cell = find(CumlDistance*1000>=str2double(get(handles.Xi_input,'String')),1,'first'); % Updated TG May,2015
+
 T2_Hatching = HatchingTime(mean(Temp(Initial_Cell:end)),specie);
 Larvaemode = handles.userdata.Larvae;
 
 switch Larvaemode %:Updated TG May,2015
-    %++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+    % ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
     case 'on'
         if strcmp(specie,'Silver')%if specie=='Silver'
             Tmin2 = 13.3;%C
@@ -91,34 +95,35 @@ switch Larvaemode %:Updated TG May,2015
             Tmin2 = 13.3;%C
             MeanCTU_Gas_bladder = 1100.82;
             %STD = 49.853;
-        end
-        
+        end %MeanCTU species dependent
+        % Estimate time to reach GBI
         T2_Gas_bladder = str2double(num2str(round(MeanCTU_Gas_bladder*10/(mean(Temp(Initial_Cell:end))-Tmin2))/10));%h
-        handles.userdata.Max_Sim_Time = T2_Gas_bladder;
+        handles.userdata.Max_Sim_Time = T2_Gas_bladder; %Max time occours at GBI stage
         
-        %++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
-        
-        %         if handles.userdata.Totaltime>(handles.userdata.Max_Sim_Time+0.000001)
-        %             choice = questdlg('Error, the simulation time overpasses the estimated time to reach gas bladder stage, do you want FluEgg to use the estimated time to reach gas bladder stage as the simulation time?'...
-        %                 ,'Simulation time Error','Yes','No','Yes');
-        %             switch choice
-        %                 case 'Yes'
-        %                     Totaltime=handles.userdata.Max_Sim_Time;
-        %                     set(handles.Totaltime,'String',handles.userdata.Max_Sim_Time);
-        %                 case 'No'
-        %                     minDt=0;
-        %                     delete(h)
-        %                     Exit=1;
-        %                     return
-        %             end
-        %         end
-        %======================================================================
+        % ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+        % Display error if simulation time is greater than time to reach
+        % GBI stage
+        if handles.userdata.Totaltime>(handles.userdata.Max_Sim_Time+0.000001)
+            choice = questdlg('Error, the simulation time overpasses the estimated time to reach gas bladder stage, do you want FluEgg to use the estimated time to reach gas bladder stage as the simulation time?'...
+                ,'Simulation time Error','Yes','No','Yes');
+            switch choice
+                case 'Yes'
+                    Totaltime=handles.userdata.Max_Sim_Time;
+                    set(handles.Totaltime,'String',handles.userdata.Max_Sim_Time);
+                case 'No'
+                    minDt=0;
+                    delete(h)
+                    Exit=1;
+                    return
+            end
+        end
+        % ======================================================================
+        % Simulate egg phase if larvae mode is off
     case 'off'
-        
         T2_Gas_bladder = 0;
-        handles.userdata.Max_Sim_Time = T2_Hatching;
-        
-        %==================================================================
+        handles.userdata.Max_Sim_Time = T2_Hatching; %Max time is hatching time
+        % ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+        % Display error if simulation time is greater than hatching time
         if handles.userdata.Totaltime>(round(handles.userdata.Max_Sim_Time*100)/100)+0.000001
             choice = questdlg('Error, the simulation time overpasses the estimated hatching time, do you want FluEgg to use the hatching time as the simulation time?'...
                 ,'Simulation time Error','Yes','No','Yes');
@@ -133,16 +138,17 @@ switch Larvaemode %:Updated TG May,2015
                     return
             end
         end
-        %======================================================================
-end
+        % ======================================================================
+end %If larvaemode on
 
 Totaltime = single(handles.userdata.Totaltime*3600);%seconds
 Dt = single(handles.userdata.Dt); %time step in seconds
 minDt = Dt; % initialize the variable
-time = single(0:Dt:Totaltime);
-t = single(1); %time=time(1:Steps);%Time is in seconds
+time = single(0:Dt:Totaltime); %generates time array, time is in seconds
+t = single(1); %time index
 Steps = single(length(time));
-%% =======================================================================
+% =======================================================================
+
 %% pre-allocate memory and intialization of variables
 X = zeros(Steps,Eggs,'single');
 Y = zeros(Steps,Eggs,'single');
@@ -164,8 +170,8 @@ Z(1,:) = Zi;
 KS = Vx;
 Rhoe = Vx;
 alive = ones(Steps,Eggs,'single');
-%cellsExtended=int8(0);
 
+%% In case of mortality model active ======================================
 if alivemodel==0
     %Check int 8 for this case
     Dead_t = cell;
@@ -174,14 +180,17 @@ if alivemodel==0
     count_mortality_at_hatching = 0;
 end
 
-%% ========================================================================
-waitbar(0,h,['Please wait....' 'Running growth model']);
-%%Eggs biological properties
+% ========================================================================
 
-% Determine the selected data set.
+%% Eggs biological properties
+waitbar(0,h,['Please wait....' 'Running growth model']);
+
+% Determine the selected input data.
 str = get(handles.popup_EggsChar, 'String');
 val = get(handles.popup_EggsChar,'Value');
-% Set current data to the selected data set.
+
+% Set biological data corresponding to selected species.
+% Get data from GUI
 switch str{val};
     case 'Use constant egg diameter and density' %%model would use a constant Rhoe and D
         D = str2double(get(handles.ConstD,'String'));%mm
@@ -192,11 +201,12 @@ switch str{val};
     case 'Use diameter and egg density time series (Chapman and George (2011, 2014))'
         Tref = 22; %C
         [D,Rhoe_ref] = EggBio;
-end
+end % Do we use constant diameter and egg density? or do we use grow development time series
 
 %% Calculate water density
 Rhow = density(Temp); %Here we calculate the water density in every cell
-%% Channel geometry and initial data
+
+%% Get channel geometry and initial data where eggs spawned
 for l=1:Eggs
     C = find(X(t,l)<CumlDistance*1000);cell(l)=C(1);
     Vx(l) = VX(cell(l)); %m/s
@@ -214,56 +224,62 @@ for l=1:Eggs
     %======================================================================
     %% Explicit Lagrangian Horizontal Diffusion
     DH(l) = 0.6*H(l)*ustar(l);
-end
+end %get hydraulic and water temperature data at egg location
 
-%% Calculating initial fall velocity
-%% Dietrich's
+%% Calculating initial fall velocity of eggs
+% Dietrich's
 Vzpart = single(-Dietrich(D(t),SG(1),T(1))/100);%D should be in mm, vs output is in cm/s, then we convert it to m
-%%
+%======================================================================
 
-%% Checking Dt
+%% Checking Dt for simulation estability, see Garcia et al., 2013
 if  CheckDt==0
     [minDt,CheckDt] = Checking_Dt;
 end
 if Dt>minDt
     waitfor(msgbox(['The selected time step is too large, A value of Dt=', num2str(minDt), ' seconds it is going to be used in the simulation'],'FluEgg Warning','warn'));
     delete(h)
-    return
+    return % go out of function and display error message
 end
 
 Vzpart=Vzpart*ones(Eggs,1,'single'); %Initially all the eggs have the same Vs
 %%
 clear Dmin Vsmax DiamStd VsStd Diam vs C str val
-Jump;
 
+%% Lagrangian movement of eggs (Please reffer to Jump function below)
+Jump;
+%========================================================================
+
+%% This is for mortality model development
 % Total_perTime=sum(touch,2);
 % plot(time(2:end),Total_perTime);
 % bar(time(2:end),Total_perTime);
 
+%% Sometimes I use this to delete the waitbar when debbuging TG
 % catch
 % set(0,'ShowHiddenHandles','on')
 % delete(get(0,'Children'))
 % return
 % end
-
 %%=========================================================================
+
 %% Nested Functions
 % Nested functions are used in this function to speed up the simulation
 %%=========================================================================
 %
 %++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
-%% 1.  EggBio  
-% In this function we estimate the eggs growth (diameter and density of eggs) 
-% based on Chapman's experiments.  
-% The time series of eggs characteristics are standardized at a temperature 
-% of to 22C.                                                              %                                                            
+%% 1.  EggBio
+% In this function we estimate the eggs growth (diameter and density of eggs)
+% based on Chapman's experiments.
+% The time series of eggs characteristics are standardized at a temperature
+% of to 22C.                                                              %
     function [D,Rhoe_ref]=EggBio()
         
         %% Initialize variables
-        Dvar = ones(length(time),1);Rhoevar=Dvar;
+        Dvar = ones(length(time),1);
+        Rhoevar=Dvar;
         %% ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
         if strcmp(specie,'Silver')%if specie=='Silver' :Updated TG March,2015
-            Dmin = 1.6980;% mm
+            Dmin = 1.6980;% mm % Minimum diameter from Chapman's data
             Dmax = 5.6000;% mm    TG 03/2015
             Rhoe_max = 1036.1;% Kg/m^3 at 22C
             Rhoe_min = 998.7680;% Kg/m^3 at 22C TG 03/2015
@@ -272,7 +288,7 @@ Jump;
             b = 2635.9;
             D = a*(1-exp(-time/b));%R2 = 0.87 for silver carp eggs
             %% Density of eggs fit Standardized to 22C
-            a = 25.2; 
+            a = 25.2;
             b = 2259;
             c = 999.3;
             Rhoe_ref = (a*exp(-time/b))+c;%R-square: 0.67 for silver carp eggs
@@ -314,7 +330,7 @@ Jump;
         % water temperature, simulation times and fish species
         %% ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
         for tt=1:length(D) %because the counter of the array starts from 1
-          %% ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+            %% ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
             if strcmp(specie,'Silver')%if specie=='Silver'
                 %% STD
                 if time(tt)/3600<4
@@ -355,7 +371,7 @@ Jump;
                     RhoeStd = 1.7663;%Kg/m^3 at 22C
                 end
             end % Species selection
-                %% ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+            %% ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
             %% Diameter fit + scatter
             Dvar(tt,1) = single(normrnd(D(tt),DiamStd));
             while (Dvar(tt)>=D(tt)+DiamStd)||(Dvar(tt)<=D(tt)-DiamStd)
@@ -377,7 +393,7 @@ Jump;
     end %EggBio
 
 %++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
-% 2.  Checking_Dt                                                         % 
+% 2.  Checking_Dt                                                         %
     function [minDt,CheckDt] = Checking_Dt
         CheckDt = 1;
         %% Preallocate memory
@@ -398,13 +414,13 @@ Jump;
     end
 
 %++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
-% 3.  Jump                                                                % 
+% 3.  Jump                                                                %
     function Jump
         Kprime = zeros(size(DH),'single');Kz=Kprime;%Memory allocation
         Mortality = 0;
         waitstep = floor((Steps)/100);
         alpha = 2.51;%1.9;%1.3;%
-        beta = 2.47;%1.8;%1.2;%        
+        beta = 2.47;%1.8;%1.2;%
         %%=================================================================================================
         
         for t=2:Steps
@@ -456,7 +472,7 @@ Jump;
             %reflecting Boundary
             check = X(t,a);
             check(check<d/2) = d-check(check<d/2);
-            X(t,a) = check; 
+            X(t,a) = check;
             check = []; %reset check
             X(t,~a) = X(t-1,~a);%If they were already dead,leave them in the same position.
             
@@ -585,7 +601,7 @@ Jump;
         savefast(outputfile,'ResultsSim');
         %folderName= uigetdir('./results','Folder name to save results');
         
-        %% SAVE RESULTS AS TEXT FILE  
+        %% SAVE RESULTS AS TEXT FILE
         % This section was comented because it was taking a very long time
         % to save, maybe we will anable this in a future version
         % save([Folderpath,'X' '.txt'],'X', '-ASCII');
@@ -604,7 +620,7 @@ Jump;
         function [Kprime,Kz]=calculateKz
             
             
-            % Check if ustar=0 and display error if ustar=0 
+            % Check if ustar=0 and display error if ustar=0
             if ustar(a)==0
                 ed = errordlg('u* can not be equal to zero, try using a very small number different than zero','Error');
                 set(ed, 'WindowStyle', 'modal');
@@ -615,11 +631,11 @@ Jump;
             %% Calculate beta coefficient
             %
             % Reference:                                                  %
-            % Van Rijn, L. . (1984). Sediment transport, Part II: Suspended 
+            % Van Rijn, L. . (1984). Sediment transport, Part II: Suspended
             % load transport. Journal of Hydraulic Engineering, ASCE,     %
             % 110(11), 1613–1641.                                         %
             
-            % Garcia, T., Zamalloa, C. Z., Jackson, P. R., Murphy, E. A., & 
+            % Garcia, T., Zamalloa, C. Z., Jackson, P. R., Murphy, E. A., &
             % Garcia, M. H. (2015). A Laboratory Investigation of the     %
             % Suspension, Transport, and Settling of Silver Carp Eggs     %
             % Using Synthetic Surrogates. PloS One, 10(12), e0145775.     %
@@ -628,7 +644,7 @@ Jump;
             outrange = outrange >1;%Out of the function range
             B(outrange) = 3;
             % Vertical location of the eggs with H as coordinate reference
-            % In FluEgg Z=0 is the water surface and 
+            % In FluEgg Z=0 is the water surface and
             ZR = Z(t-1,a)'+H(a);%ZR(ZR<0.1)=0.1;ZR(ZR>H(1)-0.1)=H(1)-0.1;
             
             %+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
@@ -657,7 +673,7 @@ Jump;
     end %Function Jump
 
 %++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
-% 4.  Check_if_egg_isin_newcell                                                                % 
+% 4.  Check_if_egg_isin_newcell                                                                %
     function Check_if_egg_isin_newcell
         %% Check if eggs are in a new cell in this jump
         [c,~]=find(X(t,:)'>(CumlDistance(cell)*1000));
@@ -700,7 +716,7 @@ Jump;
     end %New cell
 
 %++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
-% 5.  Check_if_egg_isin_newcell                                           
+% 5.  Check_if_egg_isin_newcell
     function [alive]=mortality_model(alive,d,a)
         %% Load parameters
         Mp=0;   %By predators

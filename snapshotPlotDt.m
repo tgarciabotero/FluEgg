@@ -96,8 +96,8 @@ Z=ResultsSim.Z;
 time=ResultsSim.time;
 CumlDistance=double(ResultsSim.CumlDistance);
 Depth=double(ResultsSim.Depth);
-Xi=double(ResultsSim.Spawning(1,1));
-Zi=double(ResultsSim.Spawning(1,3));
+Xi=double(ResultsSim.Spawning(1,1));% in m
+Zi=double(ResultsSim.Spawning(1,3));% in m
 %%
 set(0,'Units','pixels') ;
 scnsize = get(0,'ScreenSize');
@@ -127,8 +127,8 @@ xlim([0 max(CumlDistance)])
 ylim([-max(Depth)-0.15 0])
 No=length(Depth);
 %% Text
-text(Xi-CumlDistance(end)*0.007,Zi+Depth(end)*0.028, '\downarrow','FontWeight','bold','FontName','Arial')
-text(Xi-CumlDistance(end)*0.04,Zi+Depth(end)*0.07, 'Fish spawn here','FontWeight','normal','FontName','Arial')
+text(Xi/1000-CumlDistance(end)*0.007,Zi+Depth(end)*0.028, '\downarrow','FontWeight','bold','FontName','Arial')
+text(Xi/1000-CumlDistance(end)*0.04,Zi+Depth(end)*0.07, 'Fish spawn here','FontWeight','normal','FontName','Arial')
 text(CumlDistance(end)/2.4,0.08,'Water surface','FontWeight','normal','FontName','Arial')
 text(CumlDistance(end)*0.9,-Depth(end)*0.95,'\downarrow','FontWeight','bold','FontName','Arial');%,'FontSize',20
 text(CumlDistance(end)*0.9,-Depth(end)*0.9, 'River bed','FontWeight','normal','FontName','Arial')

@@ -258,7 +258,7 @@ for i=1:length(CumlDistance)
         patch(xx,yy,gray,'FaceAlpha',0.2,'LineStyle','none')
     end
 end
-xlabel('Average downstream distance from spawning location [km]','FontName','Arial','FontSize',12);
+xlabel('Average downstream distance [km]','FontName','Arial','FontSize',12);
 ylabel('Normalized vertical position (z/h+1) [ ]','FontName','Arial','FontSize',12);
 set(gca,'TickDir','in','TickLength',[0.021 0.021],'FontName','Arial','FontSize',12)
 ylim([0 1])
@@ -629,7 +629,7 @@ for i=1:size(X,2)
 end
 %%
 if check==0
-    ed = errordlg('No eggs have arrived downstream distance X, please check the distribution of eggs closer to the spawning location or run the model for a longer time','Error');
+    ed = errordlg('No eggs have arrived to distance X, please check the distribution of eggs closer to the spawning location or run the model for a longer time','Error');
     set(ed, 'WindowStyle', 'modal');
     uiwait(ed);
 else
@@ -676,7 +676,7 @@ else
     annotation('line',[0.98 0.97],[0.1020 0.0900]);
     text(Xlimit(end)*1.065,0.063, {'River','bed'},'HorizontalAlignment','center','FontName','Arial')
     %% Message
-    h = msgbox([num2str(sum(N)) ' eggs passed by ' num2str(dX/1000) ' km downstream from the virtual spawning location during the simulation time'],'FluEgg Message');
+    h = msgbox([num2str(sum(N)) ' eggs passed by ' num2str(dX/1000) ' km during the simulation time'],'FluEgg Message');
 end
 end %distribution of eggs at a distance
 
@@ -797,7 +797,7 @@ else
         %     end
     end
     %% Message
-    h = msgbox(['At the end of the simulation time ' num2str(sum(N)) ' eggs passed by ' num2str(dX/1000) ' km downstream from the virtual spawning location'],'FluEgg Message');
+    h = msgbox(['At the end of the simulation time ' num2str(sum(N)) ' eggs passed by ' num2str(dX/1000) ' km'],'FluEgg Message');
 end
 end% travel time
 
@@ -832,32 +832,32 @@ end
         end
         CalculateEggs_at_risk_hatching=getappdata(handleResults,'CalculateEggs_at_risk_hatching');
         
-        %% Where are the eggs when hatching occurs?
+        %% Where are the eggs when hatching occurs or when time equal to t?
         TimeIndex=find(time<=SetTime*3600,1,'last');
-        X_at_hatching(:,1)=X(TimeIndex,:);%or at a given t
-        Z_at_hatching(:,1)=Z(TimeIndex,:);
-        Y_at_hatching(:,1)=Y(TimeIndex,:);%TG 05/15
+        X_at_Time(:,1)=X(TimeIndex,:);%or at a given t
+        Z_at_Time(:,1)=Z(TimeIndex,:);
+        Y_at_Time(:,1)=Y(TimeIndex,:);%TG 05/15
         %%
-        Cell=zeros(size(X_at_hatching));
-        h=zeros(size(X_at_hatching));
-        for e=1:size(X_at_hatching,1)
-            if X_at_hatching(e)>CumlDistance(end)*1000 % If the eggs are in the last cell
+        Cell=zeros(size(X_at_Time));
+        h=zeros(size(X_at_Time));
+        for e=1:size(X_at_Time,1)
+            if X_at_Time(e)>CumlDistance(end)*1000 % If the eggs are in the last cell
                 Cell(e)=length(CumlDistance);
             else
-                C=find(X_at_hatching(e)<CumlDistance*1000);Cell(e)=C(1);
+                C=find(X_at_Time(e)<CumlDistance*1000);Cell(e)=C(1);
             end
             h(e)=Depth(Cell(e)); %m
             w(e)=Width(Cell(e)); %m %TG 05/15
         end
-        Z_at_hatching_H=(Z_at_hatching+h)./h;
-        n=Y_at_hatching-w'/2;
-        X_at_hatching=X_at_hatching/1000; %In Km
+        Z_at_Time_H=(Z_at_Time+h)./h;
+        n=Y_at_Time-w'/2;
+        X_at_Time=X_at_Time/1000; %In Km
         %% Define eggs in suspension and settled
-        Nsusp=X_at_hatching(Z_at_hatching_H>0.05);
-        Nbot=X_at_hatching(Z_at_hatching_H<=0.05);
+        Nsusp=X_at_Time(Z_at_Time_H>0.05);
+        Nbot=X_at_Time(Z_at_Time_H<=0.05);
         %%
-        k=round(size(X_at_hatching,1)^(1/3));%Number of bins %2*size
-        ds=round(100*((max(max(X_at_hatching))-min(min(X_at_hatching)))+0.001)/k)/100;
+        k=round(size(X_at_Time,1)^(1/3));%Number of bins %2*size
+        ds=round(100*((max(max(X_at_Time))-min(min(X_at_Time)))+0.001)/k)/100;
         edges=0:ds:CumlDistance(end)+0.001;
         %edges=0:(CumlDistance(end)+0.01)/k:CumlDistance(end)+0.01;
         bids=(edges(1:end-1)+edges(2:end))/2;bids=bids';
@@ -878,22 +878,22 @@ end
             'position',[scnsize(3)/2 scnsize(4)/2.6 scnsize(3)/2.1333 scnsize(4)/2]);
         subaxis(1,1,1,'MR',0.1,'ML',0.095,'MB',0.12,'MT',0.05);
         %%
-        cdf_Nsusp=cumsum(Nsusp*100/size(X_at_hatching,1));
-        percentage_of_Eggs=[Nbot Nsusp]*100/size(X_at_hatching,1);
+        cdf_Nsusp=cumsum(Nsusp*100/size(X_at_Time,1));
+        percentage_of_Eggs=[Nbot Nsusp]*100/size(X_at_Time,1);
         bar1=bar(bids,percentage_of_Eggs,1,'stacked');%,'FaceColor',[0.3804,0.8118,0.8980])
         set(bar1(2),'FaceColor',[0.3804,0.8118,0.8980]);
         set(bar1(1),'FaceColor',[0.6,0.6,0.6]);
         %--Cust0mize plot -----------------------------------------------------
         position_axes1= get(gca,'position');
-        [Convert_km_to_miles,xlabel_text,StringStats]=setupUnits(X_at_hatching(Z_at_hatching_H>0.05));%Calculate stats for eggs in susp.
+        [Convert_km_to_miles,xlabel_text,StringStats]=setupUnits(X_at_Time(Z_at_Time_H>0.05));%Calculate stats for eggs in susp.
         
-        xStep=round(Convert_km_to_miles*(k*ds+max(max(X_at_hatching)))/4);%in miles
+        xStep=round(Convert_km_to_miles*(k*ds+max(max(X_at_Time)))/4);%in miles
         xaxisticks=[0:xStep:4*xStep];
         set(gca,'XTick',xaxisticks/Convert_km_to_miles,'Xticklabel',xaxisticks)
         set(gca,'TickDir','in','TickLength',[0.021 0.021],'XMinorTick','on','FontName','Arial','FontSize',12)
         xlim([0 xaxisticks(end)/Convert_km_to_miles]) %Xaxis limit
         xlabel(xlabel_text,'FontName','Arial','FontSize',12);
-        ylim([0 round(1.2*max([Nsusp+Nbot]*100/size(X_at_hatching,1)))])
+        ylim([0 round(1.2*max([Nsusp+Nbot]*100/size(X_at_Time,1)))])
         ylabel('Percentage of eggs [%]','FontName','Arial','FontSize',12);
         set(gca, 'box','off');set(gca,'YaxisLocation','left');
         xlim_axis1=get(gca,'Xlim');
@@ -984,13 +984,13 @@ end
         end
         if Menu.english_Units
             Convert_km_to_miles=0.621371;
-            xlabel_text='Downstream distance from spawning location [miles]';
-            StringStats={'Stats' ['Mean=',num2str(round(10*Convert_km_to_miles*(nanmean(X_at_Time)-X(1,1)/1000))/10),' miles downstream from the spawning location'],['LE=',num2str(round(10*Convert_km_to_miles*(max(X_at_Time)-X(1,1)/1000))/10),' miles downstream from the spawning location'],['TE=',num2str(round(10*Convert_km_to_miles*(min(X_at_Time)-X(1,1)/1000))/10),' miles downstream from the spawning location']};
+            xlabel_text='Distance [miles]';
+            StringStats={'Stats' ['Mean=',num2str(round(10*Convert_km_to_miles*(nanmean(X_at_Time)-X(1,1)/1000))/10),' miles'],['LE=',num2str(round(10*Convert_km_to_miles*(max(X_at_Time)-X(1,1)/1000))/10),' miles'],['TE=',num2str(round(10*Convert_km_to_miles*(min(X_at_Time)-X(1,1)/1000))/10),' miles']};
             
         else
             Convert_km_to_miles=1;
-            xlabel_text='Downstream distance from spawning location [km]';
-            StringStats={'Stats' ['Mean=',num2str(round(10*nanmean(X_at_Time)-X(1,1)/1000)/10),' km downstream from the spawning location'],['LE=',num2str(round(10*max(X_at_Time)-X(1,1)/1000)/10),' km downstream from the spawning location'],['TE=',num2str(round(10*min(X_at_Time)-X(1,1)/1000)/10),' km downstream from the spawning location']};
+            xlabel_text='Distance [km]';
+            StringStats={'Stats' ['Mean=',num2str(round(10*nanmean(X_at_Time)-X(1,1)/1000)/10),' km'],['LE=',num2str(round(10*max(X_at_Time)-X(1,1)/1000)/10),' km'],['TE=',num2str(round(10*min(X_at_Time)-X(1,1)/1000)/10),' km']};
         end
     end
     function [X,Z,Y,CumlDistance,Depth,time,Width]=load_data %TG 05/15
