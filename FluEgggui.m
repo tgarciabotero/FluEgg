@@ -1,8 +1,10 @@
 %% FluEgg main function: FluEgggui.m
-% =========================================================================
-%                    Fluvial Egg Drift Simulator                          %
-%      Lagrangian Random Walk Model for Silver Carp Eggs Transport        %
+%%:::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::%
+%%                       MAIN FUNCTION                                    %
 %                                                                         %
+%%             FLUVIAL EGG DRIFT SIMULATOR (FluEgg)                       %
+%:::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::%
+% =========================================================================
 % ------------------------------------------------------------------------%
 % This is the main function of the FluEgg model, this function gets input %
 % data, sets the virtual spawning event, performs egg movement and        %
@@ -11,7 +13,7 @@
 %                                                                         %
 % ------------------------------------------------------------------------%
 %   Created by      : Tatiana Garcia                                      %
-%   Last Modified   : May 31, 2016                                        %
+%   Last Modified   : June 2, 2016                                        %
 % ------------------------------------------------------------------------%
 %                                                                         %
 % Copyright 2016 Tatiana Garcia                                           %
