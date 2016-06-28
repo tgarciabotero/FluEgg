@@ -56,12 +56,12 @@ end
 % --- Executes on button press in River_Input_File_Panel_button.
 function River_Input_File_Panel_button_Callback(hObject, eventdata, handles)
 set(handles.panel2, 'visible', 'off');
-set(handles.panel1, 'visible', 'on');
+set(handles.panel_Single_xls_file, 'visible', 'on');
 end
 
 % --- Executes on button press in Import_HECRAS_panel_button.
 function Import_HECRAS_panel_button_Callback(hObject, eventdata, handles)
-set(handles.panel1, 'visible', 'off');
+set(handles.panel_Single_xls_file, 'visible', 'off');
 set(handles.panel2, 'visible', 'on');
 end
 
@@ -165,12 +165,16 @@ else
         m=msgbox('Please wait, loading HEC-RAS project file...','FluEgg');
         set(handles.hecras_file_path,'string',fullfile(FileName));%writes the file path
         %% Execute the Extract RAS function
-        %Extract_RAS(strFilename)
+        % loads HEC-RAS project and gets info about River, Rach, profile,
+        % River stations and plan into the GUI
         [RC]=loadsHECRAS(strFilename);
-        extension=regexp(FileName, '\.', 'split');
-        set(handles.hecras_file_path,'string',fullfile(FileName));       
+        %extension=regexp(FileName, '\.', 'split');
+        %set(handles.hecras_file_path,'string',fullfile(FileName));   
+        handles.strFilename=strFilename;
     end
 end
+guidata(hObject, handles);% Update handles structure
+
 
 
     function [RC]=loadsHECRAS(strFilename)
@@ -233,7 +237,6 @@ xlim(handles.DepthPlot,[0 max(Riverinputfile(:,2))]);
 %==========================================================================
 %% QPlot Riverin data
 set(handles.QPlot,'Visible','on');
-guidata(hObject, handles);% Update handles structure
 plot(handles.QPlot,x,[Riverinputfile(:,4);Riverinputfile(end,4)],'LineWidth',1.5,'Color',[0 0 0]);
 ylabel(handles.QPlot,{'Q [cms]'},'FontWeight','bold','FontSize',10);
 box(handles.QPlot,'on');
@@ -427,7 +430,7 @@ if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgr
 end
 end
 % --- Executes during object creation, after setting all properties.
-function panel1_CreateFcn(hObject, eventdata, handles)
+function panel_Single_xls_file_CreateFcn(hObject, eventdata, handles)
 end
 %:::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::%
 %% <<<<<<<<<<<<<<<<<<<<<<<<< END OF FUNCTION >>>>>>>>>>>>>>>>>>>>>>>>>>>>%%
@@ -483,16 +486,12 @@ end
 
 % --- Executes on button press in pushbutton_plot.
 function pushbutton_plot_Callback(hObject, eventdata, handles)
-% hObject    handle to pushbutton_plot (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    structure with handles and user data (see GUIDATA)
+    msgbox('Feature under development, no available','FluEgg message')
 end
 
 % --- Executes on button press in pushbutton_table.
 function pushbutton_table_Callback(hObject, eventdata, handles)
-% hObject    handle to pushbutton_table (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    structure with handles and user data (see GUIDATA)
+    msgbox('Feature under development, no available','FluEgg message')
 end
 
 
@@ -542,4 +541,15 @@ function popupPlan_CreateFcn(hObject, eventdata, handles)
 if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
     set(hObject,'BackgroundColor','white');
 end
+end
+
+
+% --- Executes on button press in Continue_button.
+function Continue_button_Callback(hObject, eventdata, handles)
+lngProfile = get(handles.popup_HECRAS_profile,'Value')-1;   % Profile Number
+if lngProfile==0
+    msgbox('Feature under development, no available','FluEgg message')
+    return
+end
+[Riverinputfile]=Extract_RAS(handles.strFilename,handles);
 end

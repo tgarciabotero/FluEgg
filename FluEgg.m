@@ -403,14 +403,14 @@ diary('./results/FluEgg_LogFile.txt')
 web('http://asiancarp.illinois.edu/')
 
 function settings = FluEgg_Settings
-settings.version = 'V2.2';
+settings.version = 'V2.2.01';
 
 
 % Checks for FluEgg updates ---------------------------------------------
 function Check_for_updates_Callback(hObject, eventdata, handles)
 %% Check FluEgg Version
 try
-    FluEgg_Latest_Version=urlread('http://asiancarp.illinois.edu/Files/FluEgg_version.txt');
+    FluEgg_Latest_Version=urlread('https://docs.google.com/document/d/1eQXCWP9_1Hjrf0Ywgv_4y3nDiOlB0Dl2l3cDIkHvm_c/edit?usp=sharing');
     if strcmpi(FluEgg_Latest_Version(2:10),handles.settings.version)
         h = msgbox('The FluEgg version you are using is up to date, no updates available','Checking for Update..');
     else

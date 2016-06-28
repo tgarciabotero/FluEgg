@@ -19,7 +19,7 @@
 % Copyright 2016 Tatiana Garcia
 %:::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::%
 
-function [Riverinputfile]=Extract_RAS(strRASProject,handles)
+function [Riverinputfile]=Extract_RAS(strRASProject)
 
 %% Creates a COM Server for the HEC-RAS Controller
 RC = actxserver('RAS500.HECRASController');
@@ -31,11 +31,14 @@ RC = actxserver('RAS500.HECRASController');
 RC.Project_Open(strRASProject); %open and show interface, no need to use RC.ShowRAS in Matlab
 
 %% Define Variables
-% get variables from GUI with user selection
-lngRiverID = get(handles.popup_River,'Value');   % RiverID
-lngReachID = get(handles.popup_Reach,'Value');   % ReachID
-lngProfile = get(handles.popup_HECRAS_profile,'Value')-1;   % Profile Number, 1 is all profiles
+% strRASProject-->The path and filename of the desired HEC-RAS Project.
+%lngMessages = 1;  % Number of messages returned by the RASController
+%strMessages = {}; % An array of messages returned by the RASController
+lngRiverID = 1;   % RiverID
+lngReachID = 1;   % ReachID
+lngProfile = 1;   % Profile Number
 lngUpDn = 0;      % Up/Down index for nodes with multiple sections (only used for bridges)
+
 % Output ID of Variables ( see page 247 in reference book for more details)
 % lngWS_ID = 2;                     % The Water Surface Elevation ID is 2.
 lngVelChnl_ID = 25;                 % The  ID of the average velocity of flow for the main channel is 23.
@@ -68,8 +71,8 @@ sngLengthChnl = nan(lngNum_XS,1);
 % RC.Compute_HideComputationWindow; %To hide Computation Window
 
 % Uncoment the lines below for info about current plan
-Current_Plan= RC.CurrentPlanFile()
-Current_Geometry_File= RC.CurrentGeomFile()
+% Current_Plan= RC.CurrentPlanFile()
+% Current_Geometry_File= RC.CurrentGeomFile()
 
 %% Output Results
 XC_counter=0;
