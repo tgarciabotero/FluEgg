@@ -22,7 +22,7 @@ function varargout = google_earth(varargin)
 
 % Edit the above text to modify the response to help google_earth
 
-% Last Modified by GUIDE v2.5 15-Jan-2016 16:08:34
+% Last Modified by GUIDE v2.5 30-Jun-2016 09:43:52
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;

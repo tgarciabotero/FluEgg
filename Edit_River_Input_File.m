@@ -169,12 +169,12 @@ else
         % River stations and plan into the GUI
         [RC]=loadsHECRAS(strFilename);
         %extension=regexp(FileName, '\.', 'split');
-        %set(handles.hecras_file_path,'string',fullfile(FileName));   
+        %set(handles.hecras_file_path,'string',fullfile(FileName));
         handles.strFilename=strFilename;
     end
 end
 guidata(hObject, handles);% Update handles structure
-
+close(m)
 
 
     function [RC]=loadsHECRAS(strFilename)
@@ -200,7 +200,7 @@ guidata(hObject, handles);% Update handles structure
         [lngRiv,strRiv]=RC.Geometry_GetRivers(0,0);%Gets River(s) name
         set(handles.popup_River,'string',strRiv);%Display plan names in GUI
         %Get selected River ID
-        lngRiverID=get(handles.popup_River,'Value');  
+        lngRiverID=get(handles.popup_River,'Value');
         % Reach Name
         [~,lngRch,strRch]=RC.Geometry_GetReaches(lngRiverID,0,0);%Gets River(s) Reach name
         set(handles.popup_Reach,'string',strRch);%Display plan names in GUI
@@ -208,7 +208,7 @@ guidata(hObject, handles);% Update handles structure
         lngReachID=get(handles.popup_Reach,'Value');
         % River station
         [~,~,lgnNode,strNode,strNodeType]=RC.Geometry_GetNodes(lngRiverID,lngReachID,0,0,0);%Number of nodes.~&~==>strRS & strNodeType
-        set(handles.popup_River_Station,'string',strNode(strcmp(strNodeType,'')));%Display plan names in GUI        
+        set(handles.popup_River_Station,'string',strNode(strcmp(strNodeType,'')));%Display plan names in GUI
     end %loadsProfiles
 
 end%End load HEC-RAS project
@@ -440,22 +440,10 @@ end
 
 % --- Executes on selection change in popup_River.
 function popup_River_Callback(hObject, eventdata, handles)
-% hObject    handle to popup_River (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    structure with handles and user data (see GUIDATA)
-
-% Hints: contents = cellstr(get(hObject,'String')) returns popup_River contents as cell array
-%        contents{get(hObject,'Value')} returns selected item from popup_River
 end
 
 % --- Executes during object creation, after setting all properties.
 function popup_River_CreateFcn(hObject, eventdata, handles)
-% hObject    handle to popup_River (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    empty - handles not created until after all CreateFcns called
-
-% Hint: popupmenu controls usually have a white background on Windows.
-%       See ISPC and COMPUTER.
 if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
     set(hObject,'BackgroundColor','white');
 end
@@ -463,22 +451,11 @@ end
 
 % --- Executes on selection change in popup_River_Station.
 function popup_River_Station_Callback(hObject, eventdata, handles)
-% hObject    handle to popup_River_Station (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    structure with handles and user data (see GUIDATA)
-
-% Hints: contents = cellstr(get(hObject,'String')) returns popup_River_Station contents as cell array
-%        contents{get(hObject,'Value')} returns selected item from popup_River_Station
 end
 
 % --- Executes during object creation, after setting all properties.
 function popup_River_Station_CreateFcn(hObject, eventdata, handles)
-% hObject    handle to popup_River_Station (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    empty - handles not created until after all CreateFcns called
 
-% Hint: popupmenu controls usually have a white background on Windows.
-%       See ISPC and COMPUTER.
 if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
     set(hObject,'BackgroundColor','white');
 end
@@ -486,33 +463,29 @@ end
 
 % --- Executes on button press in pushbutton_plot.
 function pushbutton_plot_Callback(hObject, eventdata, handles)
-    msgbox('Feature under development, no available','FluEgg message')
+hFluEggGui = getappdata(0,'hFluEggGui');
+HECRAS_data.Profiles=getappdata(hFluEggGui,'inputdata'); %0 means root-->storage in desktop
+% Determine the selected input data.
+str = get(handles.popup_River_Station, 'String');
+val = get(handles.popup_River_Station,'Value');
+% Hydrographs:
+Flow_Hydrograph=arrayfun(@(x) x.Riverinputfile(1,3), HECRAS_data.Profiles);
+figure('color','w')
+plot(Flow_Hydrograph
+%msgbox('Feature under development, no available','FluEgg message')
 end
 
 % --- Executes on button press in pushbutton_table.
 function pushbutton_table_Callback(hObject, eventdata, handles)
-    msgbox('Feature under development, no available','FluEgg message')
+msgbox('Feature under development, no available','FluEgg message')
 end
-
 
 % --- Executes on selection change in popup_Reach.
 function popup_Reach_Callback(hObject, eventdata, handles)
-% hObject    handle to popup_Reach (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    structure with handles and user data (see GUIDATA)
-
-% Hints: contents = cellstr(get(hObject,'String')) returns popup_Reach contents as cell array
-%        contents{get(hObject,'Value')} returns selected item from popup_Reach
-
 end
 % --- Executes during object creation, after setting all properties.
 function popup_Reach_CreateFcn(hObject, eventdata, handles)
-% hObject    handle to popup_Reach (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    empty - handles not created until after all CreateFcns called
 
-% Hint: popupmenu controls usually have a white background on Windows.
-%       See ISPC and COMPUTER.
 if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
     set(hObject,'BackgroundColor','white');
 end
@@ -521,13 +494,6 @@ end
 
 % --- Executes on selection change in popupPlan.
 function popupPlan_Callback(hObject, eventdata, handles)
-% hObject    handle to popupPlan (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    structure with handles and user data (see GUIDATA)
-
-% Hints: contents = cellstr(get(hObject,'String')) returns popupPlan contents as cell array
-%        contents{get(hObject,'Value')} returns selected item from popupPlan
-
 end
 
 % --- Executes during object creation, after setting all properties.
@@ -548,8 +514,68 @@ end
 function Continue_button_Callback(hObject, eventdata, handles)
 lngProfile = get(handles.popup_HECRAS_profile,'Value')-1;   % Profile Number
 if lngProfile==0
-    msgbox('Feature under development, no available','FluEgg message')
-    return
+    %% Iniciate Waitbar
+    h = waitbar(0,'Importing HEC-RAS data...','Name','Importing HEC-RAS data,please wait...',...
+        'CreateCancelBtn',...
+        'setappdata(gcbf,''canceling'',1)');
+    setappdata(h,'canceling',0)
+    if getappdata(h,'canceling')
+        delete(h);
+        Exit=1;
+        return;
+    end
+    %%===========
+    Profiles=get(handles.popup_HECRAS_profile,'string');
+    Profiles=Profiles(3:end);%Without the first two rows (All profiles & Max WS)
+    HECRAS_data.Profiles.Date=Profiles;
+    HECRAS_data.Profiles(length(Profiles),1).Riverinputfile=NaN;
+    waitbar(0,h,['Please wait....' 'Importing HEC-RAS data']);
+    for i=1:length(Profiles)
+        if ~mod(i, 10) || i==length(Profiles)
+            fill=i/length(Profiles);
+            % Check for Cancel button press
+            if getappdata(h,'canceling')
+                delete(h);
+                Exit=1;
+                return;
+            end
+            % Report current estimate in the waitbar's message field
+            waitbar(fill,h,['Please wait....' sprintf('%12.0f',fill*100) '%']);
+        end
+        HECRAS_data.Profiles(i).Date=Profiles(i);
+        HECRAS_data.Profiles(i).Riverinputfile=Extract_RAS(handles.strFilename,handles,i);
+    end
+    clear Profiles
+    %     msgbox('Feature under development, no available','FluEgg message')
+    %     return
 end
-[Riverinputfile]=Extract_RAS(handles.strFilename,handles);
+HECRAS_data.Profiles(1).Riverinputfile=Extract_RAS(handles.strFilename,handles,1);
+
+%% Save data in hFluEggGui
+hFluEggGui = getappdata(0,'hFluEggGui');
+setappdata(hFluEggGui, 'inputdata',HECRAS_data.Profiles);
+%%
+close(h)
+end
+
+
+
+% --- Executes on selection change in popup_TempHEC.
+function popup_TempHEC_Callback(hObject, eventdata, handles)
+% Determine the selected input data.
+str = get(handles.popup_TempHEC, 'String');
+val = get(handles.popup_TempHEC,'Value');
+% Get data from GUI
+switch str{val};
+    case 'Constant temperature in space and time' %%model would use a constant Rhoe and D
+        set(handles.Const_Temp,'Visible','on');
+        
+    case 'Constant temperature in time'
+        msgbox('This feature is currently under development, stay tuned to new updates','FluEgg','Feature under development');
+        set(handles.Const_Temp,'Visible','off');
+        
+    case'Time and space varing temperature '
+        msgbox('This feature is currently under development, stay tuned to new updates','FluEgg','Feature under development');
+        set(handles.Const_Temp,'Visible','off');
+end %Temperature choice
 end

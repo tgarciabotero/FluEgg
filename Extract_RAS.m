@@ -19,7 +19,7 @@
 % Copyright 2016 Tatiana Garcia
 %:::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::%
 
-function [Riverinputfile]=Extract_RAS(strRASProject,handles)
+function [Riverinputfile]=Extract_RAS(strRASProject,handles,profile)
 
 %% Creates a COM Server for the HEC-RAS Controller
 RC = actxserver('RAS500.HECRASController');
@@ -34,7 +34,15 @@ RC.Project_Open(strRASProject); %open and show interface, no need to use RC.Show
 % get variables from GUI with user selection
 lngRiverID = get(handles.popup_River,'Value');   % RiverID
 lngReachID = get(handles.popup_Reach,'Value');   % ReachID
+%%
+if profile==-1
 lngProfile = get(handles.popup_HECRAS_profile,'Value')-1;   % Profile Number, 1 is all profiles
+else
+    %The first profile in HEC-RAS corresponds to MAX WS, then the profile
+    % corresponding to initial conditions is:
+    lngProfile=profile+1;    
+end    
+
 lngUpDn = 0;      % Up/Down index for nodes with multiple sections (only used for bridges)
 % Output ID of Variables ( see page 247 in reference book for more details)
 % lngWS_ID = 2;                     % The Water Surface Elevation ID is 2.
@@ -67,9 +75,12 @@ sngLengthChnl = nan(lngNum_XS,1);
 %RC.Compute_CurrentPlan(0,0); %from book: = RC.Compute_CurrentPlan(lngMessages,strMessages(), True)
 % RC.Compute_HideComputationWindow; %To hide Computation Window
 
-% Uncoment the lines below for info about current plan
-Current_Plan= RC.CurrentPlanFile()
-Current_Geometry_File= RC.CurrentGeomFile()
+% Uncoment the lines below for info about current plan and project
+% Do not delete, we might need this in the future
+%==========================================================================
+%Current_Plan= RC.CurrentPlanFile()
+%Current_Geometry_File= RC.CurrentGeomFile()
+%[lngNumProf,strProfileName]=RC.Output_GetProfiles(0,0) %Profiles names and todatl number
 
 %% Output Results
 XC_counter=0;
@@ -124,9 +135,11 @@ delete(RC);
         CellNumber=(1:1:lngNum_XS)';
         ks=(8.1.*sngMannWtdChnl.*sqrt(9.81)).^6;
         Ustar=sngVelChnl./(8.1*((sngHydrRadiusC./ks).^(1/6)));
+        %% Temperature choice
+        Temperature=str2double(get(handles.Const_Temp(2),'String'));
         Riverinputfile=[CellNumber CumlDistance sngHydrDepthC sngQChannel...
             sngVelChnl zeros(lngNum_XS,1) zeros(lngNum_XS,1) Ustar ...
-            22*ones(lngNum_XS,1)]; % default temperature 22C
+            Temperature*ones(lngNum_XS,1)]; % default temperature 22C
     end
 %% :::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
 
