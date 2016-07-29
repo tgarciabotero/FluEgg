@@ -54,7 +54,13 @@ Vvert = single(temp_variables.Vvert);
 Ustar = single(temp_variables.Ustar);
 Temp = single(temp_variables.Temp);
 Width = single(temp_variables.Width);
-ks = single(temp_variables.ks);clear temp_variables
+ks = single(temp_variables.ks);
+clear temp_variables
+
+%% If user is using the HEC-RAS importer
+HECRAS_time=1;
+[CumlDistance,Depth,Q,Vmag,Vlat,Vvert,Ustar,T,Width,VX,ks]=Create_Update_Hydraulic_and_QW_Variables(HECRAS_time)
+	
 
 % =======================================================================
 % Gets input data from main GUI
@@ -777,6 +783,30 @@ Jump;
         %% At which cell the egg dye??
         celldead(alive(t,:)==0)=cell(alive(t,:)==0);
     end %mortality model
+	
+%++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+% 6.  Create hydraulic and QW variables
+function [CumlDistance,Depth,Q,Vmag,Vlat,Vvert,Ustar,T,Width,VX,ks]=Create_Update_Hydraulic_and_QW_Variables(HECRAS_time)
+hFluEggGui = getappdata(0,'hFluEggGui');
+    HECRAS_data.Profiles=getappdata(hFluEggGui,'inputdata'); 
+    Riverinputfile=HECRAS_data.Profiles(time).Riverinputfile;
+	
+CumlDistance = Riverinputfile(:,2);   %Km
+Depth = Riverinputfile(:,3);          %m
+Q = Riverinputfile(:,4);              %m3/s
+Vmag = Riverinputfile(:,5);           %m/s
+Vlat = Riverinputfile(:,6);           %m/s
+Vvert = Riverinputfile(:,7);          %m/s
+Ustar = Riverinputfile(:,8);          %m/s
+T = Riverinputfile(:,9);          %C
+
+%==========================================================================
+%% Calculations
+Width = abs(Q./(Vmag.*Depth));               %m
+VX = sqrt(Vmag.^2-Vlat.^2-Vvert.^2);         %m/s
+ks = Ks_calculate();
+
+end	
 %toc
 %profreport
 end %FluEgg function

@@ -20,7 +20,7 @@
 
 function varargout = FluEgg(varargin)
 
-% Last Modified by GUIDE v2.5 21-May-2015 15:29:18
+% Last Modified by GUIDE v2.5 21-Jul-2016 17:24:51
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
@@ -39,6 +39,7 @@ if nargout
 else
     gui_mainfcn(gui_State, varargin{:});
 end
+end
 
 % --- Executes just before FluEgg is made visible.
 function FluEgg_OpeningFcn(hObject, ~, handles, varargin)
@@ -51,10 +52,11 @@ axes(handles.bottom); imshow('asiancarp.png');
 %% Settings
 handles.settings=FluEgg_Settings;
 guidata(hObject, handles);% Update handles structure
-
+end
 
 function varargout = FluEgg_OutputFcn(~, ~, handles)
 varargout{1} = handles.output;
+end
 
 %% River input data::::::::::::::::::::::::::::::::::::::::::::::::::::::%
 %                                                                        %
@@ -102,12 +104,29 @@ set(handles.Dt,'Visible','on');
 set(handles.text12,'Visible','on');
 set(handles.simulation_panel,'Visible','on');
 set(handles.Running,'Visible','on');
+axes(handles.calendar_icon(1)); imshow('calendar.png');
+axes(handles.calendar_icon(2)); imshow('calendar.png');
 
 %% Make Results Invisible
 set(handles.panel_Results,'Visible','off');
 set(handles.NewSim_Button,'Visible','off');
 
+%% Set simulation date and time if unsteady simulation
+hFluEggGui = getappdata(0,'hFluEggGui');
+HECRAS_data.Profiles=getappdata(hFluEggGui,'inputdata'); %0 means root-->storage in desktop
+
+dateandtime = strsplit(char(HECRAS_data.Profiles(1).Date(1)),' ');
+set(handles.edit_Starting_Date,'String',dateandtime(1));
+set(handles.edit_Starting_time,'String',dateandtime(2));
+
+dateandtime = strsplit(char(HECRAS_data.Profiles(end).Date),' ');
+set(handles.edit_Ending_Date,'String',dateandtime(1));
+set(handles.edit_Ending_time,'String',dateandtime(2));
+%date=arrayfun(@(x) datenum(x.Date,'ddmmyyyy HHMM'), HECRAS_data.Profiles)
+%datestr(date(end)-date(1),'dd HH MM SS')
+
 guidata(hObject, handles);% Update handles structure
+end
 
 %% Spawning event getting input data
 %% ::::::::::::::::::::::::::::::::::::::::::::::::::::%
@@ -129,6 +148,7 @@ C = find(Xi<CumlDistance*1000,1,'first');
 %% Update Yi -->Default: place eggs in the midle of the cell
 set(handles.Yi_input,'String',floor(Width(C)*100/2)/100);
 guidata(hObject, handles);% Update handles structure
+end
 
 %% Eggs Characteristics getting input data
 %% ::::::::::::::::::::::::::::::::::::::::::::::::::::%
@@ -160,6 +180,7 @@ switch str{val};
         set(handles.ConstRhoe,'Visible',           'on');
 end
 guidata(hObject,handles)
+end
 
 %% Running the model::::::::::::::::::::::::::::::::::::::::::::::::::::::%
 
@@ -169,6 +190,7 @@ handles= getappdata(hFluEggGui, 'handlesmain');
 hObject=getappdata(hFluEggGui,   'hObjectmain');
 eventdata=getappdata(hFluEggGui,   'eventdatamain');
 Running_Callback(hObject, eventdata, handles);
+end
 
 function Running_Callback(hObject, eventdata, handles)
 
@@ -273,10 +295,12 @@ catch
     msgbox('An unexpected error occurred, FluEgg is going to close','FluEgg error','error')
     pause(4)
 end
+end
 
 %% Analyze the Results::::::::::::::::::::::::::::::::::::::::::::::::::::::%
 function Results_Callback(hObject, eventdata, handles)
 Results();
+end
 
 function NewSim_Button_Callback(hObject, ~, handles)
 set(handles.Summary_panel,'Visible',    'off');
@@ -292,11 +316,12 @@ guidata(hObject, handles);
 % set(handles.Batch_button,'Value',1)
 % %display(get(handles.popup_EggsChar,'Value'))
 % guidata(hObject, handles);
-
+end
 
 % --------------------------------------------------------------------
 function Analyze_Results_Callback(hObject, eventdata, handles)
 Results();
+end
 
 % Hatching time -----------------------------------------------------------
 function Ht_Callback(hObject, eventdata, handles)
@@ -320,14 +345,17 @@ end
 
 TimeToHatch = HatchingTime(Temp(Initial_Cell:end),specie);
 msgbox(['The estimated hatching time for an averaged temperature of ',num2str(round(mean(Temp)*10)/10),' C is ', num2str(TimeToHatch), ' hours.'],'FluEgg','none');
+end
 
 % Goes to website-------------------------------------------------------
 function Website_Callback(hObject, eventdata, handles)
 diary('./results/FluEgg_LogFile.txt')
 web('http://asiancarp.illinois.edu/')
+end
 
 function settings = FluEgg_Settings
 settings.version = 'v2.2.01';
+end
 
 % Checks for FluEgg updates ---------------------------------------------
 function Check_for_updates_Callback(hObject, eventdata, handles)
@@ -343,7 +371,7 @@ try
 catch
     msgbox('error connection failed','FluEgg error','error')
 end
-
+end
 % --------------------------------------------------------------------
 function About_FluEgg_Callback(~, ~, handles)
 
@@ -370,7 +398,7 @@ textAbout2 = uicontrol(About,'Style','text','String',...
             {'Copyright 2009-2013 University of Illinois at Urbana-Champaign. This program is distributed in the hope that it will be useful,but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU General Public License for more details.'},...
             'Units','Normalized','Position',[0 0.68 1 0.15],'FontSize',6,...
             'BackgroundColor',[1 1 1]);
-
+end
         
 %% Set simulation time to a given developmental stage ===============================
 function set_to_stage_button_Callback(hObject, eventdata, handles)
@@ -420,6 +448,7 @@ switch Larvaemode %:Updated TG May,2015
         %======================================================================
 end
 guidata(hObject, handles);
+end
 
 %% Turn ON or OFF larvae drift ============================================
 function Larvae_Callback(hObject, eventdata, handles)
@@ -436,7 +465,100 @@ switch Larvaemode %:Updated TG May,2015
         set(handles.set_to_stage_button,'String','Set to time to reach Gas bladder');
 end
 handles.userdata.Larvae=get(handles.Larvae,'Checked');
-
+end
 %======================================================================
 
 function Mortality_model_Callback(hObject, eventdata, handles)
+end
+
+
+function edit_Starting_Date_Callback(hObject, eventdata, handles)
+% hObject    handle to edit_Starting_Date (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+% Hints: get(hObject,'String') returns contents of edit_Starting_Date as text
+%        str2double(get(hObject,'String')) returns contents of edit_Starting_Date as a double
+end
+
+% --- Executes during object creation, after setting all properties.
+function edit_Starting_Date_CreateFcn(hObject, eventdata, handles)
+% hObject    handle to edit_Starting_Date (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    empty - handles not created until after all CreateFcns called
+
+% Hint: edit controls usually have a white background on Windows.
+%       See ISPC and COMPUTER.
+if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
+    set(hObject,'BackgroundColor','white');
+end
+end
+
+
+function edit_Starting_time_Callback(hObject, eventdata, handles)
+% hObject    handle to edit_Starting_time (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+% Hints: get(hObject,'String') returns contents of edit_Starting_time as text
+%        str2double(get(hObject,'String')) returns contents of edit_Starting_time as a double
+end
+
+% --- Executes during object creation, after setting all properties.
+function edit_Starting_time_CreateFcn(hObject, eventdata, handles)
+% hObject    handle to edit_Starting_time (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    empty - handles not created until after all CreateFcns called
+
+% Hint: edit controls usually have a white background on Windows.
+%       See ISPC and COMPUTER.
+if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
+    set(hObject,'BackgroundColor','white');
+end
+end
+
+
+function edit_Ending_Date_Callback(hObject, eventdata, handles)
+% hObject    handle to edit_Ending_Date (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+% Hints: get(hObject,'String') returns contents of edit_Ending_Date as text
+%        str2double(get(hObject,'String')) returns contents of edit_Ending_Date as a double
+end
+
+% --- Executes during object creation, after setting all properties.
+function edit_Ending_Date_CreateFcn(hObject, eventdata, handles)
+% hObject    handle to edit_Ending_Date (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    empty - handles not created until after all CreateFcns called
+
+% Hint: edit controls usually have a white background on Windows.
+%       See ISPC and COMPUTER.
+if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
+    set(hObject,'BackgroundColor','white');
+end
+end
+
+
+function edit_Ending_time_Callback(hObject, eventdata, handles)
+% hObject    handle to edit_Ending_time (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+% Hints: get(hObject,'String') returns contents of edit_Ending_time as text
+%        str2double(get(hObject,'String')) returns contents of edit_Ending_time as a double
+end
+
+% --- Executes during object creation, after setting all properties.
+function edit_Ending_time_CreateFcn(hObject, eventdata, handles)
+% hObject    handle to edit_Ending_time (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    empty - handles not created until after all CreateFcns called
+
+% Hint: edit controls usually have a white background on Windows.
+%       See ISPC and COMPUTER.
+if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
+    set(hObject,'BackgroundColor','white');
+end
+end
