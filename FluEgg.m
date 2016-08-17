@@ -20,7 +20,7 @@
 
 function varargout = FluEgg(varargin)
 
-% Last Modified by GUIDE v2.5 21-Jul-2016 17:24:51
+% Last Modified by GUIDE v2.5 08-Aug-2016 12:20:01
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
@@ -84,6 +84,7 @@ setappdata(gcf,'fhRunning',@Running);
 %% Open edit river input file sub-GUI
 Edit_River_Input_File();
 
+
 %% Make Visible
 set(handles.Summary_panel,'Visible','on');
 set(handles.text13,'Visible','on');
@@ -104,26 +105,9 @@ set(handles.Dt,'Visible','on');
 set(handles.text12,'Visible','on');
 set(handles.simulation_panel,'Visible','on');
 set(handles.Running,'Visible','on');
-axes(handles.calendar_icon(1)); imshow('calendar.png');
-axes(handles.calendar_icon(2)); imshow('calendar.png');
-
 %% Make Results Invisible
 set(handles.panel_Results,'Visible','off');
 set(handles.NewSim_Button,'Visible','off');
-
-%% Set simulation date and time if unsteady simulation
-hFluEggGui = getappdata(0,'hFluEggGui');
-HECRAS_data.Profiles=getappdata(hFluEggGui,'inputdata'); %0 means root-->storage in desktop
-
-dateandtime = strsplit(char(HECRAS_data.Profiles(1).Date(1)),' ');
-set(handles.edit_Starting_Date,'String',dateandtime(1));
-set(handles.edit_Starting_time,'String',dateandtime(2));
-
-dateandtime = strsplit(char(HECRAS_data.Profiles(end).Date),' ');
-set(handles.edit_Ending_Date,'String',dateandtime(1));
-set(handles.edit_Ending_time,'String',dateandtime(2));
-%date=arrayfun(@(x) datenum(x.Date,'ddmmyyyy HHMM'), HECRAS_data.Profiles)
-%datestr(date(end)-date(1),'dd HH MM SS')
 
 guidata(hObject, handles);% Update handles structure
 end
@@ -132,9 +116,15 @@ end
 %% ::::::::::::::::::::::::::::::::::::::::::::::::::::%
 
 function Xi_input_Callback(hObject, ~, handles)
-load './Temp/temp_variables.mat'
-CumlDistance = temp_variables.CumlDistance;
-Width = temp_variables.Width;
+hFluEggGui = getappdata(0,'hFluEggGui');
+HECRAS_data=getappdata(hFluEggGui,'inputdata');
+HECRAS_time_index=1; %I need to think about what would happen if temp varies with time.TG
+Riverinputfile=HECRAS_data.Profiles(HECRAS_time_index).Riverinputfile;
+CumlDistance = single(Riverinputfile(:,2));   %Km
+Depth = Riverinputfile(:,3);          %m
+Q = Riverinputfile(:,4);              %m3/s
+Vmag = Riverinputfile(:,5);           %m/
+Width = abs(Q./(Vmag.*Depth));               %m
 
 %% Find initial cell
 Xi = str2double(get(handles.Xi_input,'String'));
@@ -288,7 +278,7 @@ try
         set(handles.NewSim_Button,'Visible', 'on');
         diary off
         
-        guidata(handles.figure1, handles); %update handles
+        guidata(handles.FluEgg_main, handles); %update handles
     end
 catch
     %If there was an error during the simulation (FluEgggui)
@@ -325,10 +315,17 @@ end
 
 % Hatching time -----------------------------------------------------------
 function Ht_Callback(hObject, eventdata, handles)
+hFluEggGui = getappdata(0,'hFluEggGui');
+HECRAS_data=getappdata(hFluEggGui,'inputdata');
+HECRAS_time_index=1; %I need to think about what would happen if temp varies with time.TG
+Riverinputfile=HECRAS_data.Profiles(HECRAS_time_index).Riverinputfile;
 
-Temp = load('./Temp/temp_variables.mat');
-CumlDistance = single(Temp.temp_variables.CumlDistance);
-Temp = single(Temp.temp_variables.Temp);
+CumlDistance = single(Riverinputfile(:,2));   %Km
+Temp = single(Riverinputfile(:,9));          %C
+%% Before unsteady         
+% Temp = load('./Temp/temp_variables.mat');
+% CumlDistance = single(Temp.temp_variables.CumlDistance);
+% Temp = single(Temp.temp_variables.Temp);
 
 % Determine where the eggs where spawned
 Initial_Cell = find(CumlDistance*1000>=str2double(get(handles.Xi_input,'String')));Initial_Cell=Initial_Cell(1); % Updated TG May,2015
@@ -354,7 +351,7 @@ web('http://asiancarp.illinois.edu/')
 end
 
 function settings = FluEgg_Settings
-settings.version = 'v2.2.01';
+settings.version = 'v2.3';
 end
 
 % Checks for FluEgg updates ---------------------------------------------
@@ -414,11 +411,26 @@ end
 
 %%=========================================================================
 Larvaemode = get(handles.Larvae,'Checked');
-Temp = load('./Temp/temp_variables.mat');
-CumlDistance = single(Temp.temp_variables.CumlDistance);
-Temp = single(Temp.temp_variables.Temp);
+
+hFluEggGui = getappdata(0,'hFluEggGui');
+HECRAS_data=getappdata(hFluEggGui,'inputdata');
+try
+HECRAS_time_index=HECRAS_data.spawiningTimeIndex; %I need to think about what would happen if temp varies with time.TG
+catch
+    spawiningTimeIndex=1; %if steady state using .xls.
+    HECRAS_time_index=1; %if steady state using .xls.
+end
+Riverinputfile=HECRAS_data.Profiles(HECRAS_time_index).Riverinputfile;
+CumlDistance = single(Riverinputfile(:,2));   %Km
+Temp = single(Riverinputfile(:,9));          %C
+%% Before unsteady         
+% Temp = load('./Temp/temp_variables.mat');
+% CumlDistance = single(Temp.temp_variables.CumlDistance);
+% Temp = single(Temp.temp_variables.Temp);
+
 Initial_Cell = find(CumlDistance*1000>=str2double(get(handles.Xi_input,...
-    'String')));Initial_Cell=Initial_Cell(1); % Updated TG May,2015
+    'String')),1,'first');
+Initial_Cell=Initial_Cell(1); % Updated TG May,2015
 
 
 switch Larvaemode %:Updated TG May,2015
@@ -447,6 +459,7 @@ switch Larvaemode %:Updated TG May,2015
         set(handles.Totaltime,'String',handles.userdata.Max_Sim_Time);
         %======================================================================
 end
+Totaltime_Callback(hObject, eventdata, handles)
 guidata(hObject, handles);
 end
 
@@ -562,3 +575,31 @@ if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgr
     set(hObject,'BackgroundColor','white');
 end
 end
+
+
+
+function Totaltime_Callback(hObject, eventdata, handles)
+hFluEggGui = getappdata(0,'hFluEggGui');
+HECRAS_data=getappdata(hFluEggGui, 'inputdata');
+try
+date=arrayfun(@(x) datenum(x.Date,'ddmmyyyy HHMM'), HECRAS_data.Profiles);
+endSimtime=HECRAS_data.SpawningTime+str2double(get(handles.Totaltime,'String'))/24;
+EndSimTimeIndex=find(date>=endSimtime,1,'first');
+dateandtime = strsplit(char(HECRAS_data.Profiles(EndSimTimeIndex).Date(1)),' ');
+set(handles.edit_Ending_Date,'String',dateandtime(1));
+set(handles.edit_Ending_time,'String',dateandtime(2));
+HECRAS_data.EndSimTimeIndex=EndSimTimeIndex;
+setappdata(hFluEggGui,'inputdata',HECRAS_data)
+catch
+    %steady state or xls.
+end
+%         %% Assume user want to simulate same time as HEC-RAS
+%         Time_day_H_min_sec=datestr(date(end)-date(1),'dd HH MM SS');
+%         Time_day_H_min_sec=str2double(strsplit(Time_day_H_min_sec,' '));
+%         SimTime_H=(Time_day_H_min_sec(1)*24)+(Time_day_H_min_sec(2))+(Time_day_H_min_sec(3)/60)+(Time_day_H_min_sec(4)/3600);
+%         set(handlesmain.Totaltime,'String',SimTime_H);
+%         HECRAS_data.simtime_h=SimTime_H;
+
+ 
+end
+

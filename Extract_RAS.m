@@ -93,8 +93,8 @@ for i=1:lngNum_RS
         % Here we assing the river station name to each node
         strRS{XC_counter} = RC.Geometry.NodeRS(lngRiverID,lngReachID,i);
         % Extracts average velocity of flow for the main channel
-        sngVelChnl(XC_counter) = RC.Output_NodeOutput(lngRiverID,lngReachID,i,lngUpDn,...
-            lngProfile,lngVelChnl_ID);
+        sngVelChnl(XC_counter) = abs(RC.Output_NodeOutput(lngRiverID,lngReachID,i,lngUpDn,...
+            lngProfile,lngVelChnl_ID));
         % Extracts hydraulic depth in channel
         sngHydrDepthC(XC_counter) = RC.Output_NodeOutput(lngRiverID,lngReachID,i,lngUpDn,...
             lngProfile,lngHydrDepthC_ID);
@@ -122,7 +122,7 @@ sngLengthChnl(end)=0; %There is not data of length channel for the last cell
 Riverinputfile=Generate_Rivirinputfile();
 
 try
-    RC.Quit
+    RC.QuitRAS
 catch
 end
 delete(RC);
@@ -132,14 +132,21 @@ delete(RC);
 %% :::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
     function Riverinputfile=Generate_Rivirinputfile()
         CumlDistance=[0;cumsum(sngLengthChnl(1:end-1))/1000];%In km
+        CumlDistance=[((CumlDistance(1:end-1)+CumlDistance(2:end))/2); CumlDistance(end)]; %FluEgg cells are located between 2 XS
         CellNumber=(1:1:lngNum_XS)';
         ks=(8.1.*sngMannWtdChnl.*sqrt(9.81)).^6;
-        Ustar=sngVelChnl./(8.1*((sngHydrRadiusC./ks).^(1/6)));
+        Ustar=abs(sngVelChnl./(8.1*((sngHydrRadiusC./ks).^(1/6))));
         %% Temperature choice
         Temperature=str2double(get(handles.Const_Temp(2),'String'));
+        if isnan(Temperature) %If user didn't input temperature
+            ed = errordlg('Please input temperature','Error');
+            set(ed, 'WindowStyle', 'modal');
+            uiwait(ed);
+            return
+        end
         Riverinputfile=[CellNumber CumlDistance sngHydrDepthC sngQChannel...
-            sngVelChnl zeros(lngNum_XS,1) zeros(lngNum_XS,1) Ustar ...
-            Temperature*ones(lngNum_XS,1)]; % default temperature 22C
+                        sngVelChnl zeros(lngNum_XS,1) zeros(lngNum_XS,1) Ustar ...
+                        Temperature*ones(lngNum_XS,1)]; % default temperature 22C
     end
 %% :::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
 

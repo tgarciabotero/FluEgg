@@ -138,8 +138,17 @@ switch Tab
     case 'Vertical'
         for i=length(Postprocessing_option):-1:1
             if  strcmp(Postprocessing_option(i),'Distribution of eggs over the water column')
-                Distribution_of_Eggs_at_hatching();
-                Distribution_of_Eggs_at_a_distance();
+                
+                % Construct a questdlg with two options
+                choice = questdlg('Do you want to plot the vertical distribution of eggs at:', ...
+                    'Plot option','a given time?','a given distance?','a given time?');
+                % Handle response
+                switch choice
+                    case 'a given time?'
+                        Distribution_of_Eggs_at_hatching();
+                    case 'a given distance?'
+                        Distribution_of_Eggs_at_a_distance();
+                end
             end
             if  strcmp(Postprocessing_option(i),'Egg vertical concentration distribution')
                 egg_mass_centroid_Vs_distance();
@@ -532,10 +541,26 @@ time=ResultsSim.time;
 TimeToHatch = HatchingTime(Temp,specie);
 
 if round(TimeToHatch*60*60)>time(end)
-    ed = errordlg('Eggs have not hatched yet','Error');
-    set(ed, 'WindowStyle', 'modal');
-    uiwait(ed);
-else
+    % Construct a questdlg with two options
+choice = questdlg('Eggs have not hatched yet, would you want to plot vertical distribution of eggs at the end of simulation period?', ...
+	'Time','Yes','No','at a different time','Yes');
+% Handle response
+switch choice
+    case 'Yes'
+        disp([choice ' Perfect.'])
+        TimeToHatch=time(end)/3600;
+    case 'at a different time'
+        TimeToHatch=str2double(inputdlg('time(h)',...
+              'Time', [1 10])); 
+          if round(TimeToHatch*60*60)>time(end)
+              errordlg('Input time is greater than simulated time','FluEgg Error');
+          end
+          
+    case 'No'
+        return
+end
+end
+%This was designed for time to hatch, now we use it for different times
     %% Percentage of eggs in the water column
     %% finding the normalized location at hatching time
     tindex=find(time>=round(TimeToHatch*3600));tindex=tindex(1);
@@ -595,7 +620,7 @@ else
     annotation('line',[0.97 0.96],[0.1020 0.0900]);
     annotation('line',[0.98 0.97],[0.1020 0.0900]);
     text(Xlimit(end)*1.065,0.063, {'River','bed'},'HorizontalAlignment','center','FontName','Arial')
-end
+
 diary off
 end
 
@@ -827,6 +852,7 @@ if SetTime==T2_Gas_bladder
     %% Distribution of larvae at Gas bladder inflation
     Distribution_GBI;
 else     %% Distribution of eggs at hatching time
+    
     Distribution_eggs_hatch(SetTime);
     annotation('rectangle',position_axes1,'FaceColor','flat','linewidth',1.5);
 end
@@ -896,6 +922,7 @@ end
         %%
         cdf_Nsusp=cumsum(Nsusp*100/size(X_at_Time,1));
         percentage_of_Eggs=[Nbot Nsusp]*100/size(X_at_Time,1);
+        sum(percentage_of_Eggs)
         bar1=bar(bids,percentage_of_Eggs,1,'stacked');
         set(bar1(2),'FaceColor',[0.3804,0.8118,0.8980]);
         set(bar1(1),'FaceColor',[0.6,0.6,0.6]);
@@ -903,8 +930,9 @@ end
         position_axes1= get(gca,'position');
         [Convert_km_to_miles,xlabel_text,StringStats]=setupUnits(X_at_Time(Z_at_Time_H>0.05));%Calculate stats for eggs in susp.
         
-        xStep=round(Convert_km_to_miles*(k*ds+max(max(X_at_Time)))/4);%in miles
-        xaxisticks=[0:round(xStep/10)*10:5*round(xStep/10)*10];
+        xStep=ceil(Convert_km_to_miles*(k*ds+max(max(X_at_Time)))/4);%in miles
+        %xaxisticks=[0:ceil(xStep/10)*10:5*ceil(xStep/10)*10];
+        xaxisticks=[0:ceil(xStep*10)/10:5*ceil(xStep*10)/10];
         set(gca,'XTick',xaxisticks/Convert_km_to_miles,'Xticklabel',xaxisticks)
         set(gca,'TickDir','in','TickLength',[0.021 0.021],'XMinorTick','on','FontName','Arial','FontSize',12)
         xlim([0 xaxisticks(end)/Convert_km_to_miles]) %Xaxis limit

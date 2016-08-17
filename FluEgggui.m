@@ -13,7 +13,7 @@
 %                                                                         %
 % ------------------------------------------------------------------------%
 %   Created by      : Tatiana Garcia                                      %
-%   Last Modified   : June 2, 2016                                        %
+%   Last Modified   : July 29, 2016                                        %
 % ------------------------------------------------------------------------%
 %                                                                         %
 % Copyright 2016 Tatiana Garcia                                           %
@@ -44,24 +44,35 @@ alivemodel = 1;  %if alivemodel=1 the eggs would not die
 Exit = 0; %If we exit the code
 % =======================================================================
 
-%% Imports input data from temp variables
-Temp = load('./Temp/temp_variables.mat');temp_variables=Temp.temp_variables;clear Temp;
-CumlDistance = single(temp_variables.CumlDistance);
-Depth = single(temp_variables.Depth);
-VX = single(temp_variables.VX);
-Vlat = single(temp_variables.Vlat);
-Vvert = single(temp_variables.Vvert);
-Ustar = single(temp_variables.Ustar);
-Temp = single(temp_variables.Temp);
-Width = single(temp_variables.Width);
-ks = single(temp_variables.ks);
-clear temp_variables
+%% Imports input data
 
-%% If user is using the HEC-RAS importer
-HECRAS_time=1;
-[CumlDistance,Depth,Q,Vmag,Vlat,Vvert,Ustar,T,Width,VX,ks]=Create_Update_Hydraulic_and_QW_Variables(HECRAS_time)
-	
-
+Totaltime = single(handles.userdata.Totaltime*3600);%seconds
+%% HECRAS input
+try
+    
+    hFluEggGui = getappdata(0,'hFluEggGui');
+    HECRAS_data=getappdata(hFluEggGui,'inputdata');
+    HECRAS_time_index=HECRAS_data.spawiningTimeIndex;
+    
+    date=arrayfun(@(x) datenum(x.Date,'ddmmyyyy HHMM'), HECRAS_data.Profiles);
+    %Calculate Hydraulic Time step
+    HDt=datestr(date(2)-date(1),'dd HH MM SS');
+    HDt=str2double(strsplit(HDt,' '));
+    HDt=(HDt(1)*24)+(HDt(2))+(HDt(3)/60)+(HDt(4)/3600);%Hydraulic Time step in hours
+    HDt=HDt*3600;%Hydraulic Time step in seconds
+    %HECRAS_data.HDt_seconds=HDt;
+    
+    %HEC-RAS time=0 is the spawning time
+    HECRAS_time=0:HDt:Totaltime;
+    HECRAS_time_counter=1;
+    HECRAS_data.HECRAS_time_sec=HECRAS_time;
+    setappdata(hFluEggGui,'inputdata',HECRAS_data)     
+catch %if steady state
+HECRAS_time_index=1;
+end
+      
+%Cell dependant variables
+[CumlDistance,Depth,Q,~,Vlat,Vvert,Ustar,Temp,Width,VX,ks]=Create_Update_Hydraulic_and_QW_Variables(HECRAS_time_index);
 % =======================================================================
 % Gets input data from main GUI
 Eggs = single(handles.userdata.Num_Eggs);%make sure you can take the cubic root of it.(e.g 27,64,125)
@@ -149,7 +160,7 @@ switch Larvaemode %:Updated TG May,2015
         % ======================================================================
 end %If larvaemode on
 
-Totaltime = single(handles.userdata.Totaltime*3600);%seconds
+
 Dt = single(handles.userdata.Dt); %time step in seconds
 minDt = Dt; % initialize the variable
 time = single(0:Dt:Totaltime); %generates time array, time is in seconds
@@ -164,13 +175,14 @@ Z = zeros(Steps,Eggs,'single');
 cell = zeros(Eggs,1,'single');
 Vx = zeros(Eggs,1,'single');
 Vy = Vx;
+Egg_Direction= Vx;
 Vz = Vx;
 H = Vx;
 W = Vx;
 DH = Vx;
 ustar = Vx;
 SG = Vx;
-T = Vx;
+T = Vx;%Egg dependante Temperature
 Vswim = Vx;
 X(1,:)= Xi;
 Y(1,:)= Yi;
@@ -178,7 +190,8 @@ Z(1,:) = Zi;
 KS = Vx;
 Rhoe = Vx;
 alive = ones(Steps,Eggs,'single');
-
+%% Delete or comment, this is for debug
+%H_unsteady=ones(Steps,Eggs,'single');
 %% In case of mortality model active ======================================
 if alivemodel==0
     %Check int 8 for this case
@@ -225,6 +238,7 @@ for l=1:Eggs
     ustar(l) = Ustar(cell(l));
     T(l) = Temp(cell(l));
     KS(l) = ks(cell(l)); %mm
+    Egg_Direction(l) = Q(cell(l))./abs(Q(cell(l))); %positive is downstream movement
     %% Calculating the SG of eggs
     Rhoe(l) = Rhoe_ref(t)+0.20646*(Tref-Temp(cell(l)));
     SG(l) = Rhoe(l)/Rhow(cell(l));%dimensionless
@@ -232,10 +246,13 @@ for l=1:Eggs
     %======================================================================
     %% Explicit Lagrangian Horizontal Diffusion
     DH(l) = 0.6*H(l)*ustar(l);
+    %% Delete or comment, this is for debug
+    %H_unsteady(1,l)=H(l)';
 end %get hydraulic and water temperature data at egg location
 
 %% Calculating initial fall velocity of eggs
 % Dietrich's
+% All eggs have same properties initially
 Vzpart = single(-Dietrich(D(t),SG(1),T(1))/100);%D should be in mm, vs output is in cm/s, then we convert it to m
 %======================================================================
 
@@ -254,6 +271,7 @@ Vzpart=Vzpart*ones(Eggs,1,'single'); %Initially all the eggs have the same Vs
 clear Dmin Vsmax DiamStd VsStd Diam vs C str val
 
 %% Lagrangian movement of eggs (Please reffer to Jump function below)
+Warning_flag=0;
 Jump;
 %========================================================================
 
@@ -309,7 +327,7 @@ Jump;
             %% Diameter fit
             a = 5.82;
             b = 3506.7;
-            D = a*(1-exp(-time/b));%R2 = 0.85 for BC eggs
+            D = a*(1-exp(-time/b));%R2 = 0.82 for BC eggs
             %% Density of eggs fit Standardized to 22C
             a = 30.58;
             b = 1716;c=999.4;Rhoe_ref=(a*exp(-time/b))+c;%R-square: 0.84 for BC eggs
@@ -404,13 +422,13 @@ Jump;
 % 2.  Checking_Dt                                                         %
     function [minDt,CheckDt] = Checking_Dt
         CheckDt = 1;
-        %% Preallocate memory
-        Dt_cells = zeros(size(Rhoe_ref,1),size(CumlDistance,1),'single');
-        B_cells = Dt_cells;
-        SG_cells = ones(length(time),length(CumlDistance),'single');
-        Vzpart_cells = ones(length(time),length(CumlDistance),'single');
-        for Time=1:length(time)
-            SG_cells(Time,:) = (Rhoe_ref(Time)+0.20646*(Tref-Temp))./Rhow;
+        %% Preallocate memory [TimexCells]
+        Dt_cells = zeros(size(Rhoe_ref,1),size(CumlDistance,1),'single');% [TimexCells]
+        B_cells = Dt_cells; %[TimexCells]
+        SG_cells = ones(length(time),length(CumlDistance),'single'); %[TimexCells]
+        Vzpart_cells = ones(length(time),length(CumlDistance),'single');%[TimexCells]
+        for Time=1:length(time)%calculate parameter for all cells for everytime step upto sim time.
+            SG_cells(Time,:) = (Rhoe_ref(Time)+0.20646*(Tref-Temp))./Rhow;%sg during all time we will simulate
             for dist=1:length(CumlDistance)
                 Vzpart_cells(Time,dist) = Dietrich(D(Time),SG_cells(Time,dist),Temp(dist))/100;
             end
@@ -427,12 +445,11 @@ Jump;
         Kprime = zeros(size(DH),'single');Kz=Kprime;%Memory allocation
         Mortality = 0;
         waitstep = floor((Steps)/100);
-        alpha = 2.51;%1.9;%1.3;%
-        beta = 2.47;%1.8;%1.2;%
+        alpha = 2.51;%Average value among several rivers
+        beta = 2.47;
         %%=================================================================================================
         
-        for t=2:Steps
-            %%
+        for t=2:Steps                    
             if ~mod(t, waitstep) || t==Steps
                 fill=time(t)/Totaltime;
                 % Check for Cancel button press
@@ -472,15 +489,26 @@ Jump;
                     Vxz = ustar(a).*((1/0.41)*log(Zb./KS(a))+8.5);%Vxz of alive eggs
                     Vxz(Vxz<0) = 0; %Non slip boundary condition;
             end
+            Vxz=Egg_Direction(a).*Vxz;
             
             %% Streamwise velocity distribution in the transverse direction
-            Vxz = Vxz.*betapdf(Y(t-1,a)'./W(a),alpha,beta);
+            Vxz = abs(Vxz).*betapdf(Y(t-1,a)'./W(a),alpha,beta);
             %% X
             X(t,a) = X(t-1,a)'+(Dt*Vxz)+(normrnd(0,1,sum(a),1).*sqrt(2*DH(a)*Dt));
-            %reflecting Boundary
+            % Reflecting Boundary: Iff Eggs are located outside the
+            % upstream boundary condition
             check = X(t,a);
             check(check<d/2) = d-check(check<d/2);
-            X(t,a) = check;
+            if length(check<d/2)>1 && Warning_flag==0
+                hh=msgbox('Some eggs crossed the upstream boundary and where bounced back to the domain','FluEgg Warning','warn');
+                pause(2)
+                Warning_flag=Warning_flag+1;
+                try
+                delete(hh)
+                catch
+                end
+            end    
+            X(t,a) = check; %The new location of the eggs is check;
             check = []; %reset check
             X(t,~a) = X(t-1,~a);%If they were already dead,leave them in the same position.
             
@@ -507,7 +535,7 @@ Jump;
             % Z(t,a) = Z(t-1,a)'+Dt*(Vz(a)+Vzpart(a)+Kprime)+(normrnd(0,1,sum(a),1).*sqrt(2*Kz*Dt));%m
             Z(t,~a) = -H(~a)+d/2;%If they were already dead,leave them in the bottom.
             %% Check if eggs are in a new cell in this jump
-            Check_if_egg_isin_newcell
+            Check_if_egg_isin_newcell_or_New_Hydraulic_time_step
             if Exit==1  %If eggs are outside the domain
                 delete(h)
                 return
@@ -539,10 +567,7 @@ Jump;
                 b=Z(t,:)'<-H(:)+d/2;% Bottom
             end
             
-            %% Reflective in Y
-            %             check=Y(t,a);check(check<d/2)=d-check(check<d/2);Y(t,a)=check;check=[];
-            %             check=Y(t,a);w=W(a)';check(check>w-d/2)=2*w(check>w-d/2)-d-check(check>w-d/2);Y(t,a)=check;check=[];
-            %% double check after first jump
+            %% Reflective in Y and double check after first jump
             check = Y(t,a);
             w = W(a)';
             while ~isempty(check(check<d/2))||~isempty(check(check>w-d/2))
@@ -589,7 +614,11 @@ Jump;
         end
         hFluEggGui = getappdata(0,'hFluEggGui');
         setappdata(hFluEggGui, 'outputfile', outputfile);
-        %%
+        %% DELETE_Or_comment_This is for debugging==========================================
+%         hFluEggGui = getappdata(0,'hFluEggGui');
+%         HECRAS_data=getappdata(hFluEggGui,'inputdata');
+%         Depth_HEC_RAS=arrayfun(@(x) x.Riverinputfile(1,3), HECRAS_data.Profiles);
+        %%=================================================================
         ResultsSim.X = X;
         ResultsSim.Y = Y;
         ResultsSim.Z = Z;
@@ -682,16 +711,41 @@ Jump;
 
 %++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 % 4.  Check_if_egg_isin_newcell                                                                %
-    function Check_if_egg_isin_newcell
+    function Check_if_egg_isin_newcell_or_New_Hydraulic_time_step
+        %% Check if it is a new hydraulic_time_step, if so retrive hydraulic input variables
+        hFluEggGui = getappdata(0,'hFluEggGui');
+        HECRAS_data=getappdata(hFluEggGui,'inputdata');
+        
+        %% if we are in a new HEC-RAS time step
+        %%==>We will have new hydraulic conditions for next time step
+        try % for unsteady input
+             HECRAS_time_sec=HECRAS_data.HECRAS_time_sec;
+            if time(t)>=HECRAS_time_sec(HECRAS_time_counter+1)
+                HECRAS_time_index=HECRAS_time_index+1;
+                HECRAS_time_counter=HECRAS_time_counter+1;
+                [~,Depth,Q,~,Vlat,Vvert,Ustar,Temp,Width,VX,ks]=Create_Update_Hydraulic_and_QW_Variables(HECRAS_time_index);
+                for egg_index=1:length(H)
+                    Cell=cell(egg_index);%Cell is the cell were the current egg is located 
+                    [Vz,Vy,H,W,DH,ustar,T,KS,Vzpart,Egg_Direction]=update_local_Hydraulics_and_Temp_of_eggs(egg_index,Cell,Vz,Vy,H,W,DH,ustar,T,KS,Vzpart,Q,Egg_Direction);
+                end
+            end
+        catch
+            %continue if steady state
+        end
+        
+        
         %% Check if eggs are in a new cell in this jump
+        %Find egg index of eggs that are in a new cell
         [c,~]=find(X(t,:)'>(CumlDistance(cell)*1000));
         for i=1:length(c)
-            C=find(X(t,c(i))<CumlDistance*1000); %Find the new cell where eggs are located
+            egg_index=c(i);
+            C=find(X(t,egg_index)<CumlDistance*1000,1,'first'); %Find the new cell where eggs are located
             %%=====================================================================
             if isempty(C)  % If the egg is outside the domain
                 ed=errordlg([{'The cells domain have being exceeded.'},{'Please extend the River the domain in the River input file.'},{'Advice:'},{'1.  If your waterbody ends in a lake and you expect the eggs to settle, you can add an additional cell with Vmag=u*=very small value=1e-5m/s.'},{'2.  If your waterbody ends in a stream where you do not expect settling, you need to extend your domain by adding an additional cell with the stream hydrodynamics.'},{'3.  If the hydrodynamics after the last cell are approximately constant, you can extrapolate your domain by extending the cumulative distance of the last cell of your domain, use with caution.'}],'Error');
                 set(ed, 'WindowStyle', 'modal');
                 uiwait(ed);
+                msgbox(['Simulation time=', sprintf('%5.1f',time(t)/3600),'h, ','Mean X=',sprintf('%5.1f',mean(X(t-1,:))/1000),'km'],'FluEgg message','help');
                 Exit=1;
                 return
                 %                 if cellsExtended==0
@@ -700,27 +754,41 @@ Jump;
                 %                 end
                 %% Continue in the drift ================================================
             else
-                cell(c(i))=C(1);Cell=cell(c(i));%cell is the cell were an egg is
-                %Vx(c(i))=VX(Cell); %m/s
-                Vz(c(i))=Vvert(Cell); %m/s
-                Vy(c(i))=Vlat(Cell); %m/s
-                H(c(i))=Depth(Cell); %m
-                W(c(i))=Width(Cell); %m
-                DH(c(i))=0.6*Depth(Cell)*Ustar(Cell);
-                ustar(c(i))=Ustar(Cell);
-                T(c(i))=Temp(Cell);
-                KS(c(i))=ks(Cell); %mm
-                %%
-                %% Calculating the SG of esggs
-                Rhoe(c(i))=(0.5*(Rhoe_ref(t)+Rhoe_ref(t-1)))+0.20646*(Tref-Temp(cell(i)));%Calculated at half timestep
-                SG(c(i))=Rhoe(c(i))/Rhow(Cell);%dimensionless
-                if SG(c(i))<1
-                    Vzpart(c(i))=0;
-                end
-                %% Dietrich
-                Vzpart(c(i))=-Dietrich(0.5*(D(t)+D(t-1)),SG(c(i)),T(c(i)))/100;
+                
+            cell(egg_index)=C; %Update the array that storage the cell number of all the eggs    
+            Cell=cell(egg_index);%Cell is the cell were the current egg is located           
+            [Vz,Vy,H,W,DH,ustar,T,KS,Vzpart,Egg_Direction]=update_local_Hydraulics_and_Temp_of_eggs(egg_index,Cell,Vz,Vy,H,W,DH,ustar,T,KS,Vzpart,Q,Egg_Direction);
             end
         end
+        %% Delete or comment, this is for debug
+        %H_unsteady(t,:)=H';
+        
+        
+        %% Update egg local Hydraulic and thermal characteristigs 
+        function [Vz,Vy,H,W,DH,ustar,T,KS,Vzpart,Egg_Direction]=update_local_Hydraulics_and_Temp_of_eggs(egg_index,Cell,Vz,Vy,H,W,DH,ustar,T,KS,Vzpart,Q,Egg_Direction)
+           %Vx(c(i))=VX(Cell); %m/s
+            Vz(egg_index)=Vvert(Cell); %m/s
+            Egg_Direction(egg_index)=Q(Cell)/abs(Q(Cell)); %
+            Vy(egg_index)=Vlat(Cell); %m/s
+            H(egg_index)=Depth(Cell); %m
+            W(egg_index)=Width(Cell); %m
+            DH(egg_index)=0.6*Depth(Cell)*Ustar(Cell);
+            ustar(egg_index)=Ustar(Cell);
+            T(egg_index)=Temp(Cell);
+            KS(egg_index)=ks(Cell); %mm
+            %%
+            %% Calculating the SG of esggs
+            Rhoe(egg_index)=(0.5*(Rhoe_ref(t)+Rhoe_ref(t-1)))+0.20646*(Tref-Temp(Cell));%Calculated at half timestep
+            SG(egg_index)=Rhoe(egg_index)/Rhow(Cell);%dimensionless
+            if SG(egg_index)<1
+                Vzpart(egg_index)=0;
+            end
+            %% Dietrich
+            Vzpart(egg_index)=-Dietrich(0.5*(D(t)+D(t-1)),SG(egg_index),T(egg_index))/100;
+        end%update_local_Hydraulics&Temp_of_eggs
+        
+        
+        
     end %New cell
 
 %++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
@@ -783,30 +851,45 @@ Jump;
         %% At which cell the egg dye??
         celldead(alive(t,:)==0)=cell(alive(t,:)==0);
     end %mortality model
-	
+
 %++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 % 6.  Create hydraulic and QW variables
-function [CumlDistance,Depth,Q,Vmag,Vlat,Vvert,Ustar,T,Width,VX,ks]=Create_Update_Hydraulic_and_QW_Variables(HECRAS_time)
-hFluEggGui = getappdata(0,'hFluEggGui');
-    HECRAS_data.Profiles=getappdata(hFluEggGui,'inputdata'); 
-    Riverinputfile=HECRAS_data.Profiles(time).Riverinputfile;
-	
-CumlDistance = Riverinputfile(:,2);   %Km
-Depth = Riverinputfile(:,3);          %m
-Q = Riverinputfile(:,4);              %m3/s
-Vmag = Riverinputfile(:,5);           %m/s
-Vlat = Riverinputfile(:,6);           %m/s
-Vvert = Riverinputfile(:,7);          %m/s
-Ustar = Riverinputfile(:,8);          %m/s
-T = Riverinputfile(:,9);          %C
-
-%==========================================================================
-%% Calculations
-Width = abs(Q./(Vmag.*Depth));               %m
-VX = sqrt(Vmag.^2-Vlat.^2-Vvert.^2);         %m/s
-ks = Ks_calculate();
-
-end	
+    function [CumlDistance,Depth,Q,Vmag,Vlat,Vvert,Ustar,Temp,Width,VX,ks]=Create_Update_Hydraulic_and_QW_Variables(HECRAS_time_index)
+        hFluEggGui = getappdata(0,'hFluEggGui');
+        HECRAS_data=getappdata(hFluEggGui,'inputdata');
+        
+        %% Delete or uncomment, this is for testing of the unsteady input new development
+%         for i=1:7
+%             HECRAS_data.Profiles(i).Riverinputfile(2:end,:)=[];
+%             HECRAS_data.Profiles(i).Riverinputfile(1,2)=100;
+%         end
+%         setappdata(hFluEggGui,'inputdata',HECRAS_data);
+        %%==================================================================
+        Riverinputfile=HECRAS_data.Profiles(HECRAS_time_index).Riverinputfile;
+        
+        CumlDistance = Riverinputfile(:,2);   %Km
+        Depth = Riverinputfile(:,3);          %m
+        Q = Riverinputfile(:,4);              %m3/s-->sign is in Vx
+        Vmag = Riverinputfile(:,5);           %m/s
+        Vlat = Riverinputfile(:,6);           %m/s
+        Vvert = Riverinputfile(:,7);          %m/s
+        Ustar = Riverinputfile(:,8);          %m/s
+        Temp = Riverinputfile(:,9);          %C
+        
+        %==========================================================================
+        %% Calculations
+        Width = abs(Q./(Vmag.*Depth));               %m
+        VX = (Q./abs(Q)).*sqrt(Vmag.^2-Vlat.^2-Vvert.^2); %m/s Times +1 or - 1 to account for flow direction
+        ks = Ks_calculate();
+        
+        function [ks]=Ks_calculate()
+            %% Input data needed to calculate ks
+            Depth = Riverinputfile(:,3);         %m
+            Ustar = Riverinputfile(:,8);           %m/s
+            ks = 11*Depth./exp((VX.*0.41)./Ustar); %m
+        end
+        
+    end
 %toc
 %profreport
 end %FluEgg function
