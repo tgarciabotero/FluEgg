@@ -351,7 +351,7 @@ web('http://asiancarp.illinois.edu/')
 end
 
 function settings = FluEgg_Settings
-settings.version = 'v2.3';
+settings.version = 'v3.0';
 end
 
 % Checks for FluEgg updates ---------------------------------------------

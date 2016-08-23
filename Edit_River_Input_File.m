@@ -230,7 +230,13 @@ set(handles.TempPlot,'Visible','off');
 
     function [RC]=loadsHECRAS(strFilename)
         %% Creates a COM Server for the HEC-RAS Controller
+        try
         RC = actxserver('RAS500.HECRASController');
+        catch
+            ed = errordlg('Please install HEC-RAS 5.0 and try again','Error');
+            set(ed, 'WindowStyle', 'modal');
+            uiwait(ed);
+        end
         % The command above depends on the version of HEC-RAS you have, in my case
         % I am using version 5.0.
         
@@ -445,6 +451,9 @@ axes(handlesmain.calendar_icon(2)); imshow('calendar.png');
         try
         set(handlesmain.edit_Ending_time,'String',dateandtime(2));     
         catch
+            ed = errordlg('The simulated time in HEC-RAS is not long enough to support FluEgg simulations, Please extend your simulated period in HEC-RAS. ','Error');
+            set(ed, 'WindowStyle', 'modal');
+            uiwait(ed);
         end
         HECRAS_data.spawiningTimeIndex= spawiningTimeIndex;
         HECRAS_data.EndSimTimeIndex=EndSimTimeIndex;
