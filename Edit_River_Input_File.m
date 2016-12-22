@@ -39,7 +39,6 @@ else
 end
 end
 
-
 function Edit_River_Input_File_OpeningFcn(hObject, ~, handles, varargin)
 ScreenSize=get(0, 'screensize');
 set(handles.River_inputfile_GUI,'Position',[1 1 ScreenSize(3:4)])
@@ -76,10 +75,24 @@ end
 
 % --- Executes on button press in Import_HECRAS_panel_button.
 function Import_HECRAS_panel_button_Callback(hObject, eventdata, handles)
-set(handles.panel_Single_xls_file, 'visible', 'off');
-set(handles.panel2, 'visible', 'on');
-set(handles.River_Input_File_Panel_button, 'value', 0);
+init_ImportHECRAS_panel()
+set(handles.Import_data_button,'String', 'Import data')
+
 guidata(hObject, handles);% Update handles structure
+
+    function init_ImportHECRAS_panel() 
+        set(handles.text_TempHEC,'Visible','on')
+        set(handles.popup_TempHEC,'Visible','on')
+        set(handles.Const_Temp,'Visible','on')
+        set(handles.checkbox_flow,'Visible','on')
+        set(handles.checkbox_H,'Visible','on')
+        %set(handles.text_HECRAS_profile,'String','HEC-RAS profile:')
+        set(handles.panel_Single_xls_file, 'visible', 'off')
+        set(handles.panel2, 'visible', 'on')
+        set(handles.River_Input_File_Panel_button,'Value',0)
+        set(handles.Import_HECRAS_panel_button,'Value',1)
+        set(handles.time_series_panel,'Value',0)
+    end % init_ImportHECRAS_panel()
 end
 
 %% <<<<<<<<<<< USER WANTS TO IMPORT A SINGLE RIVER INPUT FILE >>>>>>>>>>>%%
@@ -211,7 +224,7 @@ else
 end
 
 %%
-set(handles.Import_data_button,'String','Import data');
+%set(handles.Import_data_button,'String','Import data'); %[SS]
 %%
 guidata(hObject, handles);% Update handles structure
 close(m)
@@ -246,10 +259,16 @@ set(handles.TempPlot,'Visible','off');
         
         % Profile Names
         [lngNumProf,strProfileName]=RC.Output_GetProfiles(0,0);
-        % add the option of including all profiles-->For unsteady state
-        strProfileName(2:end+1) = strProfileName(1:end);
-        strProfileName{1}='All profiles-unsteady flow';
-        set(handles.popup_HECRAS_profile,'string',strProfileName);%Display profile names in GUI
+        importData = get(handles.Import_HECRAS_panel_button,'Value');
+        if importData == 1
+            % add the option of including all profiles-->For unsteady state
+            strProfileName(2:end+1) = strProfileName(1:end);
+            strProfileName{1}='All profiles-unsteady flow';
+            set(handles.popup_HECRAS_profile,'string',strProfileName);%Display profile names in GUI
+        else
+            'Do Nothing'
+        end
+        
         % Plan Name
         [lngPlanCount,strPlanNames,~]=RC.Plan_Names(0,0,0);%Gets plan names. Output:[lngPlanCount,strPlanNames,blnIncludeBasePlansOnly]
         set(handles.popupPlan,'string',strPlanNames);%Display plan names in GUI
@@ -460,7 +479,7 @@ axes(handlesmain.calendar_icon(2)); imshow('calendar.png');
         setappdata(hFluEggGui,'inputdata',HECRAS_data)
     end
 diary off
-close(Edit_River_Input_File);
+% close(Edit_River_Input_File);
 end
 
 %%======================================================================
@@ -479,7 +498,7 @@ end
 
 function RiverInputFile_CellEditCallback(hObject, eventdata, handles)
 hFluEggGui = getappdata(0,'hFluEggGui');
-HECRAS_data=getappdata(hFluEggGui,'inputdata');
+HECRAS_data=getappdata(hFluEggGui,'');
 HECRAS_data.Profiles.Riverinputfile=get(handles.RiverInputFile,'Data');
 setappdata(hFluEggGui, 'inputdata',HECRAS_data);
 % if  isfield(handles,'userdata') == 0
@@ -546,7 +565,11 @@ end
 
 % --- Executes on selection change in popup_River_Station.
 function popup_River_Station_Callback(hObject, eventdata, handles)
-pushbutton_plot_Callback(hObject, eventdata, handles)
+    try
+        pushbutton_plot_Callback(hObject, eventdata, handles)
+    catch
+        %Do Nothing
+    end
 end
 
 % --- Executes during object creation, after setting all properties.
@@ -560,7 +583,7 @@ end
 % --- Executes on button press in pushbutton_plot.
 function pushbutton_plot_Callback(hObject, eventdata, handles)
 hFluEggGui = getappdata(0,'hFluEggGui');
-HECRAS_data=getappdata(hFluEggGui,'inputdata'); %0 means root-->storage in desktop
+HECRAS_data = getappdata(hFluEggGui,'inputdata'); %0 means root-->storage in desktop
 if isempty(HECRAS_data)
     m = msgbox('Please import data and try again','FluEgg error','error');
     uiwait(m)
@@ -570,10 +593,12 @@ else
 str = get(handles.popup_River_Station, 'String');
 val = get(handles.popup_River_Station,'Value');
 % Hydrographs:
-if get(handles.checkbox_flow,'value')==1
+if get(handles.checkbox_flow,'value') == 1
+    set(handles.checkbox_H,'value',0)
     Hydrograph=arrayfun(@(x) x.Riverinputfile(val,4), HECRAS_data.Profiles);
     Yylabel='Flow, in cubic meters per second';
-elseif get(handles.checkbox_H,'value')==1
+elseif get(handles.checkbox_H,'value') == 1
+    set(handles.checkbox_flow,'value',0)
     Hydrograph=arrayfun(@(x) x.Riverinputfile(val,3), HECRAS_data.Profiles);
     Yylabel='Water depth, in meters';
 else
@@ -636,16 +661,31 @@ if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgr
 end
 end
 
-
 % --- Executes on button press in Import_data_button.
 function Import_data_button_Callback(hObject, eventdata, handles)
-what=get(handles.Import_data_button,'String');
-if strcmp(what,'Import data')
-    importdata();
+what = get(handles.Import_data_button, 'String');
+project = get(handles.hecras_file_path,'String');
+if  strcmp(project,' ') == 1
+    error_load()
+    return
 end
-if strcmp(what,'Continue')
+    
+if strcmp(    what,'Import data')
+    importdata();
+elseif strcmp(    what,'Import TS')
+    import_TS();
+elseif strcmp(what,   'Continue')
     ContinueButton_Callback(hObject, eventdata, handles)
 end
+
+%==========================================================================
+%% Error load data
+    %% Check user loaded HEC-RAS project
+    function error_load()
+        ed = errordlg('Please load the HEC-RAS project and import the data into FluEgg','Error');
+        set(ed, 'WindowStyle', 'modal');
+        uiwait(ed);
+    end
 
 %==========================================================================
 %% Import Data
@@ -712,9 +752,29 @@ end
         %%
        % set(handles.Set_up_spawning_time,'Visible','on')
     end
-end
-
-
+%==========================================================================
+%% Import Time Series Data
+    function import_TS()
+        list = get(handles.popup_River_Station,'String');
+        val = get(handles.popup_River_Station,'value');
+        XS = list(val,:);
+        try
+            %HECRAS_data.TimeSeries(length(list),1) = NaN;
+            TS = Extract_RAS_TS(handles.strFilename,handles,XS);
+            HECRAS_data.TS = TS;
+        catch
+            ed = errordlg('Error importing data','Error');
+            set(ed, 'WindowStyle', 'modal');
+            uiwait(ed);
+%             delete(h)
+            return
+        end
+        
+        %% Save data in hFluEggGui
+        hFluEggGui = getappdata(0,'hFluEggGui');
+        setappdata(hFluEggGui,'inputdata',HECRAS_data);
+    end %import_TS()
+end %Import_data_button_Callback
 
 % --- Executes on selection change in popup_TempHEC.
 function popup_TempHEC_Callback(hObject, eventdata, handles)
@@ -774,21 +834,72 @@ HECRAS_data.SpawningTime=xi;
 setappdata(hFluEggGui, 'inputdata',HECRAS_data);
 set(handles.Import_data_button,'String','Continue');
 set(gcf,'Pointer','arrow')
- set(handles.delete_spawning_time,'Visible','on')
+set(handles.delete_spawning_time,'Visible','on')
 end
 
 
 
 function Const_Temp_Callback(hObject, eventdata, handles)
-try
-hFluEggGui = getappdata(0,'hFluEggGui');
-HECRAS_data=getappdata(hFluEggGui, 'inputdata');
-%% Temperature choice
-Temperature=str2double(get(handles.Const_Temp(2),'String'));
-for i=1:length(HECRAS_data.Profiles)
-    HECRAS_data.Profiles(i).Riverinputfile(:,9)=Temperature;
+    
+    try
+        hFluEggGui = getappdata(0,'hFluEggGui');
+        HECRAS_data = getappdata(hFluEggGui, 'inputdata');
+        %% Temperature choice
+        Temperature = str2double(get(handles.Const_Temp(2),'String'));
+        for i = 1:length(HECRAS_data.Profiles)
+            HECRAS_data.Profiles(i).Riverinputfile(:,9)=Temperature;
+        end
+    setappdata(hFluEggGui, 'inputdata', HECRAS_data); %[SS]    
+    catch
+    end
+%setappdata(hFluEggGui, 'inputdata', HECRAS_data); %[SS]
 end
-catch
+
+% --- Executes on button press in time_series_panel.
+function time_series_panel_Callback(hObject, eventdata, handles)
+% hObject    handle to time_series_panel (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+%TimeSeries_GUI()
+% Initialize GUI: makes some objects invisible
+init_TS_panel() 
+
+    function init_TS_panel() 
+        set(handles.text_TempHEC,'Visible','off')
+        set(handles.popup_TempHEC,'Visible','off')
+        set(handles.Const_Temp,'Visible','off')
+        set(handles.checkbox_flow,'Visible','off')
+        set(handles.checkbox_H,'Visible','off')
+        set(handles.Import_data_button,'String', 'Import TS')
+        set(handles.popup_HECRAS_profile,'String', 'ALL PROFILES')
+        set(handles.River_Input_File_Panel_button,'Value',0)
+        set(handles.Import_HECRAS_panel_button,'Value',0)
+        set(handles.time_series_panel,'Value',1)
+    end % init_TS_panel()
+end %time_series_panel_Callback(hObject, eventdata, handles)
+
+
+% --------------------------------------------------------------------
+function Untitled_1_Callback(hObject, eventdata, handles)
+% hObject    handle to Untitled_1 (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
 end
-setappdata(hFluEggGui, 'inputdata',HECRAS_data);
+
+% --- If Enable == 'on', executes on mouse press in 5 pixel border.
+% --- Otherwise, executes on mouse press in 5 pixel border or over popup_HECRAS_profile.
+function popup_HECRAS_profile_ButtonDownFcn(hObject, eventdata, handles)
+% hObject    handle to popup_HECRAS_profile (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+end
+
+% --- Executes on key press with focus on popup_HECRAS_profile and none of its controls.
+function popup_HECRAS_profile_KeyPressFcn(hObject, eventdata, handles)
+% hObject    handle to popup_HECRAS_profile (see GCBO)
+% eventdata  structure with the following fields (see MATLAB.UI.CONTROL.UICONTROL)
+%	Key: name of the key that was pressed, in lower case
+%	Character: character interpretation of the key(s) that was pressed
+%	Modifier: name(s) of the modifier key(s) (i.e., control, shift) pressed
+% handles    structure with handles and user data (see GUIDATA)
 end

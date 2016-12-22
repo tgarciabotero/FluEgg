@@ -138,7 +138,8 @@ delete(RC);
         Ustar=abs(sngVelChnl./(8.1*((sngHydrRadiusC./ks).^(1/6))));
         %% Temperature choice
         Temperature=str2double(get(handles.Const_Temp(2),'String'));
-        if isnan(Temperature) %If user didn't input temperature
+        what = get(handles.Import_data_button, 'String');
+        if isnan(Temperature) && strcmp(    what,'Import data') %If user didn't input temperature
             ed = errordlg('Please input temperature','Error');
             set(ed, 'WindowStyle', 'modal');
             uiwait(ed);
