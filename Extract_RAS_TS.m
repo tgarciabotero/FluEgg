@@ -19,7 +19,7 @@
 % Copyright 2016 Santiago Santacruz & Tatiana Garcia
 %:::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::%
 
-function [hydrographs] = Extract_RAS_TS(strRASProject,handles,RiverStation)
+function [hydrographs, profiles] = Extract_RAS_TS(strRASProject,handles,RiverStation)
 
 %% Creates a COM Server for the HEC-RAS Controller
 RC = actxserver('RAS500.HECRASController');
@@ -41,25 +41,26 @@ lngNodeID = RC.Geometry_GetNode(lngRiverID, lngReachID, RiverStation{1});   % No
 lngQChannelID = 7;    % Flow in the main channel
 lngWseID = 2;    % Water Surface Elevation
 %% Get data
-nProfiles = RC.Output_GetProfiles(0, 0);
-QChannel_TS = nan(nProfiles - 1, 1); % Discount MaxWSL profile
-WSE = nan(nProfiles - 1, 1); % Discount MaxWSL profile
+[nProfiles, profiles] = RC.Output_GetProfiles(0, 0);
+QChannel_TS = nan(nProfiles - 1, 1); % Discard MaxWSL profile
+WSE = nan(nProfiles - 1, 1); % Discard MaxWSL profile
 
-for i = 1:nProfiles-1 % Profile = 1 is for MaxWSL
+for i = 1:nProfiles-1 % Profile = 1 is for MaxWSL (to be discarded)
     QChannel_TS(i) = RC.Output_NodeOutput(lngRiverID,...
                                           lngReachID,....
                                            lngNodeID,...
                                                    0,...
-                                                   i,...
+                                               i + 1,...
                                        lngQChannelID);
     WSE(i)         = RC.Output_NodeOutput(lngRiverID,...
                                           lngReachID,....
                                            lngNodeID,...
                                                    0,...
-                                                   i,...
+                                               i + 1,...
                                             lngWseID);
 end
-hydrographs = [(1:nProfiles-1)', QChannel_TS, WSE];
+hydrographs = [(1:numel(WSE))', QChannel_TS, WSE];
+profiles = {profiles{2:end}}'; %Don't save MaxWS profile
 try
     RC.QuitRAS
 catch

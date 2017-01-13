@@ -266,7 +266,7 @@ set(handles.TempPlot,'Visible','off');
             strProfileName{1}='All profiles-unsteady flow';
             set(handles.popup_HECRAS_profile,'string',strProfileName);%Display profile names in GUI
         else
-            %'Do Nothing'
+            'Do Nothing'
         end
         
         % Plan Name
@@ -662,7 +662,7 @@ function plotTS(handles)
             return
         end
     end %if
-    date = arrayfun(@(x) datenum(x,'ddmmyyyy HHMM'), HECRAS_data.Dates);
+    date = arrayfun(@(x) datenum(x.Dates,'ddmmyyyy HHMM'), HECRAS_data);
     set(handles.Plot_Hydrograph,'visible','on')
 
     plot(handles.Plot_Hydrograph,date,Hydrograph,'linewidth',2)
