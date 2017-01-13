@@ -86,6 +86,9 @@ guidata(hObject, handles);% Update handles structure
         set(handles.Const_Temp,'Visible','on')
         set(handles.checkbox_flow,'Visible','on')
         set(handles.checkbox_H,'Visible','on')
+        set(handles.LoadObsData, 'Visible','off')
+        set(handles.edit4, 'Visible','off')
+        
         %set(handles.text_HECRAS_profile,'String','HEC-RAS profile:')
         set(handles.panel_Single_xls_file, 'visible', 'off')
         set(handles.panel2, 'visible', 'on')
@@ -646,13 +649,18 @@ function plotTS(handles)
     %% Determine the parameter to plot
         str = get(handles.popup_River_Station, 'String');
         val = get(handles.popup_River_Station,'Value');
+        currentRS = HECRAS_data.RiverStation;
+        if val ~= currentRS
+            m = msgbox('Please Import TS for new river station',...
+                       'FluEgg error','error');
+            uiwait(m)
+            return
+        end
         % Hydrographs:
         if get(handles.checkbox_flow,'value') == 1
-            set(handles.checkbox_H,'value',0)
             Hydrograph = HECRAS_data.TS(:,2);
             Yylabel='Flow, in cubic meters per second';
         elseif get(handles.checkbox_H,'value') == 1
-            set(handles.checkbox_flow,'value',0)
             Hydrograph = HECRAS_data.TS(:,3);
             Yylabel='Water Surface Elevation, in meters';
         else
@@ -823,6 +831,7 @@ end
             [TS, dates] = Extract_RAS_TS(handles.strFilename,handles,XS);
             HECRAS_data.TS = TS;
             HECRAS_data.Dates = dates;
+            HECRAS_data.RiverStation = val;
         catch
             ed = errordlg('Error importing data','Error');
             set(ed, 'WindowStyle', 'modal');
@@ -929,6 +938,8 @@ init_TS_panel()
         set(handles.text_TempHEC,'Visible','off')
         set(handles.popup_TempHEC,'Visible','off')
         set(handles.Const_Temp,'Visible','off')
+        set(handles.LoadObsData,'Visible','on')
+        set(handles.edit4, 'Visible','on')
         %set(handles.checkbox_flow,'Visible','off')
         %set(handles.checkbox_H,'Visible','off')
         set(handles.Import_data_button,'String', 'Import TS')
@@ -963,4 +974,54 @@ function popup_HECRAS_profile_KeyPressFcn(hObject, eventdata, handles)
 %	Character: character interpretation of the key(s) that was pressed
 %	Modifier: name(s) of the modifier key(s) (i.e., control, shift) pressed
 % handles    structure with handles and user data (see GUIDATA)
+end
+
+
+% --- Executes on button press in LoadObsData.
+function LoadObsData_Callback(hObject, eventdata, handles)
+% hObject    handle to LoadObsData (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+end
+
+
+function edit4_Callback(hObject, eventdata, handles)
+% hObject    handle to edit4 (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+% Hints: get(hObject,'String') returns contents of edit4 as text
+%        str2double(get(hObject,'String')) returns contents of edit4 as a double
+end
+
+% --- Executes during object creation, after setting all properties.
+function edit4_CreateFcn(hObject, eventdata, handles)
+% hObject    handle to edit4 (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    empty - handles not created until after all CreateFcns called
+
+% Hint: edit controls usually have a white background on Windows.
+%       See ISPC and COMPUTER.
+if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
+    set(hObject,'BackgroundColor','white');
+end
+end
+
+% --- Executes on button press in checkbox_H.
+function checkbox_H_Callback(hObject, eventdata, handles)
+% hObject    handle to checkbox_H (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+% Hint: get(hObject,'Value') returns toggle state of checkbox_H
+set(handles.checkbox_flow,'value',0)
+end
+% --- Executes on button press in checkbox_flow.
+function checkbox_flow_Callback(hObject, eventdata, handles)
+% hObject    handle to checkbox_flow (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+% Hint: get(hObject,'Value') returns toggle state of checkbox_flow
+set(handles.checkbox_H,'value',0)
 end
