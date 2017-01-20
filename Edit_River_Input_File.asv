@@ -1005,7 +1005,6 @@ elseif FileName ~= 0
         m = msgbox('Please wait, loading Observed Data...','FluEgg');
         handles.strObsDataFile=strFilename;
         set(handles.edit4,'string',FileName)
-        return
 end
 end %LoadObsData_Callback(hObject, eventdata, handles)
 
