@@ -688,9 +688,11 @@ function plotTS(handles)
     ylabel(handles.Plot_Hydrograph,Yylabel,...
         'FontName','Arial',...
         'FontSize',14);
-    %msgbox('Feature under development, no available','FluEgg message')
-    %set(handles.delete_spawning_time,'Visible','off')
-    %set(handles.Set_up_spawning_time,'Visible','on')
+    
+    % Add Observed data if any
+    obs_data = getappdata(hFluEggGui,'obsdata');
+    dates = obs_data;
+    % OBSERVED DATA IS READY TO BE FORMATTED AND INCLUDED IN PLOT
 %
  end %plotTS()
 end
@@ -824,38 +826,36 @@ end
 %==========================================================================
 %% Import Time Series Data
     function import_TS()
-        list = get(handles.popup_River_Station,'String');
-        val = get(handles.popup_River_Station,'value');
-        XS = list(val,:);
-        try
-            %HECRAS_data.TimeSeries(length(list),1) = NaN;
-            [TS, dates] = Extract_RAS_TS(handles.strFilename,handles,XS);
-            HECRAS_data.TS = TS;
-            HECRAS_data.Dates = dates;
-            HECRAS_data.RiverStation = val;
-        catch
-            ed = errordlg('Error importing data','Error');
-            set(ed, 'WindowStyle', 'modal');
-            uiwait(ed);
+    list = get(handles.popup_River_Station,'String');
+    val = get(handles.popup_River_Station,'value');
+    XS = list(val,:);
+    try
+        %HECRAS_data.TimeSeries(length(list),1) = NaN;
+        [TS, dates] = Extract_RAS_TS(handles.strFilename,handles,XS);
+        HECRAS_data.TS = TS;
+        HECRAS_data.Dates = dates;
+        HECRAS_data.RiverStation = val;
+    catch
+        ed = errordlg('Error importing data','Error');
+        set(ed, 'WindowStyle', 'modal');
+        uiwait(ed);
 %             delete(h)
-            return
-        end
-        
-        %% Save data in hFluEggGui
-        hFluEggGui = getappdata(0,'hFluEggGui');
-        setappdata(hFluEggGui,'inputdata',HECRAS_data);
+        return
+    end
+
+    %% Save data in hFluEggGui
+    hFluEggGui = getappdata(0,'hFluEggGui');
+    setappdata(hFluEggGui,'inputdata',HECRAS_data);
     end %import_TS()
 %==========================================================================
 %% Import Observed Time Series Data
     function import_OBS()
-        fileName = handles.strFilename;
-        if strcmp(fileName,'')
-            'do nothing'
-            return
-        else
-            obs_data = Import_CSV(fileName);
-            handles.obs_data = obs_data;
-        end
+    fileName = handles.strObsDataFile;
+    if ~strcmp(fileName,'')
+        OBS_data = Import_CSV(fileName);
+        hFluEggGui = getappdata(0,'hFluEggGui');
+        setappdata(hFluEggGui,'obsdata',OBS_data);
+    end
     end
 end %Import_data_button_Callback
 
@@ -1003,9 +1003,10 @@ if PathName == 0 %if the user pressed cancelled, then we exit this callback
 elseif FileName ~= 0
         % Load River input file
         m = msgbox('Please wait, loading Observed Data...','FluEgg');
-        handles.strObsDataFile=strFilename;
+        handles.strObsDataFile = strFilename;
         set(handles.edit4,'string',FileName)
-        return
+        guidata(hObject, handles);% Update handles structure
+        close(m)
 end
 end %LoadObsData_Callback(hObject, eventdata, handles)
 
