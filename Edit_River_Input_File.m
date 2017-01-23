@@ -4,7 +4,7 @@
 %-------------------------------------------------------------------------%
 % This function is used to import river input data into FluEgg. Currently %
 % there are two options, import an excel, csv or text file, or import a   %
-% steady or unsteady state HEC-RAS project.                                %
+% steady or unsteady state HEC-RAS project.                               %
 %-------------------------------------------------------------------------%
 %                                                                         %
 %-------------------------------------------------------------------------%
@@ -590,6 +590,7 @@ if strcmp(    what,'Import data')
     plotProfiles(handles);
 elseif strcmp(    what,'Import TS')
     plotTS(handles);
+    plot_obs_data(handles);
 end
 
 function plotProfiles(handles)
@@ -688,13 +689,26 @@ function plotTS(handles)
     ylabel(handles.Plot_Hydrograph,Yylabel,...
         'FontName','Arial',...
         'FontSize',14);
-    
-    % Add Observed data if any
-    obs_data = getappdata(hFluEggGui,'obsdata');
-    dates = obs_data;
-    % OBSERVED DATA IS READY TO BE FORMATTED AND INCLUDED IN PLOT
 %
  end %plotTS()
+    function plot_obs_data(handles)
+    % Get Observed data if any
+    % [SS] Need to add a check-point for non-existing data
+    hFluEggGui = getappdata(0,'hFluEggGui');
+    HECRAS_data = getappdata(hFluEggGui,'inputdata');
+    obs_data = getappdata(hFluEggGui,'obsdata');
+    text1 = obs_data.data{1,2};
+    text2 = obs_data.data{1,3};
+    profile = arrayfun(@(x, y) strcat(x,{' '},y), text1, text2);
+    
+    % Format dates for plotting
+    date = arrayfun(@(x) datenum(x,'ddmmyyyy HHMM'), profile);
+    hydrograph = obs_data.data{1,4};
+    plot(handles.Plot_Hydrograph, date, hydrograph,'s',...
+         'MarkerSize',2, 'MarkerEdgeColor','k')
+    % [SS] This plot is over-writing the existing one. How to just add markers to
+    % existing plot?
+    end %plot_obs_data()
 end
 
 % --- Executes on button press in pushbutton_table.
@@ -852,7 +866,7 @@ end
     function import_OBS()
     fileName = handles.strObsDataFile;
     if ~strcmp(fileName,'')
-        OBS_data = Import_CSV(fileName);
+        OBS_data = import_dss(fileName);
         hFluEggGui = getappdata(0,'hFluEggGui');
         setappdata(hFluEggGui,'obsdata',OBS_data);
     end

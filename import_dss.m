@@ -19,7 +19,7 @@
 % Outputs:
 % Copyright 2017 Santiago Santacruz & Tatiana Garcia
 %:::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::%
-function [dss_data] = Import_CSV(filename)
+function [dss_data] = import_dss(filename)
     fid = fopen(filename);
     check_fid(fid)
     dss_data = {};
