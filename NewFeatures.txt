@@ -1,5 +1,6 @@
-New Features as of Dec 16, 2015
-
+"New Features as of Dec 16, 2015"
+"-Added a tool in results to calculate the percentage of eggs at a particular location and a given time. This is useful for back-calculation of spawning grounds from egg samples (Jan 23, 2017)"
+-HEC-RAS-Fluegg interaction tool. HEC-RAS 5.0.3
 -Larvae transport untill Gas Bladder Inflation Stage
 -Rearranged post-processing tools by: 
                                      *Longitudinal 

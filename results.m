@@ -1,8 +1,17 @@
+%%:::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::%
+%%                    FluEgg Post-processing tools                        %
+%%           Generate video or figures to analize FluEgg results          %
+%:::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::%
+%-------------------------------------------------------------------------%
+% This is the results GUI, it is used inside FluEgg to generate different %
+% plots to analyze FluEgg results.                                        %
+%-------------------------------------------------------------------------%
+%   Created by      : Tatiana Garcia                                      %
+%   Last Modified   : June 28, 2016                                       %
+%-------------------------------------------------------------------------%
+% Copyright 2016 Tatiana Garcia
+%:::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::%
 function varargout = Results(varargin)
-% RESULTS MATLAB code for Results.fig
-%
-% Edit the above text to modify the response to help Results
-
 % Last Modified by GUIDE v2.5 01-Sep-2015 09:05:42
 
 % Begin initialization code - DO NOT EDIT
@@ -42,8 +51,14 @@ set(handles.Postprocessing_option(4),'Visible','off');
 guidata(hObject, handles);
 end
 
+function varargout = Results_OutputFcn(~, ~, handles)
+diary off
+varargout{1} = handles.output;
+end
+
 % --- Executes on button press in Browse_button.
 function Browse_button_Callback(hObject, eventdata, handles)
+% When user selects the results file
 %% Main handles
 setappdata(0,'handleResults',gcf); %gcf-->get current GUI
 handleResults=getappdata(0,'handleResults'); %0 means root-->storage in desktop
@@ -55,20 +70,7 @@ setappdata(handleResults, 'fullpath_result', fullpath_result);
 setappdata(handleResults, 'pathname',pathname);
 set(handles.ResultsPathName,'string',filename);
 beep
-beep
 guidata(hObject, handles);
-end
-
-function varargout = Results_OutputFcn(~, ~, handles)
-diary off
-varargout{1} = handles.output;
-end
-function PostprocessingOptions_listbox_Callback(~, ~, handles)
-end
-function PostprocessingOptions_listbox_CreateFcn(hObject, ~, handles)
-if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
-    set(hObject,'BackgroundColor','white');
-end
 end
 
 function generate_Callback(hObject, ~, handles)
@@ -98,7 +100,7 @@ selected_life_stage=cell2mat(get(handles.Life_stage_group,'Value'));
 if isfield(ResultsSim, 'T2_Gas_bladder')==0%This is for results files from previous FluEgg versions
     T2_Gas_bladder=0;
 else
-T2_Gas_bladder=ResultsSim.T2_Gas_bladder;
+    T2_Gas_bladder=ResultsSim.T2_Gas_bladder;
 end
 if T2_Gas_bladder==0&&selected_life_stage(1)==1  % Case larvae is not simulated
     strcmp( selected_life_stage, 'Larvae at gas bladder inflation')
@@ -136,8 +138,17 @@ switch Tab
     case 'Vertical'
         for i=length(Postprocessing_option):-1:1
             if  strcmp(Postprocessing_option(i),'Distribution of eggs over the water column')
-                Distribution_of_Eggs_at_hatching();
-                Distribution_of_Eggs_at_a_distance();
+                
+                % Construct a questdlg with two options
+                choice = questdlg('Do you want to plot the vertical distribution of eggs at:', ...
+                    'Plot option','a given time?','a given distance?','a given time?');
+                % Handle response
+                switch choice
+                    case 'a given time?'
+                        Distribution_of_Eggs_at_hatching();
+                    case 'a given distance?'
+                        Distribution_of_Eggs_at_a_distance();
+                end
             end
             if  strcmp(Postprocessing_option(i),'Egg vertical concentration distribution')
                 egg_mass_centroid_Vs_distance();
@@ -148,7 +159,6 @@ switch Tab
         for i=1:sum(selected)
             if  strcmp(Postprocessing_option(i),'Longitudinal distribution')
                 Longitudinal_distribution_of_eggs_at_time_t();
-                uiwait;
             end
             if  strcmp(Postprocessing_option(i),'Vertical position of the centroid of the egg mass')
                 egg_mass_centroid_Vs_distance();
@@ -167,15 +177,19 @@ switch Tab
         %%=================================================================================================
     case 'Mixed'
         for i=length(Postprocessing_option):-1:1
-            if  strcmp(Postprocessing_option(i),'Evolution of a mass of Asian carp eggs')
+            if  strcmp(Postprocessing_option(i),'Evolution of a mass of Asian carp eggs/larvae')
                 snapshotPlotDt();
             end
-            if  strcmp(Postprocessing_option(i),'Summary of temporal and spatial evolution of the egg mass')
+            if  strcmp(Postprocessing_option(i),'Summary of temporal and spatial evolution of the eggs/larvae mass')
                 temporal_and_spatial_dispersion();
             end
-            if  strcmp(Postprocessing_option(i),'3D animation of egg transport (video)')
+            if  strcmp(Postprocessing_option(i),'3D animation of egg/larvae transport (video)')
                 Minigui_Video();
             end
+            if  strcmp(Postprocessing_option(i),'Calculate the percentage of eggs at a given location, depth, and time')
+                PercentageEggs_location_time();
+            end
+            
         end
 end
 
@@ -258,7 +272,7 @@ for i=1:length(CumlDistance)
         patch(xx,yy,gray,'FaceAlpha',0.2,'LineStyle','none')
     end
 end
-xlabel('Average downstream distance from spawning location [km]','FontName','Arial','FontSize',12);
+xlabel('Average downstream distance [km]','FontName','Arial','FontSize',12);
 ylabel('Normalized vertical position (z/h+1) [ ]','FontName','Arial','FontSize',12);
 set(gca,'TickDir','in','TickLength',[0.021 0.021],'FontName','Arial','FontSize',12)
 ylim([0 1])
@@ -530,10 +544,26 @@ time=ResultsSim.time;
 TimeToHatch = HatchingTime(Temp,specie);
 
 if round(TimeToHatch*60*60)>time(end)
-    ed = errordlg('Eggs have not hatched yet','Error');
-    set(ed, 'WindowStyle', 'modal');
-    uiwait(ed);
-else
+    % Construct a questdlg with two options
+choice = questdlg('Eggs have not hatched yet, would you want to plot vertical distribution of eggs at the end of simulation period?', ...
+	'Time','Yes','No','at a different time','Yes');
+% Handle response
+switch choice
+    case 'Yes'
+        disp([choice ' Perfect.'])
+        TimeToHatch=time(end)/3600;
+    case 'at a different time'
+        TimeToHatch=str2double(inputdlg('time(h)',...
+              'Time', [1 10])); 
+          if round(TimeToHatch*60*60)>time(end)
+              errordlg('Input time is greater than simulated time','FluEgg Error');
+          end
+          
+    case 'No'
+        return
+end
+end
+%This was designed for time to hatch, now we use it for different times
     %% Percentage of eggs in the water column
     %% finding the normalized location at hatching time
     tindex=find(time>=round(TimeToHatch*3600));tindex=tindex(1);
@@ -593,7 +623,7 @@ else
     annotation('line',[0.97 0.96],[0.1020 0.0900]);
     annotation('line',[0.98 0.97],[0.1020 0.0900]);
     text(Xlimit(end)*1.065,0.063, {'River','bed'},'HorizontalAlignment','center','FontName','Arial')
-end
+
 diary off
 end
 
@@ -629,7 +659,7 @@ for i=1:size(X,2)
 end
 %%
 if check==0
-    ed = errordlg('No eggs have arrived downstream distance X, please check the distribution of eggs closer to the spawning location or run the model for a longer time','Error');
+    ed = errordlg('No eggs have arrived to distance X, please check the distribution of eggs closer to the spawning location or run the model for a longer time','Error');
     set(ed, 'WindowStyle', 'modal');
     uiwait(ed);
 else
@@ -676,7 +706,7 @@ else
     annotation('line',[0.98 0.97],[0.1020 0.0900]);
     text(Xlimit(end)*1.065,0.063, {'River','bed'},'HorizontalAlignment','center','FontName','Arial')
     %% Message
-    h = msgbox([num2str(sum(N)) ' eggs passed by ' num2str(dX/1000) ' km downstream from the virtual spawning location during the simulation time'],'FluEgg Message');
+    h = msgbox([num2str(sum(N)) ' eggs passed by ' num2str(dX/1000) ' km during the simulation time'],'FluEgg Message');
 end
 end %distribution of eggs at a distance
 
@@ -797,67 +827,83 @@ else
         %     end
     end
     %% Message
-    h = msgbox(['At the end of the simulation time ' num2str(sum(N)) ' eggs passed by ' num2str(dX/1000) ' km downstream from the virtual spawning location'],'FluEgg Message');
+    h = msgbox(['At the end of the simulation time ' num2str(sum(N)) ' eggs passed by ' num2str(dX/1000) ' km'],'FluEgg Message');
 end
 end% travel time
 
 
 function Longitudinal_distribution_of_eggs_at_time_t()
-ed=Longitudinal_Dist_Eggs();
+%Display Sub-GUI-->at what time do you want to display the longitudinal
+%distribution of eggs or larvae?
+ed = Longitudinal_Dist_Eggs();
 uiwait(ed);
+
 %% Load data from Results Gui
-%% Time to hatch
 [X,Z,Y,CumlDistance,Depth,time,Width]=load_data; %TG 05/15
-SetTime=getappdata(handleResults,'SetTime');
+%If user does not press the continue button (if user closes gui)
+continuee=getappdata(handleResults, 'continue'); 
+if continuee==0
+    return
+else
+    SetTime=getappdata(handleResults,'SetTime');
+end
+
 T2_Gas_bladder=ResultsSim.T2_Gas_bladder;
 
-%% Identify the time at which the user wants to display 
+%% Identify the time at which the user wants to display
 if SetTime==T2_Gas_bladder
-%% Distribution of larvae at Gas bladder inflation
-Distribution_GBI;
-else
-Distribution_eggs_hatch(SetTime);
-annotation('rectangle',position_axes1,'FaceColor','flat','linewidth',1.5);
+    %% Distribution of larvae at Gas bladder inflation
+    Distribution_GBI;
+else     %% Distribution of eggs at hatching time
+    
+    Distribution_eggs_hatch(SetTime);
+    annotation('rectangle',position_axes1,'FaceColor','flat','linewidth',1.5);
 end
 %%=========================================================================
 
 
 
-%% Distribution of eggs at hatching time
+%% Sub-function-->Distribution of eggs at hatching time
     function Distribution_eggs_hatch(SetTime)
+        % gets results data
         handleResults=getappdata(0,'handleResults');
+        
         % If error in SetTime input
         if isempty(SetTime)
             return
         end
+        
         CalculateEggs_at_risk_hatching=getappdata(handleResults,'CalculateEggs_at_risk_hatching');
         
-        %% Where are the eggs when hatching occurs?
+        %% Where are the eggs when hatching occurs or when time equal to t?
         TimeIndex=find(time<=SetTime*3600,1,'last');
-        X_at_hatching(:,1)=X(TimeIndex,:);%or at a given t
-        Z_at_hatching(:,1)=Z(TimeIndex,:);
-        Y_at_hatching(:,1)=Y(TimeIndex,:);%TG 05/15
+        X_at_Time(:,1)=X(TimeIndex,:);%or at a given t
+        Z_at_Time(:,1)=Z(TimeIndex,:);
+        Y_at_Time(:,1)=Y(TimeIndex,:);%TG 05/15
         %%
-        Cell=zeros(size(X_at_hatching));
-        h=zeros(size(X_at_hatching));
-        for e=1:size(X_at_hatching,1)
-            if X_at_hatching(e)>CumlDistance(end)*1000 % If the eggs are in the last cell
+        Cell=zeros(size(X_at_Time));
+        h=zeros(size(X_at_Time));
+        %Calculate locale hydraulic conditions experienced by every egg
+        for e=1:size(X_at_Time,1)
+            if X_at_Time(e)>CumlDistance(end)*1000 % If the eggs are in the last cell
                 Cell(e)=length(CumlDistance);
             else
-                C=find(X_at_hatching(e)<CumlDistance*1000);Cell(e)=C(1);
+                Cell(e)=find(X_at_Time(e)<CumlDistance*1000,1,'first');
             end
             h(e)=Depth(Cell(e)); %m
             w(e)=Width(Cell(e)); %m %TG 05/15
         end
-        Z_at_hatching_H=(Z_at_hatching+h)./h;
-        n=Y_at_hatching-w'/2;
-        X_at_hatching=X_at_hatching/1000; %In Km
+        Z_at_Time_H=(Z_at_Time+h)./h;
+        n=Y_at_Time-w'/2;
+        X_at_Time=X_at_Time/1000; %In Km
+        
         %% Define eggs in suspension and settled
-        Nsusp=X_at_hatching(Z_at_hatching_H>0.05);
-        Nbot=X_at_hatching(Z_at_hatching_H<=0.05);
+        Nsusp=X_at_Time(Z_at_Time_H>0.05);
+        Nbot=X_at_Time(Z_at_Time_H<=0.05);
         %%
-        k=round(size(X_at_hatching,1)^(1/3));%Number of bins %2*size
-        ds=round(100*((max(max(X_at_hatching))-min(min(X_at_hatching)))+0.001)/k)/100;
+        k=round(size(X_at_Time,1)^(1/3));%Number of bins %2*size
+        %% look for rice rule-->k=2n^1/3-->https://en.wikipedia.org/wiki/Histogram
+        ds=round(100*((max(max(X_at_Time))-min(min(X_at_Time)))+0.001)/k)/100;
         edges=0:ds:CumlDistance(end)+0.001;
         %edges=0:(CumlDistance(end)+0.01)/k:CumlDistance(end)+0.01;
         bids=(edges(1:end-1)+edges(2:end))/2;bids=bids';
@@ -874,34 +920,39 @@ end
         %% Plot
         set(0,'Units','pixels') ;
         scnsize = get(0,'ScreenSize');
-        h=figure('Name','Longitudinal distribution of the eggs at a given time','Color',[1 1 1],...
+        %h=figure('Name','Longitudinal distribution of the eggs at a given time','Color',[1 1 1],...
+            %'position',[scnsize(3)/2 scnsize(4)/2.6 scnsize(3)/2.1333 scnsize(4)/2]);
+            h=figure('Name','Longitudinal distribution of the eggs at a given time','Color',[1 1 1],...
             'position',[scnsize(3)/2 scnsize(4)/2.6 scnsize(3)/2.1333 scnsize(4)/2]);
         subaxis(1,1,1,'MR',0.1,'ML',0.095,'MB',0.12,'MT',0.05);
         %%
-        cdf_Nsusp=cumsum(Nsusp*100/size(X_at_hatching,1));
-        percentage_of_Eggs=[Nbot Nsusp]*100/size(X_at_hatching,1);
-        bar1=bar(bids,percentage_of_Eggs,1,'stacked');%,'FaceColor',[0.3804,0.8118,0.8980])
+        cdf_Nsusp=cumsum(Nsusp*100/size(X_at_Time,1));
+        percentage_of_Eggs=[Nbot Nsusp]*100/size(X_at_Time,1);
+        bar1=bar(bids,percentage_of_Eggs,1,'stacked');
         set(bar1(2),'FaceColor',[0.3804,0.8118,0.8980]);
         set(bar1(1),'FaceColor',[0.6,0.6,0.6]);
         %--Cust0mize plot -----------------------------------------------------
         position_axes1= get(gca,'position');
-        [Convert_km_to_miles,xlabel_text,StringStats]=setupUnits(X_at_hatching(Z_at_hatching_H>0.05));%Calculate stats for eggs in susp.
-        
-        xStep=round(Convert_km_to_miles*(k*ds+max(max(X_at_hatching)))/4);%in miles
-        xaxisticks=[0:xStep:4*xStep];
+               %[Convert_km_to_miles,xlabel_text,StringStats]=setupUnits(X_at_Time(Z_at_Time_H>0.05));%Calculate stats for eggs in susp.
+        [Convert_km_to_miles,xlabel_text,StringStats]=setupUnits(X_at_Time);
+        xStep=round((Convert_km_to_miles*(k*ds+max(max(X_at_Time)))/4)/10)*10;%in miles
+        %xaxisticks=[0:ceil(xStep/10)*10:5*ceil(xStep/10)*10];
+        %xlim([0 xaxisticks(end)/Convert_km_to_miles]) %Xaxis limit
+        xlim([fix(0.9*min(X_at_Time)/10)*10 round(xStep*5)]./Convert_km_to_miles) %Xaxis limit
+        xaxisticks=get(gca,'XTick');
         set(gca,'XTick',xaxisticks/Convert_km_to_miles,'Xticklabel',xaxisticks)
-        set(gca,'TickDir','in','TickLength',[0.021 0.021],'XMinorTick','on','FontName','Arial','FontSize',12)
-        xlim([0 xaxisticks(end)/Convert_km_to_miles]) %Xaxis limit
+        set(gca,'TickDir','in','TickLength',[0.021 0.021],'XMinorTick','off','FontName','Arial','FontSize',12)
         xlabel(xlabel_text,'FontName','Arial','FontSize',12);
-        ylim([0 round(1.2*max([Nsusp+Nbot]*100/size(X_at_hatching,1)))])
+        ylim([0 round(1.2*max([Nsusp+Nbot]*100/size(X_at_Time,1)))])
         ylabel('Percentage of eggs [%]','FontName','Arial','FontSize',12);
         set(gca, 'box','off');set(gca,'YaxisLocation','left');
         xlim_axis1=get(gca,'Xlim');
         legend('Near the bottom','In suspension','location','NorthWest');
         %
         %%
-        annotation('textbox',[0.5 0.3 0.1 0.1],...
+        annotation('textbox',[0.75 0.7 0.1 0.1],...
             'String',StringStats,'FontName','Arial','FontSize',10);
+     
         %%
         if CalculateEggs_at_risk_hatching==1
             % Create axes
@@ -913,13 +964,12 @@ end
             set(axes2,'Ylim',[0 100]);
             set(axes2, 'XTick', []);
             % Create plot
-            %plot(bids,cdf_Nsusp,'Parent',axes2,'LineWidth',2,'Color',[1 0 1]);
             plot(bids(cdf_Nsusp>0),cdf_Nsusp(cdf_Nsusp>0),'Parent',axes2,'LineWidth',2,'Color',[1 0 1]);
             plot(xlim_axis1,[99.999 99.999],'k')
             ylabel(axes2,'Cumulative pct. of eggs in suspension [%]','FontName','Arial','FontSize',12);
             
             %%
-             idtext=find(cdf_Nsusp>=max(cdf_Nsusp),1,'first');
+            idtext=find(cdf_Nsusp>=max(cdf_Nsusp),1,'first');
             text(double(bids(idtext)*0.88),94, {['Approximately ' num2str(round((cdf_Nsusp(end)*10)/10)),'% of eggs are'],' at risk of hatching'},'HorizontalAlignment','center','FontName','Arial')
             
         end
@@ -942,7 +992,11 @@ end
         % Number of bins
         k=round(2*size( X_at_GBI,1)^(1/3));%Number of bins %2*size
         ds=round(100*((max(max( X_at_GBI))-min(min( X_at_GBI)))+0.001)/k)/100;
-        display(ds)
+        h = msgbox(['Bin spacing equal to ' num2str(ds) ' km']);
+        pause(2)
+        try
+            close(h)
+        end
         edges=0:ds:CumlDistance(end)+0.001;
         bids=(edges(1:end-1)+edges(2:end))/2;bids=bids';
         % Number of eggs in each bin
@@ -956,19 +1010,19 @@ end
         subaxis(1,1,1,'MR',0.1,'ML',0.095,'MB',0.12,'MT',0.05);
         %---------------------------------------------------------------
         percentage_of_Eggs=N*100/size(X_at_GBI,1);
-        bar1=bar(bids,percentage_of_Eggs,1);%,'FaceColor',[0.3804,0.8118,0.8980])
+        bar1=bar(bids,percentage_of_Eggs,1);
         %--Cust0mize plot -----------------------------------------------------
         set(bar1,'FaceColor',[1,0,1]);
         [Convert_km_to_miles,xlabel_text,StringStats]=setupUnits(X_at_GBI);
         xStep=round(Convert_km_to_miles*(k*ds+max(max(X_at_GBI)))/4);%in miles
-        xaxisticks=[0:xStep:4*xStep];
+        xaxisticks=[0:round(xStep/10)*10:5*round(xStep/10)*10];
         set(gca,'XTick',xaxisticks/Convert_km_to_miles,'Xticklabel',xaxisticks)
         set(gca,'TickDir','in','TickLength',[0.021 0.021],'XMinorTick','on','FontName','Arial','FontSize',12)
         xlim([0 xaxisticks(end)/Convert_km_to_miles]) %Xaxis limit
         ylabel('Percentage of larvae at GBI stage [%]','FontName','Arial','FontSize',12);
         xlabel(xlabel_text,'FontName','Arial','FontSize',12);
         %%
-        annotation('textbox',[0.4 0.7 0.1 0.1],...
+        annotation('textbox',[0.7 0.7 0.1 0.1],...
             'String',StringStats,'FontName','Arial','FontSize',12);
         
     end
@@ -980,17 +1034,18 @@ end
         Menu=getappdata(handleResults, 'Menu');
         if isempty(Menu)
             %% default
-             Menu.english_Units=0;
+            Menu.english_Units=0;
         end
         if Menu.english_Units
             Convert_km_to_miles=0.621371;
-            xlabel_text='Downstream distance from spawning location [miles]';
-            StringStats={'Stats' ['Mean=',num2str(round(10*Convert_km_to_miles*(nanmean(X_at_Time)-X(1,1)/1000))/10),' miles downstream from the spawning location'],['LE=',num2str(round(10*Convert_km_to_miles*(max(X_at_Time)-X(1,1)/1000))/10),' miles downstream from the spawning location'],['TE=',num2str(round(10*Convert_km_to_miles*(min(X_at_Time)-X(1,1)/1000))/10),' miles downstream from the spawning location']};
-            
+            xlabel_text='Distance [miles]';
+            %StringStats={'Stats' ['Mean=',num2str(round(10*Convert_km_to_miles*(nanmean(X_at_Time)-X(1,1)/1000))/10),' miles'],['LE=',num2str(round(10*Convert_km_to_miles*(max(X_at_Time)-X(1,1)/1000))/10),' miles'],['TE=',num2str(round(10*Convert_km_to_miles*(min(X_at_Time)-X(1,1)/1000))/10),' miles']};
+            StringStats={'Stats' ['Mean=',num2str(round(10*Convert_km_to_miles*(nanmean(X_at_Time)))/10),' miles'],['LE=',num2str(round(10*Convert_km_to_miles*(max(X_at_Time)))/10),' miles'],['TE=',num2str(round(10*Convert_km_to_miles*(min(X_at_Time)))/10),' miles']};
         else
             Convert_km_to_miles=1;
-            xlabel_text='Downstream distance from spawning location [km]';
-            StringStats={'Stats' ['Mean=',num2str(round(10*nanmean(X_at_Time)-X(1,1)/1000)/10),' km downstream from the spawning location'],['LE=',num2str(round(10*max(X_at_Time)-X(1,1)/1000)/10),' km downstream from the spawning location'],['TE=',num2str(round(10*min(X_at_Time)-X(1,1)/1000)/10),' km downstream from the spawning location']};
+            xlabel_text='Distance [km]';
+            %StringStats={'Stats' ['Mean=',num2str(round(10*nanmean(X_at_Time)-X(1,1)/1000)/10),' km'],['LE=',num2str(round(10*max(X_at_Time)-X(1,1)/1000)/10),' km'],['TE=',num2str(round(10*min(X_at_Time)-X(1,1)/1000)/10),' km']};
+             StringStats={'Stats' ['Mean=',num2str(round(10*nanmean(X_at_Time))/10),' km'],['LE=',num2str(round(10*max(X_at_Time))/10),' km'],['TE=',num2str(round(10*min(X_at_Time))/10),' km']};
         end
     end
     function [X,Z,Y,CumlDistance,Depth,time,Width]=load_data %TG 05/15
@@ -1065,11 +1120,12 @@ switch Tab
         set(handles.Postprocessing_option(1),'Visible','on');
         set(handles.Postprocessing_option(2),'Visible','on');
         set(handles.Postprocessing_option(3),'Visible','on');
-        set(handles.Postprocessing_option(4),'Visible','off');
+        set(handles.Postprocessing_option(4),'Visible','on');
         
-        set(handles.Postprocessing_option(1),'string','Evolution of a mass of Asian carp eggs' )
-        set(handles.Postprocessing_option(2),'string','Summary of temporal and spatial evolution of the egg mass');
-        set(handles.Postprocessing_option(3),'string','3D animation of egg transport (video)');
+        set(handles.Postprocessing_option(1),'string','Evolution of a mass of Asian carp eggs/larvae' )
+        set(handles.Postprocessing_option(2),'string','Summary of temporal and spatial evolution of the egg/larvae mass');
+        set(handles.Postprocessing_option(3),'string','3D animation of egg/larvae transport (video)');
+        set(handles.Postprocessing_option(4),'string','Calculate the percentage of eggs at a given location, depth, and time');
         
         set(handles.tab_group,'BackgroundColor',[240 240 240]/250)
         set(handles.tab_group(4),'BackgroundColor',[250 250 250]/250)
