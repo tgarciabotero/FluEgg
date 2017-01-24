@@ -541,7 +541,6 @@ function edit_Ending_Date_Callback(hObject, eventdata, handles)
 %        str2double(get(hObject,'String')) returns contents of edit_Ending_Date as a double
 end
 
-
 function edit_Ending_time_Callback(hObject, eventdata, handles)
 %% If user modifies spawning time
 hFluEggGui = getappdata(0,'hFluEggGui');
@@ -586,7 +585,6 @@ function Totaltime_Callback(hObject, eventdata, handles)
 hFluEggGui = getappdata(0,'hFluEggGui');
 HECRAS_data=getappdata(hFluEggGui, 'inputdata');
 try
-    
     endSimtime=HECRAS_data.SpawningTime+str2double(get(handles.Totaltime,'String'))/24;
     endSimtime=datestr(endSimtime,'ddmmmyyyy HHMM');
     dateandtime = strsplit(char(endSimtime),' ');

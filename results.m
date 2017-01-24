@@ -183,7 +183,11 @@ switch Tab
             if  strcmp(Postprocessing_option(i),'Summary of temporal and spatial evolution of the eggs/larvae mass')
                 temporal_and_spatial_dispersion();
             end
+<<<<<<< HEAD
             if  strcmp(Postprocessing_option(i),'3D animation of egg/larvae transport (video)')
+=======
+            if  strcmp(Postprocessing_option(i),'3D animation of eggs/larvae transport (video)')
+>>>>>>> santi-scruz-FluEgg_USGS_3.0.1
                 Minigui_Video();
             end
             if  strcmp(Postprocessing_option(i),'Calculate the percentage of eggs at a given location, depth, and time')
@@ -902,7 +906,10 @@ end
         Nbot=X_at_Time(Z_at_Time_H<=0.05);
         %%
         k=round(size(X_at_Time,1)^(1/3));%Number of bins %2*size
+<<<<<<< HEAD
         %% look for rice rule-->k=2n^1/3-->https://en.wikipedia.org/wiki/Histogram
+=======
+>>>>>>> santi-scruz-FluEgg_USGS_3.0.1
         ds=round(100*((max(max(X_at_Time))-min(min(X_at_Time)))+0.001)/k)/100;
         edges=0:ds:CumlDistance(end)+0.001;
         %edges=0:(CumlDistance(end)+0.01)/k:CumlDistance(end)+0.01;
@@ -928,11 +935,16 @@ end
         %%
         cdf_Nsusp=cumsum(Nsusp*100/size(X_at_Time,1));
         percentage_of_Eggs=[Nbot Nsusp]*100/size(X_at_Time,1);
+<<<<<<< HEAD
+=======
+        sum(percentage_of_Eggs)
+>>>>>>> santi-scruz-FluEgg_USGS_3.0.1
         bar1=bar(bids,percentage_of_Eggs,1,'stacked');
         set(bar1(2),'FaceColor',[0.3804,0.8118,0.8980]);
         set(bar1(1),'FaceColor',[0.6,0.6,0.6]);
         %--Cust0mize plot -----------------------------------------------------
         position_axes1= get(gca,'position');
+<<<<<<< HEAD
                %[Convert_km_to_miles,xlabel_text,StringStats]=setupUnits(X_at_Time(Z_at_Time_H>0.05));%Calculate stats for eggs in susp.
         [Convert_km_to_miles,xlabel_text,StringStats]=setupUnits(X_at_Time);
         xStep=round((Convert_km_to_miles*(k*ds+max(max(X_at_Time)))/4)/10)*10;%in miles
@@ -940,6 +952,13 @@ end
         %xlim([0 xaxisticks(end)/Convert_km_to_miles]) %Xaxis limit
         xlim([fix(0.9*min(X_at_Time)/10)*10 round(xStep*5)]./Convert_km_to_miles) %Xaxis limit
         xaxisticks=get(gca,'XTick');
+=======
+        [Convert_km_to_miles,xlabel_text,StringStats]=setupUnits(X_at_Time(Z_at_Time_H>0.05));%Calculate stats for eggs in susp.
+        
+        xStep=ceil(Convert_km_to_miles*(k*ds+max(max(X_at_Time)))/4);%in miles
+        %xaxisticks=[0:ceil(xStep/10)*10:5*ceil(xStep/10)*10];
+        xaxisticks=[0:ceil(xStep*10)/10:5*ceil(xStep*10)/10];
+>>>>>>> santi-scruz-FluEgg_USGS_3.0.1
         set(gca,'XTick',xaxisticks/Convert_km_to_miles,'Xticklabel',xaxisticks)
         set(gca,'TickDir','in','TickLength',[0.021 0.021],'XMinorTick','off','FontName','Arial','FontSize',12)
         xlabel(xlabel_text,'FontName','Arial','FontSize',12);
@@ -1039,6 +1058,7 @@ end
         if Menu.english_Units
             Convert_km_to_miles=0.621371;
             xlabel_text='Distance [miles]';
+<<<<<<< HEAD
             %StringStats={'Stats' ['Mean=',num2str(round(10*Convert_km_to_miles*(nanmean(X_at_Time)-X(1,1)/1000))/10),' miles'],['LE=',num2str(round(10*Convert_km_to_miles*(max(X_at_Time)-X(1,1)/1000))/10),' miles'],['TE=',num2str(round(10*Convert_km_to_miles*(min(X_at_Time)-X(1,1)/1000))/10),' miles']};
             StringStats={'Stats' ['Mean=',num2str(round(10*Convert_km_to_miles*(nanmean(X_at_Time)))/10),' miles'],['LE=',num2str(round(10*Convert_km_to_miles*(max(X_at_Time)))/10),' miles'],['TE=',num2str(round(10*Convert_km_to_miles*(min(X_at_Time)))/10),' miles']};
         else
@@ -1046,6 +1066,14 @@ end
             xlabel_text='Distance [km]';
             %StringStats={'Stats' ['Mean=',num2str(round(10*nanmean(X_at_Time)-X(1,1)/1000)/10),' km'],['LE=',num2str(round(10*max(X_at_Time)-X(1,1)/1000)/10),' km'],['TE=',num2str(round(10*min(X_at_Time)-X(1,1)/1000)/10),' km']};
              StringStats={'Stats' ['Mean=',num2str(round(10*nanmean(X_at_Time))/10),' km'],['LE=',num2str(round(10*max(X_at_Time))/10),' km'],['TE=',num2str(round(10*min(X_at_Time))/10),' km']};
+=======
+            StringStats={'Stats' ['Mean=',num2str(round(10*Convert_km_to_miles*(nanmean(X_at_Time)-X(1,1)/1000))/10),' miles'],['LE=',num2str(round(10*Convert_km_to_miles*(max(X_at_Time)-X(1,1)/1000))/10),' miles'],['TE=',num2str(round(10*Convert_km_to_miles*(min(X_at_Time)-X(1,1)/1000))/10),' miles']};
+            
+        else
+            Convert_km_to_miles=1;
+            xlabel_text='Distance [km]';
+            StringStats={'Stats' ['Mean=',num2str(round(10*nanmean(X_at_Time)-X(1,1)/1000)/10),' km'],['LE=',num2str(round(10*max(X_at_Time)-X(1,1)/1000)/10),' km'],['TE=',num2str(round(10*min(X_at_Time)-X(1,1)/1000)/10),' km']};
+>>>>>>> santi-scruz-FluEgg_USGS_3.0.1
         end
     end
     function [X,Z,Y,CumlDistance,Depth,time,Width]=load_data %TG 05/15
@@ -1125,7 +1153,10 @@ switch Tab
         set(handles.Postprocessing_option(1),'string','Evolution of a mass of Asian carp eggs/larvae' )
         set(handles.Postprocessing_option(2),'string','Summary of temporal and spatial evolution of the egg/larvae mass');
         set(handles.Postprocessing_option(3),'string','3D animation of egg/larvae transport (video)');
+<<<<<<< HEAD
         set(handles.Postprocessing_option(4),'string','Calculate the percentage of eggs at a given location, depth, and time');
+=======
+>>>>>>> santi-scruz-FluEgg_USGS_3.0.1
         
         set(handles.tab_group,'BackgroundColor',[240 240 240]/250)
         set(handles.tab_group(4),'BackgroundColor',[250 250 250]/250)

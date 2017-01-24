@@ -685,7 +685,7 @@ Jump;
             % Reference:                                                  %
             % Van Rijn, L. . (1984). Sediment transport, Part II: Suspended
             % load transport. Journal of Hydraulic Engineering, ASCE,     %
-            % 110(11), 1613–1641.                                         %
+            % 110(11), 1613?1641.                                         %
             
             % Garcia, T., Zamalloa, C. Z., Jackson, P. R., Murphy, E. A., &
             % Garcia, M. H. (2015). A Laboratory Investigation of the     %

@@ -1,1 +1,5 @@
+<<<<<<< HEAD
 v3.0.1
+=======
+v3.0
+>>>>>>> santi-scruz-FluEgg_USGS_3.0.1
