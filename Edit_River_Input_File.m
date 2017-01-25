@@ -623,25 +623,26 @@ function pushbutton_plot_Callback(hObject, eventdata, handles)
 % end
 % date=arrayfun(@(x) datenum(x.Date,'ddmmyyyy HHMM'), HECRAS_data.Profiles);
 % set(handles.Plot_Hydrograph,'visible','on')
-
 % =======
+%% Determines the action the user would want to do (TG)
 what = get(handles.Import_data_button, 'String');
 if strcmp(    what,'Import data')
-    plotProfiles(handles);
+    % If the user wants to plot the flow or water depth time series for 
+    % every XS for any plan (TG)
+    plotProfiles(handles);       
 elseif strcmp(    what,'Import TS')
-    plotTS(handles);
+    % If the user wants to plot the flow or water depth time series for
+    % a individual XS(TG)
+    plotTS(handles); 
+    % If the user wants to plot the observed data for a particular XS (TG)
     plot_obs_data(handles);
 end
 
     function plotProfiles(handles)
         %% As coded by Tatiana
         hFluEggGui = getappdata(0,'hFluEggGui');
-        HECRAS_data = getappdata(hFluEggGui,'inputdata'); %0 means root-->storage in desktop
-        if isempty(HECRAS_data)
-            m = msgbox('Please import data and try again','FluEgg error','error');
-            uiwait(m)
-            return
-        else
+        try
+            HECRAS_data = getappdata(hFluEggGui,'inputdata'); %0 means root-->storage in desktop
             %% Determine the parameter to plot
             str = get(handles.popup_River_Station, 'String');
             val = get(handles.popup_River_Station,'Value');
@@ -659,8 +660,11 @@ end
                 uiwait(m)
                 return
             end %if
-            
-        end %if
+        catch
+            m = msgbox('Please import data and try again','FluEgg error','error');
+            uiwait(m)
+            return
+        end
         date=arrayfun(@(x) datenum(x.Date,'ddmmyyyy HHMM'), HECRAS_data.Profiles);
         set(handles.Plot_Hydrograph,'visible','on')
         plot(handles.Plot_Hydrograph,date,Hydrograph,'linewidth',2)
@@ -787,6 +791,7 @@ end
 % --- Executes on button press in Import_data_button.
 % Modified by SS to add TS capabilities
 function Import_data_button_Callback(hObject, eventdata, handles)
+%% Determines the action the user would want to do (TG)
 what = get(handles.Import_data_button, 'String');
 project = get(handles.hecras_file_path,'String');
 if  strcmp(project,' ') == 1 % If project was not loaded
@@ -795,7 +800,7 @@ if  strcmp(project,' ') == 1 % If project was not loaded
 end
 
 if strcmp(    what,'Import data')
-    importdata();
+    import_data();
 elseif strcmp(    what,'Import TS')
     import_TS();
     import_OBS();
@@ -813,7 +818,7 @@ end
     end
 %==========================================================================
 %% Import Data
-    function importdata()
+    function import_data()
         lngProfile = get(handles.popup_HECRAS_profile,'Value')-1;   % Profile Number
         if lngProfile==0 % If unsteady state-->Multiple profiles
             Profiles=get(handles.popup_HECRAS_profile,'string');
