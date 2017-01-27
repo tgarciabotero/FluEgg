@@ -10,7 +10,7 @@
 %                                                                         %
 %-------------------------------------------------------------------------%
 %   Created by      : Tatiana Garcia                                      %
-%   Last Modified   : May 9, 2016                                         %
+%   Last Modified   : Jan 25, 2017 by TG                                         
 %-------------------------------------------------------------------------%
 % Inputs: River input file (xls,xlsx,csv,txt) or HEC-RAS project (prj)    %
 %        river input file containing cell number,cumulative distance, flow,
