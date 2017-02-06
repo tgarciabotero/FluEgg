@@ -614,11 +614,11 @@ switch Inv_mod_status
     case 'on' %If its set on, that means the user wants to turn it off.
         set(handles.Inverse_modeling, 'Checked','off')
         handles.userdata.Inv_mod=1;
-        %set(handles.set_to_stage_button,'String','Set to hatching time');
-    case 'off'
+        set(handles.Spawning_location_text,'String','Spawning Location (m)')
+    case 'off' % If this is off, that means the user it is going to turn it on.
         set(handles.Inverse_modeling, 'Checked','on')
         handles.userdata.Inv_mod=-1;
-        %set(handles.set_to_stage_button,'String','Set to time to reach Gas bladder');
+        set(handles.Spawning_location_text,'String','Eggs'' initial location (m)');
 end
 %handles.userdata.Inv_mod_status=get(handles.Larvae,'Checked');
 guidata(hObject, handles);
