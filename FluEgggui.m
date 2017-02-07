@@ -374,53 +374,33 @@ Jump;
             %% ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
             if strcmp(specie,'Silver')%if specie=='Silver'
                 %% STD
-                if time(tt)/3600<4
-                    DiamStd = 0.9868;%mm
-                else
-                    DiamStd = 0.3512;%mm
-                end
-                if time(tt)/3600<1
-                    RhoeStd = 8.2231;%Kg/m^3 at 22C
-                else
-                    RhoeStd = 0.7780;%Kg/m^3 at 22C
-                end
-                %%
+                    %% Diameter
+                    DiamStd = 0.2631.*exp(-time/22410)+0.3073;
+                	%% Density
+                    RhoeStd = 22.4.*exp(-time/1894)+0.4103;
                 %% ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
             elseif strcmp(specie,'Bighead')
                 %% STD
-                if time(tt)/3600<4
-                    DiamStd = 1.1311;%mm
-                else
-                    DiamStd = 0.4549;%mm
-                end
-                if time(tt)/3600<1
-                    RhoeStd = 4.1293;%Kg/m^3 at 22C
-                else
-                    RhoeStd = 0.2777;%Kg/m^3 at 22C
-                end
-                %%
+                    %% Diameter
+                    DiamStd = 0.1788.*exp(-time/13570)+0.44;
+                    %% Density
+                    RhoeStd = 63.12*exp((-time)/595)+0.6292;
                 %% ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
             else %case Grass Carp : TG March,2015
-                if time(tt)/3600<5
-                    DiamStd = 1.0161;%mm
-                else
-                    DiamStd = 0.5334;%mm
-                end
-                if time(tt)/3600<1
-                    RhoeStd = 8.7916;%Kg/m^3 at 22C
-                else
-                    RhoeStd = 1.7663;%Kg/m^3 at 22C
-                end
+                     %% Diameter
+                    DiamStd = 0.4759.*exp(-time/14150)+0.4586;
+                    %% Density
+                    RhoeStd = 19.28.*exp(-timeGC./1973)+1.029;
             end % Species selection
             %% ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
             %% Diameter fit + scatter
             Dvar(tt,1) = single(normrnd(D(tt),DiamStd));
-            while (Dvar(tt)>=D(tt)+DiamStd)||(Dvar(tt)<=D(tt)-DiamStd)
+            while (Dvar(tt)>=D(tt)+2*DiamStd)||(Dvar(tt)<=D(tt)-2*DiamStd)
                 Dvar(tt) = single(normrnd(D(tt),DiamStd));
             end
             %% Fitted density of the eggs  + scatter
             Rhoevar(tt,1) = single(normrnd(Rhoe_ref(tt),RhoeStd));
-            while (Rhoevar(tt)>=Rhoe_ref(tt)+RhoeStd)||(Rhoevar(tt)<=Rhoe_ref(tt)-RhoeStd)
+            while (Rhoevar(tt)>=Rhoe_ref(tt)+2*RhoeStd)||(Rhoevar(tt)<=Rhoe_ref(tt)-2*RhoeStd)
                 Rhoevar(tt) = single(normrnd(Rhoe_ref(tt),RhoeStd));
             end
         end
