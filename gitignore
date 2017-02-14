@@ -3,6 +3,8 @@
 Temp/
 results/
 not needed/
+Executable/
+Input_Files/
 
 # FluEgg Specific    #
 ###################
