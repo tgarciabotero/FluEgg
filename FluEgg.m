@@ -20,7 +20,7 @@
 
 function varargout = FluEgg(varargin)
 
-% Last Modified by GUIDE v2.5 08-Aug-2016 12:20:01
+% Last Modified by GUIDE v2.5 30-Jan-2017 12:17:30
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
@@ -603,3 +603,23 @@ end
  
 end
 
+
+
+% --------------------------------------------------------------------
+function Inverse_modeling_Callback(hObject, eventdata, handles)
+%% Enables Inverse modeling. If this option is selected, the simulation starts:Updated TG May,2015
+Inv_mod_status=get(handles.Inverse_modeling,'Checked');
+switch Inv_mod_status 
+    %======================================================================
+    case 'on' %If its set on, that means the user wants to turn it off.
+        set(handles.Inverse_modeling, 'Checked','off')
+        handles.userdata.Inv_mod=1;
+        set(handles.Spawning_location_text,'String','Spawning Location (m)')
+    case 'off' % If this is off, that means the user it is going to turn it on.
+        set(handles.Inverse_modeling, 'Checked','on')
+        handles.userdata.Inv_mod=-1;
+        set(handles.Spawning_location_text,'String','Eggs'' initial location (m)');
+end
+%handles.userdata.Inv_mod_status=get(handles.Larvae,'Checked');
+guidata(hObject, handles);
+end
