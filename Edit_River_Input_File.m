@@ -45,8 +45,11 @@ ScreenSize=get(0, 'screensize');
 set(handles.River_inputfile_GUI,'Position',[1 1 ScreenSize(3:4)])
 %Logs erros in a log file
 diary('./results/FluEgg_LogFile.txt')
-set(handles.panel_Single_xls_file, 'visible', 'off'); %The default is to display HEC-RAS project import.
-set(handles.panel2, 'visible', 'on');
+
+%The default is to display HEC-RAS project import.
+set(handles.panel_Single_xls_file, 'visible', 'off'); 
+set(handles.panel2,                'visible', 'on');
+set(handles.checkbox_flow,         'value', 1)
 
 handles.output = hObject;
 guidata(hObject, handles);
@@ -81,20 +84,22 @@ set(handles.Import_data_button,'String', 'Import data')
 guidata(hObject, handles);% Update handles structure
 
     function init_ImportHECRAS_panel()
-        set(handles.text_TempHEC,'Visible','on')
-        set(handles.popup_TempHEC,'Visible','on')
-        set(handles.Const_Temp,'Visible','on')
-        set(handles.checkbox_flow,'Visible','on')
-        set(handles.checkbox_H,'Visible','on')
-        set(handles.LoadObsData, 'Visible','off')
-        set(handles.edit4, 'Visible','off')
+        set(handles.text_TempHEC, 'Visible', 'on')
+        set(handles.popup_TempHEC,'Visible', 'on')
+        set(handles.Const_Temp,   'Visible', 'on')
+        set(handles.checkbox_flow,'Visible', 'on')
+        set(handles.panel2,       'visible', 'on')
+        set(handles.checkbox_H,   'Visible', 'on')
+        set(handles.LoadObsData,  'Visible', 'off')
+        set(handles.edit4,        'Visible', 'off')
+        set(handles.panel_Single_xls_file,   'visible', 'off')
         
         %set(handles.text_HECRAS_profile,'String','HEC-RAS profile:')
-        set(handles.panel_Single_xls_file, 'visible', 'off')
-        set(handles.panel2, 'visible', 'on')
-        set(handles.River_Input_File_Panel_button,'Value',0)
-        set(handles.Import_HECRAS_panel_button,'Value',1)
-        set(handles.time_series_panel,'Value',0)
+        set(handles.checkbox_flow,                'value', 1)
+        set(handles.checkbox_H,                   'value', 0)
+        set(handles.River_Input_File_Panel_button,'Value', 0)
+        set(handles.Import_HECRAS_panel_button,   'Value', 1)
+        set(handles.time_series_panel,            'Value', 0)
     end % init_ImportHECRAS_panel()
 end
 
@@ -204,6 +209,15 @@ end % end function loadfromfile_Callback
 %% <<<<<<<<<<< USER WANTS TO IMPORT A HEC-RAS PROJECT >>>>>>>>>>>%%
 % --- Executes on button press in load_hecras_button.
 function load_hecras_button_Callback(hObject, eventdata, handles)
+% Keeps active the current Panel
+% This is important when updating the Hec-Ras profiles pop-up button
+what = get(handles.Import_data_button, 'string');
+if strcmp(what, 'Import data')
+    set(handles.Import_HECRAS_panel_button,   'Value', 1)
+elseif strcmp(what, 'Import TS')
+    set(handles.time_series_panel,            'Value', 1)
+end
+
 [FileName,PathName]=uigetfile({'*.prj'     , 'HEC-RAS project'}, ...
     'Select the HEC-RAS project file to import');
 strFilename=fullfile(PathName,FileName);
@@ -229,7 +243,6 @@ end
 %%
 guidata(hObject, handles);% Update handles structure
 close(m)
-
 
 %% Clear old input data
 set(handles.Riverinput_filename,'String',' ')
@@ -263,42 +276,49 @@ set(handles.TempPlot,'Visible','off');
                         uiwait(ed);
                     end %HECRAS 5.0.0
                 end %HECRAS 5.0.1
-            end%HECRAS 5.0.2
-            
+            end%HECRAS 5.0.2     
         end %HECRAS 5.0.3
         
         %% Open the project
-        %strRASProject = 'D:\Asian Carp\Asian Carp_USGS_Project\Tributaries data\Sandusky River\SANDUSKY_Hec_RAS_mod\Sandusky_mod_II\BallvilleDam_Updated.prj';
-        RC.Project_Open(strFilename); %open and show interface, no need to use RC.ShowRAS in Matlab
-        
-        % Profile Names
-        [lngNumProf,strProfileName]=RC.Output_GetProfiles(0,0);
-        importData = get(handles.Import_HECRAS_panel_button,'Value');
-        if importData == 1
-            % add the option of including all profiles-->For unsteady state
-            strProfileName(2:end+1) = strProfileName(1:end);
-            strProfileName{1}='All profiles-unsteady flow';
-            set(handles.popup_HECRAS_profile,'string',strProfileName);%Display profile names in GUI
-        else
-            %'Do Nothing, this is not necessary when using the time series option'
+        try
+            %strRASProject = 'D:\Asian Carp\Asian Carp_USGS_Project\Tributaries data\Sandusky River\SANDUSKY_Hec_RAS_mod\Sandusky_mod_II\BallvilleDam_Updated.prj';
+            RC.Project_Open(strFilename); %open and show interface, no need to use RC.ShowRAS in Matlab
+            
+            % Profile Names
+            [lngNumProf,strProfileName]=RC.Output_GetProfiles(0,0);
+                        importData = get(handles.Import_HECRAS_panel_button,'Value');
+            if importData == 1 
+               % Only if Import HECRAS tab is highlighted
+               % add the option of including all profiles --> For unsteady state
+                strProfileName(2:end+1) = strProfileName(1:end);
+               % Display ALL profile names in GUI                
+                strProfileName{1} = 'All profiles-unsteady flow';
+                set(handles.popup_HECRAS_profile,'string',strProfileName);
+            else
+                % Display only 'All profiles-unsteady flow'
+                set(handles.popup_HECRAS_profile,'string','All profiles-unsteady flow');
+            end
+            % Plan Name
+            [lngPlanCount,strPlanNames,~]=RC.Plan_Names(0,0,0);%Gets plan names. Output:[lngPlanCount,strPlanNames,blnIncludeBasePlansOnly]
+            set(handles.popupPlan,'string',strPlanNames);%Display plan names in GUI
+            % River Name
+            [lngRiv,strRiv]=RC.Geometry_GetRivers(0,0);%Gets River(s) name
+            set(handles.popup_River,'string',strRiv);%Display plan names in GUI
+            %Get selected River ID
+            lngRiverID=get(handles.popup_River,'Value');
+            % Reach Name
+            [~,lngRch,strRch]=RC.Geometry_GetReaches(lngRiverID,0,0);%Gets River(s) Reach name
+            set(handles.popup_Reach,'string',strRch);%Display plan names in GUI
+            %Get selected River Reach ID
+            lngReachID=get(handles.popup_Reach,'Value');
+            % River station
+            [~,~,lgnNode,strNode,strNodeType]=RC.Geometry_GetNodes(lngRiverID,lngReachID,0,0,0);%Number of nodes.~&~==>strRS & strNodeType
+            set(handles.popup_River_Station,'string',strNode(strcmp(strNodeType,'')));%Display plan names in GUI
+        catch
+            ed = errordlg('FluEgg cannot load you HEC-RAS project. Please check HEC-RAS files and try again','Error');
+            set(ed, 'WindowStyle', 'modal');
+            uiwait(ed);
         end
-        
-        % Plan Name
-        [lngPlanCount,strPlanNames,~]=RC.Plan_Names(0,0,0);%Gets plan names. Output:[lngPlanCount,strPlanNames,blnIncludeBasePlansOnly]
-        set(handles.popupPlan,'string',strPlanNames);%Display plan names in GUI
-        % River Name
-        [lngRiv,strRiv]=RC.Geometry_GetRivers(0,0);%Gets River(s) name
-        set(handles.popup_River,'string',strRiv);%Display plan names in GUI
-        %Get selected River ID
-        lngRiverID=get(handles.popup_River,'Value');
-        % Reach Name
-        [~,lngRch,strRch]=RC.Geometry_GetReaches(lngRiverID,0,0);%Gets River(s) Reach name
-        set(handles.popup_Reach,'string',strRch);%Display plan names in GUI
-        %Get selected River Reach ID
-        lngReachID=get(handles.popup_Reach,'Value');
-        % River station
-        [~,~,lgnNode,strNode,strNodeType]=RC.Geometry_GetNodes(lngRiverID,lngReachID,0,0,0);%Number of nodes.~&~==>strRS & strNodeType
-        set(handles.popup_River_Station,'string',strNode(strcmp(strNodeType,'')));%Display plan names in GUI
     end %loadsProfiles
 
 end%End load HEC-RAS project
@@ -550,9 +570,6 @@ end
 end
 
 function popup_HECRAS_profile_Callback(hObject, eventdata, handles)
-if get(handles.popup_HECRAS_profile,'Value')==1
-    set(handles.checkbox_flow,'value',1)
-end
 end
 
 function popup_HECRAS_profile_CreateFcn(hObject, eventdata, handles)
@@ -1000,24 +1017,17 @@ function time_series_panel_Callback(hObject, eventdata, handles)
 % handles    structure with handles and user data (see GUIDATA)
 %TimeSeries_GUI()
 % Initialize GUI: makes some objects invisible
-init_TS_panel()
+set(handles.text_TempHEC, 'Visible', 'off')
+set(handles.popup_TempHEC,'Visible', 'off')
+set(handles.Const_Temp,   'Visible', 'off')
+set(handles.LoadObsData,  'Visible', 'on')
+set(handles.edit4,        'Visible', 'on')
 
-    function init_TS_panel()
-        set(handles.text_TempHEC,'Visible','off')
-        set(handles.popup_TempHEC,'Visible','off')
-        set(handles.Const_Temp,'Visible','off')
-        set(handles.LoadObsData,'Visible','on')
-        set(handles.edit4, 'Visible','on')
-        %set(handles.checkbox_flow,'Visible','off')
-        %set(handles.checkbox_H,'Visible','off')
-        set(handles.Import_data_button,'String', 'Import TS')
-        set(handles.popup_HECRAS_profile,'String', 'ALL PROFILES')
-        set(handles.River_Input_File_Panel_button,'Value',0)
-        set(handles.Import_HECRAS_panel_button,'Value',0)
-        set(handles.time_series_panel,'Value',1)
-    end % init_TS_panel()
+set(handles.Import_data_button,           'String', 'Import TS')
+set(handles.River_Input_File_Panel_button,'Value',0)
+set(handles.Import_HECRAS_panel_button,   'Value',0)
+set(handles.time_series_panel,            'Value',1)
 end %time_series_panel_Callback(hObject, eventdata, handles)
-
 
 % --------------------------------------------------------------------
 function Untitled_1_Callback(hObject, eventdata, handles)
