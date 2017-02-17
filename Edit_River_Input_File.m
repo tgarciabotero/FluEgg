@@ -597,7 +597,7 @@ function popup_River_Station_Callback(hObject, eventdata, handles)
 try
     pushbutton_plot_Callback(hObject, eventdata, handles)
 catch
-    %Don't do any thing, for Time series analysis the user needs to import again the data
+    %Do nothin. For Model Evaluation the user needs to import again the data
 end
 end
 
@@ -699,7 +699,7 @@ end
         set(handles.Set_up_spawning_time,'Visible','on')
     end %plotProfiles()
     function plotTS(handles)
-        %% Coded by Santi for Time Series Analysis
+        %% Coded by Santi for Model Evaluation
         hFluEggGui = getappdata(0,'hFluEggGui');
         HECRAS_data = getappdata(hFluEggGui,'inputdata');
         if isempty(HECRAS_data)
