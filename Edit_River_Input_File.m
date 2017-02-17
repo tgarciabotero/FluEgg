@@ -757,17 +757,19 @@ end
         hFluEggGui = getappdata(0,'hFluEggGui');
         HECRAS_data = getappdata(hFluEggGui,'inputdata');
         obs_data = getappdata(hFluEggGui,'obsdata');
-        text1 = obs_data.data{1,2};
-        text2 = obs_data.data{1,3};
-        profile = arrayfun(@(x, y) strcat(x,{' '},y), text1, text2);
-        
-        % Format dates for plotting
-        date = arrayfun(@(x) datenum(x,'ddmmyyyy HHMM'), profile);
-        hydrograph = obs_data.data{1,4};
-        plot(handles.Plot_Hydrograph, date, hydrograph,'s',...
-            'MarkerSize',2, 'MarkerEdgeColor','k')
-        % [SS] This plot is over-writing the existing one. How to just add markers to
-        % existing plot?
+        if ~isempty(obs_data)
+            text1 = obs_data.data{1,2};
+            text2 = obs_data.data{1,3};
+            profile = arrayfun(@(x, y) strcat(x,{' '},y), text1, text2);
+
+            % Format dates for plotting
+            date = arrayfun(@(x) datenum(x,'ddmmyyyy HHMM'), profile);
+            hydrograph = obs_data.data{1,4};
+            plot(handles.Plot_Hydrograph, date, hydrograph,'s',...
+                'MarkerSize',2, 'MarkerEdgeColor','k')
+            % [SS] This plot is over-writing the existing one. How to just add markers to
+            % existing plot?
+        end
     end %plot_obs_data()
 end % pushbutton_plot_Callback(hObject, eventdata, handles)
 
@@ -820,7 +822,13 @@ if strcmp(    what,'Import data')
     import_data();
 elseif strcmp(    what,'Import TS')
     import_TS();
-    import_OBS();
+    try
+        import_OBS();
+    catch
+        ed = warndlg('No Observed Data was found','Observed Data');
+        set(ed, 'WindowStyle', 'modal');
+        uiwait(ed);  
+    end
 elseif strcmp(what,   'Continue')
     ContinueButton_Callback(hObject, eventdata, handles)
 end
