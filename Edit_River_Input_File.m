@@ -734,7 +734,7 @@ end
         date = arrayfun(@(x) datenum(x,'ddmmyyyy HHMM'), HECRAS_data.Dates);
         set(handles.Plot_Hydrograph,'visible','on')
         
-        plot(handles.Plot_Hydrograph,date,Hydrograph,'linewidth',2)
+        plot(handles.Plot_Hydrograph,date,Hydrograph,'linewidth',2);
         set(handles.Plot_Hydrograph,...
             'XTickLabel',...
             datestr(get(handles.Plot_Hydrograph,'XTick'),'mm/dd/yy HH:MM AM'),...
@@ -749,7 +749,6 @@ end
         ylabel(handles.Plot_Hydrograph,Yylabel,...
             'FontName','Arial',...
             'FontSize',14);
-        %
     end %plotTS()
     function plot_obs_data(handles)
         % Get Observed data if any
@@ -765,10 +764,13 @@ end
             % Format dates for plotting
             date = arrayfun(@(x) datenum(x,'ddmmyyyy HHMM'), profile);
             hydrograph = obs_data.data{1,4};
-            plot(handles.Plot_Hydrograph, date, hydrograph,'s',...
-                'MarkerSize',2, 'MarkerEdgeColor','k')
-            % [SS] This plot is over-writing the existing one. How to just add markers to
-            % existing plot?
+            
+            %Plot observations on top of HEC-RAS hydrograph
+            h2 = line(date, hydrograph, 'Parent', handles.Plot_Hydrograph);
+            h2.LineStyle        = 'none';
+            h2.Marker           = 's';
+            h2.MarkerEdgeColor  = 'k';
+            h2.MarkerSize       = 2;
         end
     end %plot_obs_data()
 end % pushbutton_plot_Callback(hObject, eventdata, handles)
@@ -817,10 +819,12 @@ if  strcmp(project,' ') == 1 % If project was not loaded
     error_load()
     return
 end
-
+% If project was loaded, take action according to Import button's string
 if strcmp(    what,'Import data')
+    % Load HEC-RAS data
     import_data();
 elseif strcmp(    what,'Import TS')
+    % Import HEC_RAS data and Observed Data if any
     import_TS();
     try
         import_OBS();
