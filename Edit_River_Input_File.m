@@ -644,14 +644,13 @@ function pushbutton_plot_Callback(hObject, eventdata, handles)
 %% Determines the action the user would want to do (TG)
 what = get(handles.Import_data_button, 'String');
 if strcmp(    what,'Import data')
-    % If the user wants to plot the flow or water depth time series for 
-    % every XS for any plan (TG)
+    % Plot the flow or water depth time series for 
+    % any XS for any plan (TG)
     plotProfiles(handles);       
 elseif strcmp(    what,'Import TS')
-    % If the user wants to plot the flow or water depth time series for
-    % a individual XS(TG)
+    % Plot the flow or water depth time series for selected River Station
     plotTS(handles); 
-    % If the user wants to plot the observed data for a particular XS (TG)
+    % Plot observed data for selected River Station
     plot_obs_data(handles);
 end
 
@@ -700,16 +699,23 @@ end
     end %plotProfiles()
     function plotTS(handles)
         %% Coded by Santi for Model Evaluation
+        % This function plots HEC-RAS output hydrographs.
+        % Load HEC-RAS outputs
         hFluEggGui = getappdata(0,'hFluEggGui');
         HECRAS_data = getappdata(hFluEggGui,'inputdata');
+        h = handles.Plot_Hydrograph;
+        
         if isempty(HECRAS_data)
+            % If HEC-RAS data store in FluEGG is not found
             m = msgbox('Please import data and try again','FluEgg error','error');
             uiwait(m)
             return
         else
-            %% Determine the parameter to plot
+            % If HEC-RAS data is found: Determine the parameter to plot
             str = get(handles.popup_River_Station, 'String');
-            val = get(handles.popup_River_Station,'Value');
+            val = get(handles.popup_River_Station, 'Value');
+            
+            % Check data was imported for selected River Station
             currentRS = HECRAS_data.RiverStation;
             if val ~= currentRS
                 m = msgbox('Please Import TS for new river station',...
@@ -717,56 +723,64 @@ end
                 uiwait(m)
                 return
             end
-            % Hydrographs:
+            
+            % Get Hydrographs data
             if get(handles.checkbox_flow,'value') == 1
+                % Flow Hydrograph
                 Hydrograph = HECRAS_data.TS(:,2);
                 Yylabel='Flow, in cubic meters per second';
             elseif get(handles.checkbox_H,'value') == 1
+                % Water Level hydrograph
                 Hydrograph = HECRAS_data.TS(:,3);
                 Yylabel='Water Surface Elevation, in meters';
             else
+                % No hydrograph has been selected
                 m = msgbox('Please select a variable to plot',...
                     'FluEgg error','error');
                 uiwait(m)
                 return
             end
         end %if
-        date = arrayfun(@(x) datenum(x,'ddmmyyyy HHMM'), HECRAS_data.Dates);
-        set(handles.Plot_Hydrograph,'visible','on')
         
-        plot(handles.Plot_Hydrograph,date,Hydrograph,'linewidth',2);
-        set(handles.Plot_Hydrograph,...
-            'XTickLabel',...
-            datestr(get(handles.Plot_Hydrograph,'XTick'),'mm/dd/yy HH:MM AM'),...
-            'XColor','k',...
-            'FontName','Arial');
-        box(handles.Plot_Hydrograph,'on')
-        xlabel(handles.Plot_Hydrograph,'Time',...
-            'FontName','Arial',...
-            'FontSize',14);
-        grid(handles.Plot_Hydrograph,'on')
-        set(handles.Plot_Hydrograph,'XMinorTick','on')
-        ylabel(handles.Plot_Hydrograph,Yylabel,...
-            'FontName','Arial',...
-            'FontSize',14);
+        % Format Date data for plot
+        date = arrayfun(@(x) datenum(x,'ddmmyyyy HHMM'), HECRAS_data.Dates);
+        date_axis = datestr(get(h,'XTick'), 'mm/dd/yy HH:MM AM');
+        
+        % Show plot and creat Axes and line object
+        set(h,'visible','on')
+        plot(h, date, Hydrograph, 'linewidth',2);
+        set(h, 'XTickLabel', date_axis,...
+               'XColor'  ,'k',...
+               'FontName','Arial');
+        box(h,'on')
+        xlabel(h, 'Time',...
+                  'FontName','Arial',...
+                  'FontSize',14);
+        grid(h, 'on')
+        set(h, 'XMinorTick','on')
+        ylabel(h, Yylabel,...
+                  'FontName','Arial',...
+                  'FontSize',14);
     end %plotTS()
     function plot_obs_data(handles)
-        % Get Observed data if any
-        % [SS] Need to add a check-point for non-existing data
-        hFluEggGui = getappdata(0,'hFluEggGui');
+        % Get Observed data, if any
+        % Load HEC-RAS outputs and observed data
+        hFluEggGui  = getappdata(0,'hFluEggGui');
         HECRAS_data = getappdata(hFluEggGui,'inputdata');
-        obs_data = getappdata(hFluEggGui,'obsdata');
+        obs_data    = getappdata(hFluEggGui,'obsdata');
+        h = handles.Plot_Hydrograph;
+        
         if ~isempty(obs_data)
+            % Observed data was loaded in FluEgg
+            % Format dates for plotting
             text1 = obs_data.data{1,2};
             text2 = obs_data.data{1,3};
             profile = arrayfun(@(x, y) strcat(x,{' '},y), text1, text2);
-
-            % Format dates for plotting
             date = arrayfun(@(x) datenum(x,'ddmmyyyy HHMM'), profile);
             hydrograph = obs_data.data{1,4};
             
             %Plot observations on top of HEC-RAS hydrograph
-            h2 = line(date, hydrograph, 'Parent', handles.Plot_Hydrograph);
+            h2 = line(date, hydrograph, 'Parent', h);
             h2.LineStyle        = 'none';
             h2.Marker           = 's';
             h2.MarkerEdgeColor  = 'k';
