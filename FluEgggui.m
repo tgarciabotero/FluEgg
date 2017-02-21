@@ -371,6 +371,10 @@ Jump;
         % water temperature, simulation times and fish species
         %% ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
         for tt=1:length(D) %because the counter of the array starts from 1
+		%The following standard deviation relationships were calculated by fitting
+		% a normal probability density function to increments of Chapman's data and 
+		%calculating the standard deviation of the data points from the fitted curve.
+        %A curve of form a*exp(-t/b)+c was then fit to the time series of standard deviation values (LJ February 2017).
             %% ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
             if strcmp(specie,'Silver')%if specie=='Silver'
                 %% STD
@@ -384,15 +388,22 @@ Jump;
                     %% Diameter
                     DiamStd = 0.1788.*exp(-time/13570)+0.44;
                     %% Density
-                    RhoeStd = 63.12*exp((-time)/595)+0.6292;
+                    RhoeStd = 63.12*exp(-time/595)+0.6292;
                 %% ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
             else %case Grass Carp : TG March,2015
                      %% Diameter
                     DiamStd = 0.4759.*exp(-time/14150)+0.4586;
                     %% Density
-                    RhoeStd = 19.28.*exp(-timeGC./1973)+1.029;
+                    RhoeStd = 19.28.*exp(-time/1973)+1.029;
             end % Species selection
             %% ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+			%  The diameter and density are calculated at time 't' by using the value of the 
+			%  fitted curve as the mean for that time and the value of the fitted curve of the standard
+			%  deviation. A random variable is chosen from the normal distribuion with the given mean and 
+			%  standard deviation to represent the diameter and density at the given time 't'. The value from the 
+			%  the distribution is limited to between +/- 2 times the standard deviation, which encapsulates 95%
+			%  of the observed data. (LJ February 2017)
+			
             %% Diameter fit + scatter
             Dvar(tt,1) = single(normrnd(D(tt),DiamStd));
             while (Dvar(tt)>=D(tt)+2*DiamStd)||(Dvar(tt)<=D(tt)-2*DiamStd)
