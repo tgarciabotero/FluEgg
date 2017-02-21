@@ -646,31 +646,46 @@ what = get(handles.Import_data_button, 'String');
 if strcmp(    what,'Import data')
     % Plot the flow or water depth time series for 
     % any XS for any plan (TG)
-    plotProfiles(handles);       
+    [date_axis, Yylabel] = plotProfiles(handles);
 elseif strcmp(    what,'Import TS')
     % Plot the flow or water depth time series for selected River Station
-    plotTS(handles); 
+    [date_axis, Yylabel] = plotTS(handles); 
     % Plot observed data for selected River Station
     plot_obs_data(handles);
 end
-
-    function plotProfiles(handles)
+%% Format plot
+h = handles.Plot_Hydrograph;
+h.FontName          = 'Arial';
+h.XLabel            = xlabel('Time', 'FontSize',14 );
+h.Visible           = 'on';
+h.XTickLabel        = date_axis;
+h.XColor            = 'k';
+h.XLabel.Visible    = 'on';
+h.YLabel            = ylabel(Yylabel, 'FontSize',14);
+h.YLabel.Visible    = 'on';
+h.XMinorTick        = 'on';
+box( h, 'on')
+grid(h, 'on')
+set( h, 'XMinorTick','on')
+%% Sub-functions 
+    function [date_axis, Yylabel] = plotProfiles(handles)
         %% As coded by Tatiana
         hFluEggGui = getappdata(0,'hFluEggGui');
         try
             HECRAS_data = getappdata(hFluEggGui,'inputdata'); %0 means root-->storage in desktop
+            h = handles.Plot_Hydrograph;
             %% Determine the parameter to plot
             str = get(handles.popup_River_Station, 'String');
             val = get(handles.popup_River_Station,'Value');
             % Hydrographs:
             if get(handles.checkbox_flow,'value') == 1
                 set(handles.checkbox_H,'value',0)
-                Hydrograph=arrayfun(@(x) x.Riverinputfile(val,4), HECRAS_data.Profiles);
-                Yylabel='Flow, in cubic meters per second';
+                Hydrograph = arrayfun(@(x) x.Riverinputfile(val,4), HECRAS_data.Profiles);
+                Yylabel = 'Flow, in cubic meters per second';
             elseif get(handles.checkbox_H,'value') == 1
                 set(handles.checkbox_flow,'value',0)
-                Hydrograph=arrayfun(@(x) x.Riverinputfile(val,3), HECRAS_data.Profiles);
-                Yylabel='Water depth, in meters';
+                Hydrograph = arrayfun(@(x) x.Riverinputfile(val,3), HECRAS_data.Profiles);
+                Yylabel = 'Water depth, in meters';
             else
                 m = msgbox('Please select a variable to plot','FluEgg error','error');
                 uiwait(m)
@@ -681,23 +696,30 @@ end
             uiwait(m)
             return
         end
-        date=arrayfun(@(x) datenum(x.Date,'ddmmyyyy HHMM'), HECRAS_data.Profiles);
-        set(handles.Plot_Hydrograph,'visible','on')
-        plot(handles.Plot_Hydrograph,date,Hydrograph,'linewidth',2)
-        %xlim(handles.Plot_Hydrograph,[date(1) date(end)])
-        %%set(handles.Plot_Hydrograph,'XTick',[date(1):(date(end)-date(1))/5:date(end)]);
-        %set(handles.Plot_Hydrograph,'XTickLabel',datestr([date(1):(date(end)-date(1))/5:date(end)],'mm/dd/yy HH:MM AM'),'XColor','k','FontName','Arial');
-        set(handles.Plot_Hydrograph,'XTickLabel',datestr(get(handles.Plot_Hydrograph,'XTick'),'mm/dd/yy HH:MM AM'),'XColor','k','FontName','Arial');
-        box(handles.Plot_Hydrograph,'on')
-        xlabel(handles.Plot_Hydrograph,'Time','FontName','Arial','FontSize',14);
-        grid(handles.Plot_Hydrograph,'on')
-        set(handles.Plot_Hydrograph,'XMinorTick','on')
-        ylabel(handles.Plot_Hydrograph,Yylabel,'FontName','Arial','FontSize',14);
-        %msgbox('Feature under development, no available','FluEgg message')
-        set(handles.delete_spawning_time,'Visible','off')
-        set(handles.Set_up_spawning_time,'Visible','on')
+        % Format Date data for plot
+        date = arrayfun(@(x) datenum(x.Date,'ddmmyyyy HHMM'), HECRAS_data.Profiles);
+        date_axis = datestr(get(h,'XTick'), 'mm/dd/yy HH:MM AM');
+
+%         date=arrayfun(@(x) datenum(x.Date,'ddmmyyyy HHMM'), HECRAS_data.Profiles);
+%         set(handles.Plot_Hydrograph,'visible','on')
+        
+        % Create Axes and line object         
+        plot(h, date, Hydrograph, 'linewidth',2);
+        
+%         %xlim(handles.Plot_Hydrograph,[date(1) date(end)])
+%         %%set(handles.Plot_Hydrograph,'XTick',[date(1):(date(end)-date(1))/5:date(end)]);
+%         %set(handles.Plot_Hydrograph,'XTickLabel',datestr([date(1):(date(end)-date(1))/5:date(end)],'mm/dd/yy HH:MM AM'),'XColor','k','FontName','Arial');
+%         set(handles.Plot_Hydrograph,'XTickLabel',datestr(get(handles.Plot_Hydrograph,'XTick'),'mm/dd/yy HH:MM AM'),'XColor','k','FontName','Arial');
+%         box(handles.Plot_Hydrograph,'on')
+%         xlabel(handles.Plot_Hydrograph,'Time','FontName','Arial','FontSize',14);
+%         grid(handles.Plot_Hydrograph,'on')
+%         set(handles.Plot_Hydrograph,'XMinorTick','on')
+%         ylabel(handles.Plot_Hydrograph,Yylabel,'FontName','Arial','FontSize',14);
+%         %msgbox('Feature under development, no available','FluEgg message')
+%         set(handles.delete_spawning_time,'Visible','off')
+%         set(handles.Set_up_spawning_time,'Visible','on')
     end %plotProfiles()
-    function plotTS(handles)
+    function [date_axis, Yylabel] = plotTS(handles)
         %% Coded by Santi for Model Evaluation
         % This function plots HEC-RAS output hydrographs.
         % Load HEC-RAS outputs
@@ -746,27 +768,13 @@ end
         date = arrayfun(@(x) datenum(x,'ddmmyyyy HHMM'), HECRAS_data.Dates);
         date_axis = datestr(get(h,'XTick'), 'mm/dd/yy HH:MM AM');
         
-        % Show plot and creat Axes and line object
-        set(h,'visible','on')
-        plot(h, date, Hydrograph, 'linewidth',2);
-        set(h, 'XTickLabel', date_axis,...
-               'XColor'  ,'k',...
-               'FontName','Arial');
-        box(h,'on')
-        xlabel(h, 'Time',...
-                  'FontName','Arial',...
-                  'FontSize',14);
-        grid(h, 'on')
-        set(h, 'XMinorTick','on')
-        ylabel(h, Yylabel,...
-                  'FontName','Arial',...
-                  'FontSize',14);
+        % Create Axes and line object
+         plot(h, date, Hydrograph, 'linewidth',2);
     end %plotTS()
+
     function plot_obs_data(handles)
-        % Get Observed data, if any
-        % Load HEC-RAS outputs and observed data
+        % Add Observed data to plot, if any
         hFluEggGui  = getappdata(0,'hFluEggGui');
-        HECRAS_data = getappdata(hFluEggGui,'inputdata');
         obs_data    = getappdata(hFluEggGui,'obsdata');
         h = handles.Plot_Hydrograph;
         
@@ -779,7 +787,7 @@ end
             date = arrayfun(@(x) datenum(x,'ddmmyyyy HHMM'), profile);
             hydrograph = obs_data.data{1,4};
             
-            %Plot observations on top of HEC-RAS hydrograph
+            %Add line to plot and add format
             h2 = line(date, hydrograph, 'Parent', h);
             h2.LineStyle        = 'none';
             h2.Marker           = 's';
