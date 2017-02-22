@@ -37,6 +37,18 @@ if getappdata(h,'canceling')
     return;
 end
 
+%% Inverse modeling [TG}
+ choice = questdlg('You are about to start an inverse simulation of drifting eggs, are you sure you want to continue?'...
+                ,'Warning','Yes','No','Yes');
+            switch choice
+                case 'Yes'
+                    %Continue
+                case 'No'
+                    delete(h)
+                    Exit=1;
+                    return
+            end
+
 %% Switch to turn on or off mortality model
 %Right now we are assuming eggs don't die
 % The mortality model is under development
@@ -372,9 +384,9 @@ Jump;
         %% ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
         for tt=1:length(D) %because the counter of the array starts from 1
 		%The following standard deviation relationships were calculated by fitting
-		% a normal probability density function to increments of Chapman's data and 
+		% a normal probability density function to increments of Chapman's data gruped by time periods and 
 		%calculating the standard deviation of the data points from the fitted curve.
-        %A curve of form a*exp(-t/b)+c was then fit to the time series of standard deviation values (LJ February 2017).
+        %A curve of form a*exp(-t/b)+c was then fit to the time series of standard deviation values as a function of time (LJ February 2017).
             %% ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
             if strcmp(specie,'Silver')%if specie=='Silver'
                 %% STD
@@ -405,14 +417,14 @@ Jump;
 			%  of the observed data. (LJ February 2017)
 			
             %% Diameter fit + scatter
-            Dvar(tt,1) = single(normrnd(D(tt),DiamStd));
-            while (Dvar(tt)>=D(tt)+2*DiamStd)||(Dvar(tt)<=D(tt)-2*DiamStd)
-                Dvar(tt) = single(normrnd(D(tt),DiamStd));
+            Dvar(tt,1) = single(normrnd(D(tt),DiamStd(tt)));
+            while (Dvar(tt)>=D(tt)+2*DiamStd(tt))||(Dvar(tt)<=D(tt)-2*DiamStd(tt))
+                Dvar(tt) = single(normrnd(D(tt),DiamStd(tt)));
             end
             %% Fitted density of the eggs  + scatter
-            Rhoevar(tt,1) = single(normrnd(Rhoe_ref(tt),RhoeStd));
-            while (Rhoevar(tt)>=Rhoe_ref(tt)+2*RhoeStd)||(Rhoevar(tt)<=Rhoe_ref(tt)-2*RhoeStd)
-                Rhoevar(tt) = single(normrnd(Rhoe_ref(tt),RhoeStd));
+            Rhoevar(tt,1) = single(normrnd(Rhoe_ref(tt),RhoeStd(tt)));
+            while (Rhoevar(tt)>=Rhoe_ref(tt)+2*RhoeStd(tt))||(Rhoevar(tt)<=Rhoe_ref(tt)-2*RhoeStd(tt))
+                Rhoevar(tt) = single(normrnd(Rhoe_ref(tt),RhoeStd(tt)));
             end
         end
         Rhoe_ref = Rhoevar;
