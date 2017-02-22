@@ -249,6 +249,13 @@ switch str{val};
     case 'Use diameter and egg density time series (Chapman and George (2011, 2014))'
         Tref = 22; %C
         [D,Rhoe_ref] = EggBio;
+        %% Are we doing inverse modeling? TG
+        Inv_mod=handles.userdata.Inv_mod;
+        if Inv_mod==-1 %If yes invert the array of D and Rhoe in such a way D decreases with every time step
+                       %and Rhoe increases with every time step
+            D=D(end:-1:1);
+            Rhoe_ref=Rhoe_ref(end:-1:1);
+        end
 end % Do we use constant diameter and egg density? or do we use grow development time series
 
 %% Calculate water density
@@ -466,6 +473,9 @@ Jump;
         alpha = 2.51;%Average value among several rivers
         beta = 2.47;
         %%=================================================================================================
+        %% Are we doing inverse modeling? TG
+        Inv_mod=handles.userdata.Inv_mod; %use this in the x, y, z movement equations
+        
         
         for t=2:Steps                    
             if ~mod(t, waitstep) || t==Steps
@@ -512,7 +522,7 @@ Jump;
             %% Streamwise velocity distribution in the transverse direction
             Vxz = abs(Vxz).*betapdf(Y(t-1,a)'./W(a),alpha,beta);
             %% X
-            X(t,a) = X(t-1,a)'+(Dt*Vxz)+(normrnd(0,1,sum(a),1).*sqrt(2*DH(a)*Dt));
+            X(t,a) = X(t-1,a)'+Inv_mod*((Dt*Vxz)+(normrnd(0,1,sum(a),1).*sqrt(2*DH(a)*Dt)));
             % Reflecting Boundary: Iff Eggs are located outside the
             % upstream boundary condition
             check = X(t,a);
@@ -531,7 +541,7 @@ Jump;
             X(t,~a) = X(t-1,~a);%If they were already dead,leave them in the same position.
             
             %% Y
-            Y(t,a) = Y(t-1,a)'+(Dt*Vy(a))+(normrnd(0,1,sum(a),1).*sqrt(2*DH(a)*Dt));
+            Y(t,a) = Y(t-1,a)'+Inv_mod*((Dt*Vy(a))+(normrnd(0,1,sum(a),1).*sqrt(2*DH(a)*Dt)));
             Y(t,~a) = Y(t-1,~a);%If they were already dead,leave them in the same position.
             
             %% Calculate Vertical dispersion
@@ -547,7 +557,7 @@ Jump;
                 Vswim(a) = zeros(length(Vzpart(a)),1);
             end
             
-            Z(t,a) = Z(t-1,a)'+Dt*(Vz(a)+Vswim(a)+Vzpart(a)+Kprime)+(normrnd(0,1,sum(a),1).*sqrt(2*Kz*Dt));%m
+            Z(t,a) = Z(t-1,a)'+Inv_mod*(Dt*(Vz(a)+Vswim(a)+Vzpart(a)+Kprime))+(normrnd(0,1,sum(a),1).*sqrt(2*Kz*Dt));%m
             
             %% Movement in Z
             % Z(t,a) = Z(t-1,a)'+Dt*(Vz(a)+Vzpart(a)+Kprime)+(normrnd(0,1,sum(a),1).*sqrt(2*Kz*Dt));%m
@@ -713,13 +723,13 @@ Jump;
                     Kz(Kz<B.*viscosity)=B(Kz<B.*viscosity).*viscosity(Kz<B.*viscosity);  %If eddy diffusivity is less than the water viscosity, use the water viscosity
                 case 'Parabolic Turbulent Diffusivity'
                     Kprime=B.*0.41.*ustar(a).*(1-(2*ZR./H(a)));
-                    Zprime=ZR+(0.5*Kprime*Dt);
+                    Zprime=ZR+Inv_mod*((0.5*Kprime*Dt));
                     Kz=B.*0.41.*ustar(a).*Zprime.*(1-(Zprime./H(a)));%Calculated at ofset location 0.5K'Dt
                     Kz(Kz<B.*viscosity)=B(Kz<B.*viscosity).*viscosity(Kz<B.*viscosity);  %If eddy diffusivity is less than the water viscosity, use the water viscosity
                 case 'Parabolic-Constant Turbulent Diffusivity'
                     Kprime=B.*0.41.*ustar(a).*(1-(2*ZR./H(a)));%dimensionless
                     Kprime(ZR./H(a)>=0.5)=0;  %constant portion
-                    Zprime=ZR+(0.5*Kprime*Dt);
+                    Zprime=ZR+Inv_mod*((0.5*Kprime*Dt));
                     Kz=B.*0.41.*ustar(a).*Zprime.*(1-(Zprime./H(a)));%Calculated at ofset location 0.5K'Dt  %% Parabolic function
                     Kz(ZR./H(a)>=0.5)=B(ZR./H(a)>=0.5).*0.25*0.41.*ustar(ZR./H(a)>=0.5).*H(ZR./H(a)>=0.5);  %% Constant part, corresponding to max diffisivity, refference Van Rijin
                     Kz(Kz<B.*viscosity)=B(Kz<B.*viscosity).*viscosity(Kz<B.*viscosity);  %If eddy diffusivity is less than the water viscosity, use the water viscosity
