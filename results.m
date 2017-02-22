@@ -151,7 +151,7 @@ switch Tab
                 end
             end
             if  strcmp(Postprocessing_option(i),'Egg vertical concentration distribution')
-                egg_mass_centroid_Vs_distance();
+                Egg_vertical_concentration();
             end
         end
         %%=================================================================================================
