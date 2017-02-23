@@ -26,6 +26,30 @@
 
 function [minDt,CheckDt,Exit]=FluEgggui(~, ~,handles,CheckDt)
 
+%% Are we doing inverse modeling? TG
+Inv_mod_status=get(handles.Inverse_modeling,'Checked');
+switch Inv_mod_status
+    %======================================================================
+    case 'off' %If forward modeling
+        Inv_mod=1;
+    case 'on' % If inverse modeling is activated
+        Inv_mod=-1;
+        %% Inverse modeling [TG}
+        choice = questdlg('You are about to start an inverse simulation of drifting eggs, are you sure you want to continue?'...
+            ,'Warning','Yes','No','Yes');
+        switch choice
+            case 'Yes'
+                %Continue
+            case 'No'
+                minDt = 0;
+                Exit=1;
+                h = msgbox('The simulation was terminated by user','Warn');
+                pause(4)
+                 delete(h)
+                return
+        end
+end
+
 %% Iniciate Waitbar
 h = waitbar(0,'Initializing variables...','Name','Eggs drifting...',...
     'CreateCancelBtn',...
@@ -36,18 +60,6 @@ if getappdata(h,'canceling')
     Exit=1;
     return;
 end
-
-%% Inverse modeling [TG}
- choice = questdlg('You are about to start an inverse simulation of drifting eggs, are you sure you want to continue?'...
-                ,'Warning','Yes','No','Yes');
-            switch choice
-                case 'Yes'
-                    %Continue
-                case 'No'
-                    delete(h)
-                    Exit=1;
-                    return
-            end
 
 %% Switch to turn on or off mortality model
 %Right now we are assuming eggs don't die
@@ -250,7 +262,6 @@ switch str{val};
         Tref = 22; %C
         [D,Rhoe_ref] = EggBio;
         %% Are we doing inverse modeling? TG
-        Inv_mod=handles.userdata.Inv_mod;
         if Inv_mod==-1 %If yes invert the array of D and Rhoe in such a way D decreases with every time step
                        %and Rhoe increases with every time step
             D=D(end:-1:1);
@@ -472,11 +483,7 @@ Jump;
         waitstep = floor((Steps)/100);
         alpha = 2.51;%Average value among several rivers
         beta = 2.47;
-        %%=================================================================================================
-        %% Are we doing inverse modeling? TG
-        Inv_mod=handles.userdata.Inv_mod; %use this in the x, y, z movement equations
-        
-        
+        %%=================================================================================================    
         for t=2:Steps                    
             if ~mod(t, waitstep) || t==Steps
                 fill=time(t)/Totaltime;
@@ -766,12 +773,24 @@ Jump;
         
         %% Check if eggs are in a new cell in this jump
         %Find egg index of eggs that are in a new cell
-        %% If not doing forward modeling..
+        
+        %% If not doing forward modeling.
         if Inv_mod==1
         [c,~]=find(X(t,:)'>(CumlDistance(cell)*1000));
-        else
+        else %% If we are doing inverse modeling
+            check_Eggs_are_in_domain=(cell-1<1);%Are the eggs istill in the domain????
+            if sum(check_Eggs_are_in_domain)>=1
+                 ed=errordlg([{'Eggs are outside the domain'},{'Please review river input file or decrese the simulation time.'}],'Error');
+                set(ed, 'WindowStyle', 'modal');
+                uiwait(ed);
+                minDt = 0; %terminate the simulation
+                Exit=1;
+                return
+            else %If eggs are still within the domain
              [c,~]=find(X(t,:)'<(CumlDistance(cell-1)*1000));
+            end
         end
+        
         for i=1:length(c)
             egg_index=c(i);
             C=find(X(t,egg_index)<CumlDistance*1000,1,'first'); %Find the new cell where eggs are located
