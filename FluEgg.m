@@ -289,7 +289,7 @@ end
 
 %% Analyze the Results::::::::::::::::::::::::::::::::::::::::::::::::::::::%
 function Results_Callback(hObject, eventdata, handles)
-Results();
+results();
 end
 
 function NewSim_Button_Callback(hObject, ~, handles)
@@ -310,7 +310,7 @@ end
 
 % --------------------------------------------------------------------
 function Analyze_Results_Callback(hObject, eventdata, handles)
-Results();
+results();
 end
 
 % Hatching time -----------------------------------------------------------

@@ -527,6 +527,7 @@ Jump;
             % upstream boundary condition
             check = X(t,a);
             check(check<d/2) = d-check(check<d/2);
+            if Inv_mod==1
             if length(check<d/2)>1 && Warning_flag==0
                 hh=msgbox('Some eggs crossed the upstream boundary and where bounced back to the domain','FluEgg Warning','warn');
                 pause(2)
@@ -535,7 +536,8 @@ Jump;
                 delete(hh)
                 catch
                 end
-            end    
+            end 
+            end
             X(t,a) = check; %The new location of the eggs is check;
             check = []; %reset check
             X(t,~a) = X(t-1,~a);%If they were already dead,leave them in the same position.
@@ -764,7 +766,12 @@ Jump;
         
         %% Check if eggs are in a new cell in this jump
         %Find egg index of eggs that are in a new cell
+        %% If not doing forward modeling..
+        if Inv_mod==1
         [c,~]=find(X(t,:)'>(CumlDistance(cell)*1000));
+        else
+             [c,~]=find(X(t,:)'<(CumlDistance(cell-1)*1000));
+        end
         for i=1:length(c)
             egg_index=c(i);
             C=find(X(t,egg_index)<CumlDistance*1000,1,'first'); %Find the new cell where eggs are located
