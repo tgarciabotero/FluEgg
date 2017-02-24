@@ -652,14 +652,17 @@ elseif strcmp(    what,'Import TS')
     % Plot observed data for selected River Station
     plot_obs_data(handles);
     [pbias, nse] = modeleval(handles);
+    %% Add Evaluation results
+    pbiasstr = strcat({'PBIAS ='}, {' '}, {num2str(pbias)});
+    nsestr   = strcat({'NSE ='}  , {' '}, {num2str(nse)});m1 = msgbox(pbiasstr ,'About !','modal');
+    uiwait(m1)
+    m2 = msgbox(nsestr ,'About !','modal');
+    uiwait(m2)
 end
-%% Add Evaluation results
-pbiasstr = strcat({'PBIAS ='}, {' '}, {num2str(pbias)});
-nsestr   = strcat({'NSE ='}  , {' '}, {num2str(nse)});
 %text(0.5, 0.5, {pbiasstr; nsestr},'Parent',h)
 %% Format plot
-h = handles.Plot_Hydrograph;
-text(0.5, 0.5, pbiasstr,'Parent', h);
+handles.Plot_Hydrograph;
+%t = text(0.5, 0.5, pbiasstr,'Parent', h);
 h.FontName          = 'Arial';
 h.XLabel            = xlabel('Time', 'FontSize',14 );
 h.Visible           = 'on';
@@ -672,6 +675,7 @@ h.XMinorTick        = 'on';
 box( h, 'on')
 grid(h, 'on')
 set( h, 'XMinorTick','on')
+return
 %% Sub-functions 
     function [date_axis, Yylabel] = plotProfiles(handles)
         %% As coded by Tatiana
