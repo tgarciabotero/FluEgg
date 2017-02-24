@@ -697,7 +697,7 @@ set( h, 'XMinorTick','on')
         end
         % Format Date data for plot
         date = arrayfun(@(x) datenum(x.Date,'ddmmyyyy HHMM'), HECRAS_data.Profiles);
-        date_axis = datestr(get(h,'XTick'), 'mm/dd/yy HH:MM AM');
+        date_axis = datestr(date, 'mm/dd/yy HH:MM AM');
 
 %         date=arrayfun(@(x) datenum(x.Date,'ddmmyyyy HHMM'), HECRAS_data.Profiles);
 %         set(handles.Plot_Hydrograph,'visible','on')
@@ -765,7 +765,7 @@ set( h, 'XMinorTick','on')
         
         % Format Date data for plot
         date = arrayfun(@(x) datenum(x,'ddmmyyyy HHMM'), HECRAS_data.Dates);
-        date_axis = datestr(get(h,'XTick'), 'mm/dd/yy HH:MM AM');
+        date_axis = datestr(date, 'mm/dd/yy HH:MM AM');
         
         % Create Axes and line object
          plot(h, date, Hydrograph, 'linewidth',2);
