@@ -651,9 +651,15 @@ elseif strcmp(    what,'Import TS')
     [date_axis, Yylabel] = plotTS(handles); 
     % Plot observed data for selected River Station
     plot_obs_data(handles);
+    [pbias, nse] = modeleval(handles);
 end
+%% Add Evaluation results
+pbiasstr = strcat({'PBIAS ='}, {' '}, {num2str(pbias)});
+nsestr   = strcat({'NSE ='}  , {' '}, {num2str(nse)});
+%text(0.5, 0.5, {pbiasstr; nsestr},'Parent',h)
 %% Format plot
 h = handles.Plot_Hydrograph;
+text(0.5, 0.5, pbiasstr,'Parent', h);
 h.FontName          = 'Arial';
 h.XLabel            = xlabel('Time', 'FontSize',14 );
 h.Visible           = 'on';
