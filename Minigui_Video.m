@@ -158,12 +158,10 @@ set(handles.Display_text,'String',['The video will display one frame every ',spr
     patch(x,yb,zt,'w','FaceAlpha',0.02)%Top face,optional 'FaceColor','none'
     hh=patch(xx,yy,z,colorp);
     uistack(hh,'bottom')
-    bar=colorbar('CLim',[0 1.2]);
-    colorbar('XTick',[0:0.2:1.2],'XTickLabel',[0:0.2:1.2])
-    bar=colorbar('location','NorthOutside');
+    bar=colorbar('Limits',[0 1.2],'XTick',[0:0.2:1.2],'XTickLabel',[0:0.2:1.2],'location','NorthOutside');
     set(get(bar,'xlabel'),'String', 'Cell Velocity [m/s]');clear bar;%Velocity=Vmag
     bar=findobj(gcf,'Tag','Colorbar');
-    set(bar,'Position',[0.73 0.03 0.25 0.016]);
+    set(bar,'Position',[0.74 0.05 0.25 0.016]);
     hold off
     %%
     xlim([0 CumlDistance(Fcell)]); ylim([0 max(Width(1:Fcell))]); zlim([-max(Depth(1:Fcell)) 0]);
@@ -263,9 +261,7 @@ zt=Videodata.zt;
             %     hh=patch(x,yf,z,colorp); %Front face;
             hh=patch(xx,yy,z,colorp);
             uistack(hh,'bottom')
-            bar=colorbar('CLim',[0 1.2]);
-            colorbar('XTick',[0:0.2:1.2],'XTickLabel',[0:0.2:1.2])
-            bar=colorbar('location','NorthOutside');
+            bar=colorbar('Limits',[0 1.2],'XTick',[0:0.2:1.2],'XTickLabel',[0:0.2:1.2],'location','NorthOutside');
             set(get(bar,'xlabel'),'String', 'Cell Velocity [m/s]');clear bar;%Velocity=Vmag
             bar=findobj(gcf,'Tag','Colorbar');
             set(bar,'Position',[0.73 0.03 0.25 0.016]);

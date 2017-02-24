@@ -11,15 +11,15 @@
 %-------------------------------------------------------------------------%
 % Copyright 2016 Tatiana Garcia
 %:::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::%
-function varargout = Results(varargin)
-% Last Modified by GUIDE v2.5 01-Sep-2015 09:05:42
+function varargout = results(varargin)
+% Last Modified by GUIDE v2.5 22-Feb-2017 17:55:39
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
 gui_State = struct('gui_Name',       mfilename, ...
     'gui_Singleton',  gui_Singleton, ...
-    'gui_OpeningFcn', @Results_OpeningFcn, ...
-    'gui_OutputFcn',  @Results_OutputFcn, ...
+    'gui_OpeningFcn', @results_OpeningFcn, ...
+    'gui_OutputFcn',  @results_OutputFcn, ...
     'gui_LayoutFcn',  [] , ...
     'gui_Callback',   []);
 if nargin && ischar(varargin{1})
@@ -35,7 +35,7 @@ end
 end
 
 % --- Executes just before Results is made visible.
-function Results_OpeningFcn(hObject, eventdata, handles, varargin)
+function results_OpeningFcn(hObject, eventdata, handles, varargin)
 diary('./results/FluEgg_LogFile.txt')
 axes(handles.bottom); imshow('asiancarp.png');
 button_load_picture(hObject, eventdata, handles);
@@ -51,7 +51,7 @@ set(handles.Postprocessing_option(4),'Visible','off');
 guidata(hObject, handles);
 end
 
-function varargout = Results_OutputFcn(~, ~, handles)
+function varargout = results_OutputFcn(~, ~, handles)
 diary off
 varargout{1} = handles.output;
 end
@@ -199,9 +199,6 @@ setappdata(handleResults, 'selected_life_stage', selected_life_stage);
 end
 
 function checkbox1_Callback(~, ~, handles)
-end
-
-function ResultsPathName_Callback(~, eventdata, handles)
 end
 
 function ResultsPathName_CreateFcn(hObject, eventdata, handles)
@@ -1136,23 +1133,6 @@ guidata(hObject, handles);
 
 end
 
-% --- Executes on button press in Postprocessing_option.
-function Postprocessing_option_Callback(hObject, eventdata, handles)
-% hObject    handle to Postprocessing_option (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    structure with handles and user data (see GUIDATA)
-
-% Hint: get(hObject,'Value') returns toggle state of Postprocessing_option
-end
-
-% --- Executes on button press in Life_stage_group.
-function Life_stage_group_Callback(hObject, eventdata, handles)
-% hObject    handle to Life_stage_group (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    structure with handles and user data (see GUIDATA)
-
-% Hint: get(hObject,'Value') returns toggle state of Life_stage_group
-end
 
 
 % --------------------------------------------------------------------
@@ -1207,3 +1187,4 @@ setappdata(handleResults, 'Menu',Menu);
 set(handles.MenuMetric, 'Checked','off')
 set(handles.MenuEnglish,'Checked','on')
 end
+

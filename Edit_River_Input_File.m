@@ -334,52 +334,51 @@ x = Riverinputfile(:,2);
 x = [(x+[0; x(1:end-1)])/2; x(end)];
 %% Depth
 set(handles.DepthPlot,'Visible','on');
-plot(handles.DepthPlot,x,[Riverinputfile(:,3);Riverinputfile(end,3)],'LineWidth',1.5,'Color',[0 0 0]);
+plot(handles.DepthPlot,[0; x],[Riverinputfile(1,3); Riverinputfile(:,3);Riverinputfile(end,3)],'LineWidth',1.5,'Color',[0 0 0]);
 ylabel(handles.DepthPlot,'H [m]','FontWeight','bold','FontSize',10);
 box(handles.DepthPlot,'on');
 xlim(handles.DepthPlot,[0 max(Riverinputfile(:,2))]);
 %==========================================================================
 %% QPlot Riverin data
 set(handles.QPlot,'Visible','on');
-plot(handles.QPlot,x,[Riverinputfile(:,4);Riverinputfile(end,4)],'LineWidth',1.5,'Color',[0 0 0]);
+plot(handles.QPlot,[0; x],[Riverinputfile(1,4); Riverinputfile(:,4);Riverinputfile(end,4)],'LineWidth',1.5,'Color',[0 0 0]);
 ylabel(handles.QPlot,{'Q [cms]'},'FontWeight','bold','FontSize',10);
 box(handles.QPlot,'on');
 xlim(handles.QPlot,[0 max(Riverinputfile(:,2))]);
 %==========================================================================
 %% VmagPlot Riverin data
 set(handles.VmagPlot,'Visible','on');
-plot(handles.VmagPlot,x,[Riverinputfile(:,5);Riverinputfile(end,5)],'LineWidth',1.5,'Color',[0 0 0]);
+plot(handles.VmagPlot,[0; x],[Riverinputfile(1,5); Riverinputfile(:,5); Riverinputfile(end,5)],'LineWidth',1.5,'Color',[0 0 0]);
 ylabel(handles.VmagPlot,{'Vmag [m/s]'},'FontWeight','bold','FontSize',10);
 box(handles.VmagPlot,'on');
 xlim(handles.VmagPlot,[0 max(Riverinputfile(:,2))]);
 %==========================================================================
 %% VyPlot Riverin data
 set(handles.VyPlot,'Visible','on');
-plot(handles.VyPlot,x,[Riverinputfile(:,6);Riverinputfile(end,6)],'LineWidth',1.5,'Color',[0 0 0]);
+plot(handles.VyPlot,[0; x],[Riverinputfile(1,6); Riverinputfile(:,6);Riverinputfile(end,6)],'LineWidth',1.5,'Color',[0 0 0]);
 ylabel(handles.VyPlot,{'Vy [m/s]'},'FontWeight','bold','FontSize',10);
 box(handles.VyPlot,'on');%check
 xlim(handles.VyPlot,[0 max(Riverinputfile(:,2))]);
 %==========================================================================
 %% VzPlot Riverin data
 set(handles.VzPlot,'Visible','on');
-plot(handles.VzPlot,x,[Riverinputfile(:,7);Riverinputfile(end,7)],'LineWidth',1.5,'Color',[0 0 0]);
+plot(handles.VzPlot,[0; x],[Riverinputfile(1,7); Riverinputfile(:,7); Riverinputfile(end,7)],'LineWidth',1.5,'Color',[0 0 0]);
 ylabel(handles.VzPlot,{'Vz [m/s]'},'FontWeight','bold','FontSize',10);
 box(handles.VzPlot,'on');
 xlim(handles.VzPlot,[0 max(Riverinputfile(:,2))]);
 %==========================================================================
 %% UstarPlot Riverin data
 set(handles.UstarPlot,'Visible','on');
-plot(handles.UstarPlot,x,[Riverinputfile(:,8);Riverinputfile(end,8)],'LineWidth',1.5,'Color',[0 0 0]);
+plot(handles.UstarPlot,[0; x],[Riverinputfile(1,8); Riverinputfile(:,8);Riverinputfile(end,8)],'LineWidth',1.5,'Color',[0 0 0]);
 ylabel(handles.UstarPlot,{'u_* [m/s]'},'FontWeight','bold','FontSize',10);
 xlabel(handles.UstarPlot,{'Cumulative distance [Km]'},'FontWeight','bold',...
     'FontSize',10);
 box(handles.UstarPlot,'on');
 xlim(handles.UstarPlot,[0 max(Riverinputfile(:,2))]);
 %==========================================================================
-
 %% TempPlot Riverin data
 set(handles.TempPlot,'Visible','on');
-plot(handles.TempPlot,x,[Riverinputfile(:,9);Riverinputfile(end,9)],'LineWidth',1.5,'Color',[0 0 0]);
+plot(handles.TempPlot,[0; x],[Riverinputfile(1,9); Riverinputfile(:,9);Riverinputfile(end,9)],'LineWidth',1.5,'Color',[0 0 0]);
 ylabel(handles.TempPlot,{'T [^oC]'},'FontWeight','bold','FontSize',10);
 xlabel(handles.TempPlot,{'Cumulative distance [Km]'},'FontWeight','bold', 'FontSize',10);
 box(handles.TempPlot,'on');
