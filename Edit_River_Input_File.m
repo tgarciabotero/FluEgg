@@ -654,15 +654,18 @@ elseif strcmp(    what,'Import TS')
     [pbias, nse] = modeleval(handles);
     %% Add Evaluation results
     pbiasstr = strcat({'PBIAS ='}, {' '}, {num2str(pbias)});
-    nsestr   = strcat({'NSE ='}  , {' '}, {num2str(nse)});m1 = msgbox(pbiasstr ,'About !','modal');
-    uiwait(m1)
-    m2 = msgbox(nsestr ,'About !','modal');
-    uiwait(m2)
+    nsestr   = strcat({'NSE ='}  , {' '}, {num2str(nse)});
+    txt = sprintf('%s \n%s', pbiasstr{1}, nsestr{1});
+    uicontrol('style'   ,'text',...
+          'String'  , txt,...
+          'Position', [950 150 180 50],...
+          'Max'     , 2,...
+          'FontSize', 12,...
+          'BackgroundColor', 'white');
+    %annotation() could be another option [SS]
 end
-%text(0.5, 0.5, {pbiasstr; nsestr},'Parent',h)
 %% Format plot
 handles.Plot_Hydrograph;
-%t = text(0.5, 0.5, pbiasstr,'Parent', h);
 h.FontName          = 'Arial';
 h.XLabel            = xlabel('Time', 'FontSize',14 );
 h.Visible           = 'on';
@@ -674,8 +677,10 @@ h.YLabel.Visible    = 'on';
 h.XMinorTick        = 'on';
 box( h, 'on')
 grid(h, 'on')
-set( h, 'XMinorTick','on')
-return
+set( h, 'XMinorTick','on');
+
+
+
 %% Sub-functions 
     function [date_axis, Yylabel] = plotProfiles(handles)
         %% As coded by Tatiana
@@ -708,13 +713,9 @@ return
         % Format Date data for plot
         date = arrayfun(@(x) datenum(x.Date,'ddmmyyyy HHMM'), HECRAS_data.Profiles);
         date_axis = datestr(date, 'mm/dd/yy HH:MM AM');
-
-%         date=arrayfun(@(x) datenum(x.Date,'ddmmyyyy HHMM'), HECRAS_data.Profiles);
-%         set(handles.Plot_Hydrograph,'visible','on')
         
         % Create Axes and line object         
-        plot(h, date, Hydrograph, 'linewidth',2);
-        
+        plot(h, date, Hydrograph, 'linewidth',2);       
 %         %xlim(handles.Plot_Hydrograph,[date(1) date(end)])
 %         %%set(handles.Plot_Hydrograph,'XTick',[date(1):(date(end)-date(1))/5:date(end)]);
 %         %set(handles.Plot_Hydrograph,'XTickLabel',datestr([date(1):(date(end)-date(1))/5:date(end)],'mm/dd/yy HH:MM AM'),'XColor','k','FontName','Arial');
@@ -780,7 +781,6 @@ return
         % Create Axes and line object
          plot(h, date, Hydrograph, 'linewidth',2);
     end %plotTS()
-
     function plot_obs_data(handles)
         % Add Observed data to plot, if any
         hFluEggGui  = getappdata(0,'hFluEggGui');
