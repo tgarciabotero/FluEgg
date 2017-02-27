@@ -649,12 +649,22 @@ if strcmp(    what,'Import data')
     % any XS for any plan (TG)
     [date_axis, Yylabel] = plotProfiles(handles);
 elseif strcmp(    what,'Import TS')
-    % Plot the flow or water depth time series for selected River Station
-    [date_axis, Yylabel] = plotTS(handles); 
+    % Plot time series of selected variable at specific River Station
+    % Variable to plot from popup menu
+    str = get(handles.popup_variable,'String');
+    val = get(handles.popup_variable,'Value');
+    var = str{val};
+    
+    % Plot HEC-RAS results
+    [date_axis, Yylabel] = plotTS(handles, var); 
+    
     % Plot observed data for selected River Station
     plot_obs_data(handles);
+    
+    %Run Model Evaluation
     [pbias, nse] = modeleval(handles);
-    %% Add Evaluation results
+    
+    % Add model evaluation results to polot
     pbiasstr = strcat({'PBIAS ='}, {' '}, {num2str(pbias)});
     nsestr   = strcat({'NSE ='}  , {' '}, {num2str(nse)});
     txt = sprintf('%s \n%s', pbiasstr{1}, nsestr{1});
@@ -664,7 +674,6 @@ elseif strcmp(    what,'Import TS')
           'Max'     , 2,...
           'FontSize', 12,...
           'BackgroundColor', 'white');
-    %annotation() could be another option [SS]
 end
 %% Format plot
 handles.Plot_Hydrograph;
@@ -680,8 +689,6 @@ h.XMinorTick        = 'on';
 box( h, 'on')
 grid(h, 'on')
 set( h, 'XMinorTick','on');
-
-
 
 %% Sub-functions 
     function [date_axis, Yylabel] = plotProfiles(handles)
@@ -731,7 +738,7 @@ set( h, 'XMinorTick','on');
 %         set(handles.delete_spawning_time,'Visible','off')
 %         set(handles.Set_up_spawning_time,'Visible','on')
     end %plotProfiles()
-    function [date_axis, Yylabel] = plotTS(handles)
+    function [date_axis, Yylabel] = plotTS(handles, var)
         %% Coded by Santi for Model Evaluation
         % This function plots HEC-RAS output hydrographs.
         % Load HEC-RAS outputs
@@ -759,11 +766,15 @@ set( h, 'XMinorTick','on');
             end
             
             % Get Hydrographs data
-            if get(handles.checkbox_flow,'value') == 1
+            if strcmp(var, 'Flow')
                 % Flow Hydrograph
                 Hydrograph = HECRAS_data.TS(:,2);
                 Yylabel='Flow, in cubic meters per second';
-            elseif get(handles.checkbox_H,'value') == 1
+            elseif strcmp(var,'Water Depth') == 1
+                % Water Level hydrograph
+                Hydrograph = HECRAS_data.TS(:,3);
+                Yylabel='Water Depth, in meters';
+            elseif strcmp(var,'Stage') == 1
                 % Water Level hydrograph
                 Hydrograph = HECRAS_data.TS(:,3);
                 Yylabel='Water Surface Elevation, in meters';
@@ -823,7 +834,6 @@ if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgr
     set(hObject,'BackgroundColor','white');
 end
 end
-
 
 % --- Executes on selection change in popupPlan.
 function popupPlan_Callback(hObject, eventdata, handles)
