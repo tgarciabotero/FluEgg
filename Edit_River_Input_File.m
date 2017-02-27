@@ -49,6 +49,7 @@ diary('./results/FluEgg_LogFile.txt')
 %The default is to display HEC-RAS project import.
 set(handles.panel_Single_xls_file, 'visible', 'off'); 
 set(handles.panel2,                'visible', 'on');
+set(handles.popup_variable,        'Visible','off')
 set(handles.checkbox_flow,         'value', 1)
 
 handles.output = hObject;
@@ -92,6 +93,7 @@ guidata(hObject, handles);% Update handles structure
         set(handles.checkbox_H,   'Visible', 'on')
         set(handles.LoadObsData,  'Visible', 'off')
         set(handles.edit4,        'Visible', 'off')
+        set(handles.popup_variable,'Visible','off')
         set(handles.panel_Single_xls_file,   'visible', 'off')
         
         %set(handles.text_HECRAS_profile,'String','HEC-RAS profile:')
@@ -1060,12 +1062,16 @@ function time_series_panel_Callback(hObject, eventdata, handles)
 % handles    structure with handles and user data (see GUIDATA)
 %TimeSeries_GUI()
 % Initialize GUI: makes some objects invisible
-set(handles.text_TempHEC, 'Visible', 'off')
-set(handles.popup_TempHEC,'Visible', 'off')
-set(handles.Const_Temp,   'Visible', 'off')
-set(handles.LoadObsData,  'Visible', 'on')
-set(handles.edit4,        'Visible', 'on')
-
+set(handles.text_TempHEC,  'Visible', 'off')
+set(handles.popup_TempHEC, 'Visible', 'off')
+set(handles.Const_Temp,    'Visible', 'off')
+set(handles.checkbox_flow, 'Visible', 'off')
+set(handles.checkbox_H,    'Visible', 'off')
+set(handles.LoadObsData,   'Visible', 'on')
+set(handles.edit4,         'Visible', 'on')
+set(handles.popup_variable,'Visible', 'on')
+set(handles.popup_variable, ...
+    'String', {'Variable','Flow', 'Water Depth','Stage'})
 set(handles.Import_data_button,           'String', 'Import TS')
 set(handles.River_Input_File_Panel_button,'Value',0)
 set(handles.Import_HECRAS_panel_button,   'Value',0)
@@ -1119,4 +1125,26 @@ end
 % --- Executes on button press in checkbox_flow.
 function checkbox_flow_Callback(hObject, eventdata, handles)
 set(handles.checkbox_H,'value',0)
+end
+
+% --- Executes on selection change in popup_variable.
+function popup_variable_Callback(hObject, eventdata, handles)
+% hObject    handle to popup_variable (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+% Hints: contents = cellstr(get(hObject,'String')) returns popup_variable contents as cell array
+%        contents{get(hObject,'Value')} returns selected item from popup_variable
+end
+
+% --- Executes during object creation, after setting all properties.
+function popup_variable_CreateFcn(hObject, eventdata, handles)
+% hObject    handle to popup_variable (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    empty - handles not created until after all CreateFcns called
+% Hint: popupmenu controls usually have a white background on Windows.
+%       See ISPC and COMPUTER.
+if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
+    set(hObject,'BackgroundColor','white');
+end
 end
