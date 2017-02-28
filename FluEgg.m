@@ -20,7 +20,7 @@
 
 function varargout = FluEgg(varargin)
 
-% Last Modified by GUIDE v2.5 30-Jan-2017 12:17:30
+% Last Modified by GUIDE v2.5 28-Feb-2017 10:42:46
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
@@ -199,6 +199,20 @@ CheckDt = 0;
 
 %% Get data from main GUI
 %==========================================================================
+
+%% Check if we are in Batch mode - If batch simulation is checked under
+%  the tool drop down menu in the main GUI, activate the Batch Run GUI
+%  when the Run Simulation button is pressed. (Updated 2/28/2017 LJ & TG)
+Batchmode=get(handles.Batch,'Checked');
+if Batchmode=='on'
+    ed=batchgui();
+    uiwait(ed);
+    hFluEggGui = getappdata(0,'hFluEggGui');
+    inputdata=getappdata(hFluEggGui,'inputdata');
+    continuee=inputdata.Batch.continuee;
+    NumSim=inputdata.Batch.NumSim;
+end
+
 hFluEggGui=getappdata(0,'hFluEggGui');
 
 % user errors
@@ -224,16 +238,13 @@ end
 
 
 %% Batch Run
-% --> We are not using this any more however, I left this here because we will
-% use it in a future implementation. The idea is to link this to the main
-% GUI as well.
+% --> Right now the batch run only has the capability to run a batch
+% simulation for one set of inputs. The number of simulations is read from
+% the batch GUI. (Updated 2/28/2017 LJ & TG)
 
-Batch = 0;  %
-handles.userdata.Batch = Batch;
-%No=100;  %Getting info from Batch GUI;
-if Batch==1
+if Batchmode == 'on'
     
-    for k=1:No
+    for k=1:NumSim
         handles.userdata.RunNumber = k;
         if k==1
             [minDt,CheckDt,Exit] = FluEgggui(hObject, eventdata,handles,CheckDt);
@@ -620,4 +631,19 @@ switch Inv_mod_status
 end
 %handles.userdata.Inv_mod_status=get(handles.Larvae,'Checked');
 guidata(hObject, handles);
+end
+
+
+% --------------------------------------------------------------------
+function Batch_Callback(hObject, eventdata, handles)
+%% Sees if Batch Simulation option is checked in the main GUI
+Batchmode=get(handles.Batch,'Checked');
+
+switch Batchmode %:Updated TG & LJ 2/28/2017
+    %======================================================================
+    case 'on' %If its set on, that means the user wants to turn it off.
+        set(handles.Batch, 'Checked','off')
+    case 'off'
+        set(handles.Batch, 'Checked','on')
+end
 end
