@@ -22,9 +22,24 @@
 function [hydrographs, profiles] = Extract_RAS_TS(strRASProject,handles,RiverStation)
 
 %% Creates a COM Server for the HEC-RAS Controller
-RC = actxserver('RAS500.HECRASController');
 % The command above depends on the version of HEC-RAS you have, in my case
-% I am using version 5.0.
+% I am using version 5.0.3
+try
+    RC = actxserver('RAS503.HECRASController');
+catch
+    try %HECRAS 5.0.2
+        RC = actxserver('RAS502.HECRASController');
+    catch
+        try %HECRAS 5.0.1
+            RC = actxserver('RAS501.HECRASController');
+        catch
+            try %HECRAS 5.0.0
+                RC = actxserver('RAS500.HECRASController');
+            catch
+            end %HECRAS 5.0.0
+        end %HECRAS 5.0.1
+    end%HECRAS 5.0.2
+end %HECRAS 5.0.3
 
 %% Open the project
 %strRASProject = 'D:\Asian Carp\Asian Carp_USGS_Project\Tributaries data\Sandusky River\SANDUSKY_Hec_RAS_mod\Sandusky_mod_II\BallvilleDam_Updated.prj';

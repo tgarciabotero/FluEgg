@@ -641,8 +641,9 @@ Jump;
         Folderpath=['./results/Results_', get(handles.edit_River_name, 'String'),'_',get(handles.Totaltime, 'String'),'h_', ...
             get(handles.Dt, 'String'),'s/'];
         
-        %%
-        if handles.userdata.Batch==1
+        %% If Batch mode is activated
+        Batchmode=get(handles.Batch,'Checked');
+        if Batchmode=='on'
             outputfile = [Folderpath,'Results_', get(handles.edit_River_name, 'String'),'_',get(handles.Totaltime, 'String'),'h_', ...
                 get(handles.Dt, 'String'),'s','run ',num2str(handles.userdata.RunNumber) '.mat'];
         else
