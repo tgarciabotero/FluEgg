@@ -854,7 +854,7 @@ if SetTime==T2_Gas_bladder
 else     %% Distribution of eggs at hatching time
     
     Distribution_eggs_hatch(SetTime);
-    annotation('rectangle',position_axes1,'FaceColor','flat','linewidth',1.5);
+    annotation('rectangle',position_axes1,'linewidth',1.5);
 end
 %%=========================================================================
 
@@ -932,10 +932,11 @@ end
         position_axes1= get(gca,'position');
                %[Convert_km_to_miles,xlabel_text,StringStats]=setupUnits(X_at_Time(Z_at_Time_H>0.05));%Calculate stats for eggs in susp.
         [Convert_km_to_miles,xlabel_text,StringStats]=setupUnits(X_at_Time);
-        xStep=round((Convert_km_to_miles*(k*ds+max(max(X_at_Time)))/4)/10)*10;%in miles
+        xStep=ceil((Convert_km_to_miles*(k*ds+max(max(X_at_Time)))/4)/10)*10;%in miles
         %xaxisticks=[0:ceil(xStep/10)*10:5*ceil(xStep/10)*10];
         %xlim([0 xaxisticks(end)/Convert_km_to_miles]) %Xaxis limit
-        xlim([fix(0.9*min(X_at_Time)/10)*10 round(xStep*5)]./Convert_km_to_miles) %Xaxis limit
+        %xlim([fix(0.9*min(X_at_Time)/10)*10 round(xStep*5)]./Convert_km_to_miles) %Xaxis limit
+        xlim([fix(0.9*min(X_at_Time)/10)*10 ceil(1.1*max(X_at_Time)/10)*10]./Convert_km_to_miles) %Xaxis limit-->Changes this for case of Inv modeling
         xaxisticks=get(gca,'XTick');
         set(gca,'XTick',xaxisticks/Convert_km_to_miles,'Xticklabel',xaxisticks)
         set(gca,'TickDir','in','TickLength',[0.021 0.021],'XMinorTick','off','FontName','Arial','FontSize',12)
