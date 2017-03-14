@@ -566,7 +566,7 @@ Jump;
                 Vswim(a) = zeros(length(Vzpart(a)),1);
             end
             
-            Z(t,a) = Z(t-1,a)'+Inv_mod*(Dt*(Vz(a)+Vswim(a)+Vzpart(a)+Kprime))+(normrnd(0,1,sum(a),1).*sqrt(2*Kz*Dt));%m
+            Z(t,a) = Z(t-1,a)'+Inv_mod*(Dt*(Vz(a)+Vswim(a)+Vzpart(a)+Kprime)+(normrnd(0,1,sum(a),1).*sqrt(2*Kz*Dt)));%m
             
             %% Movement in Z
             % Z(t,a) = Z(t-1,a)'+Dt*(Vz(a)+Vzpart(a)+Kprime)+(normrnd(0,1,sum(a),1).*sqrt(2*Kz*Dt));%m
@@ -733,13 +733,13 @@ Jump;
                     Kz(Kz<B.*viscosity)=B(Kz<B.*viscosity).*viscosity(Kz<B.*viscosity);  %If eddy diffusivity is less than the water viscosity, use the water viscosity
                 case 'Parabolic Turbulent Diffusivity'
                     Kprime=B.*0.41.*ustar(a).*(1-(2*ZR./H(a)));
-                    Zprime=ZR+Inv_mod*((0.5*Kprime*Dt));
+                    Zprime=ZR+(0.5*Kprime*Dt);
                     Kz=B.*0.41.*ustar(a).*Zprime.*(1-(Zprime./H(a)));%Calculated at ofset location 0.5K'Dt
                     Kz(Kz<B.*viscosity)=B(Kz<B.*viscosity).*viscosity(Kz<B.*viscosity);  %If eddy diffusivity is less than the water viscosity, use the water viscosity
                 case 'Parabolic-Constant Turbulent Diffusivity'
                     Kprime=B.*0.41.*ustar(a).*(1-(2*ZR./H(a)));%dimensionless
                     Kprime(ZR./H(a)>=0.5)=0;  %constant portion
-                    Zprime=ZR+Inv_mod*((0.5*Kprime*Dt));
+                    Zprime=ZR+(0.5*Kprime*Dt);
                     Kz=B.*0.41.*ustar(a).*Zprime.*(1-(Zprime./H(a)));%Calculated at ofset location 0.5K'Dt  %% Parabolic function
                     Kz(ZR./H(a)>=0.5)=B(ZR./H(a)>=0.5).*0.25*0.41.*ustar(ZR./H(a)>=0.5).*H(ZR./H(a)>=0.5);  %% Constant part, corresponding to max diffisivity, refference Van Rijin
                     Kz(Kz<B.*viscosity)=B(Kz<B.*viscosity).*viscosity(Kz<B.*viscosity);  %If eddy diffusivity is less than the water viscosity, use the water viscosity
