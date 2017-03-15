@@ -643,7 +643,7 @@ Jump;
         
         %% If Batch mode is activated
         Batchmode=get(handles.Batch,'Checked');
-        if Batchmode=='on'
+        if strcmp(Batchmode,'on')
             outputfile = [Folderpath,'Results_', get(handles.edit_River_name, 'String'),'_',get(handles.Totaltime, 'String'),'h_', ...
                 get(handles.Dt, 'String'),'s','run ',num2str(handles.userdata.RunNumber) '.mat'];
         else
