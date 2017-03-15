@@ -204,7 +204,7 @@ CheckDt = 0;
 %  the tool drop down menu in the main GUI, activate the Batch Run GUI
 %  when the Run Simulation button is pressed. (Updated 2/28/2017 LJ & TG)
 Batchmode=get(handles.Batch,'Checked');
-if Batchmode=='on'
+if strcmp(Batchmode,'on')
     ed=batchgui();
     uiwait(ed);
     hFluEggGui = getappdata(0,'hFluEggGui');
@@ -242,7 +242,7 @@ end
 % simulation for one set of inputs. The number of simulations is read from
 % the batch GUI. (Updated 2/28/2017 LJ & TG)
 
-if Batchmode == 'on'
+if strcmp(Batchmode,'on')
     
     for k=1:NumSim
         handles.userdata.RunNumber = k;
