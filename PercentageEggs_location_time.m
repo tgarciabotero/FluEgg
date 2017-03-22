@@ -78,7 +78,13 @@ time=ResultsSim.time;
  %% Where are all the eggs where when sampling occured?
  TimeIndex_start=find(time<=((eggAge*3600)-(SamplingTime_minutes*60/2)),1,'last');
  TimeIndex_end=find(time>=((eggAge*3600)+(SamplingTime_minutes*60/2)),1,'first');
-
+if isempty(TimeIndex_end)
+    ed=errordlg(['You need to do another simulation with at least ',num2str(SamplingTime_minutes/2),' minutes more of simulation time'],'Error');
+    set(ed, 'WindowStyle', 'modal');
+    uiwait(ed);
+    Exit=1;
+    return
+end
  X_at_timewindow=X(TimeIndex_start:TimeIndex_end,:);
 
 %  DispersionofEggsat_sampling=max(X_at_sampling)-min(X_at_sampling);
@@ -103,6 +109,9 @@ set(handles.Percentage_eggs,'String',' ')
     end
  end
  set(handles.Percentage_eggs,'String', num2str(N*100/size(X,2)))
+ ed=errordlg('Done','Check your results');
+ set(ed, 'WindowStyle', 'modal');
+ uiwait(ed);
 end
 
 %If user changes sampling location or egg age

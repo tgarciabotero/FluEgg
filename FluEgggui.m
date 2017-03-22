@@ -533,8 +533,8 @@ Jump;
             % Reflecting Boundary: Iff Eggs are located outside the
             % upstream boundary condition
             check = X(t,a);
-            check(check<d/2) = d-check(check<d/2);
             if Inv_mod==1
+              check(check<d/2) = d-check(check<d/2);
             if length(check<d/2)>1 && Warning_flag==0
                 hh=msgbox('Some eggs crossed the upstream boundary and where bounced back to the domain','FluEgg Warning','warn');
                 pause(2)
@@ -544,6 +544,13 @@ Jump;
                 catch
                 end
             end 
+            elseif sum(check<d/2)>=1
+                ed=errordlg([{'Eggs are outside the domain'},{'Please review river input file or decrese the simulation time.'}],'Error');
+                set(ed, 'WindowStyle', 'modal');
+                uiwait(ed);
+                minDt = 0; %terminate the simulation
+                Exit=1;
+                return
             end
             X(t,a) = check; %The new location of the eggs is check;
             check = []; %reset check
@@ -777,20 +784,24 @@ Jump;
         
         %% If not doing forward modeling.
         if Inv_mod==1
-        [c,~]=find(X(t,:)'>(CumlDistance(cell)*1000));
+        [c,~]=find(X(t,:)'>(CumlDistance(cell)*1000));%If egg is in a new cell
         else %% If we are doing inverse modeling
-            check_Eggs_are_in_domain=(cell-1<1);%Are the eggs istill in the domain????
-            if sum(check_Eggs_are_in_domain)>=1
-                 ed=errordlg([{'Eggs are outside the domain'},{'Please review river input file or decrese the simulation time.'}],'Error');
+         %For eggs in cells>1
+         %find eggs that crossed a new cell
+         [c,~]=find(X(t,cell>1)'<(CumlDistance(cell(cell>1)-1)*1000));
+         eggs_in_first_cell=cell==1;
+         if sum(eggs_in_first_cell)>=1
+          [out,~]=find(X(t,eggs_in_first_cell)'<0);
+          if length(out)>1
+              ed=errordlg([{'Eggs are outside the domain'},{'Please review river input file or decrese the simulation time.'}],'Error');
                 set(ed, 'WindowStyle', 'modal');
                 uiwait(ed);
                 minDt = 0; %terminate the simulation
                 Exit=1;
                 return
-            else %If eggs are still within the domain
-             [c,~]=find(X(t,:)'<(CumlDistance(cell-1)*1000));
-            end
-        end
+          end
+         end
+        end %End if Inv mod
         
         for i=1:length(c)
             egg_index=c(i);
