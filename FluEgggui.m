@@ -411,20 +411,41 @@ Jump;
                     %% Diameter
                     DiamStd = 0.2631.*exp(-time/22410)+0.3073;
                 	%% Density
+                    %Fix the maximum density standard deviation to be the
+                    %max observed (LJ March 2017)
                     RhoeStd = 22.4.*exp(-time/1894)+0.4103;
+                    for jj=1:length(RhoeStd)
+                        if RhoeStd(jj)>8.1592
+                            RhoeStd(jj)=8.1592;
+                        end
+                    end
                 %% ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
             elseif strcmp(specie,'Bighead')
                 %% STD
                     %% Diameter
                     DiamStd = 0.1788.*exp(-time/13570)+0.44;
                     %% Density
+                    %Fix the maximum density standard deviation to be the
+                    %max observed (LJ March 2017)
                     RhoeStd = 63.12*exp(-time/595)+0.6292;
+                    for jj=1:length(RhoeStd)
+                        if RhoeStd(jj)>7.4703
+                            RhoeStd(jj)=7.4703;
+                        end
+                    end
                 %% ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
             else %case Grass Carp : TG March,2015
                      %% Diameter
                     DiamStd = 0.4759.*exp(-time/14150)+0.4586;
                     %% Density
+                    %Fix the maximum density standard deviation to be the
+                    %max observed (LJ March 2017)
                     RhoeStd = 19.28.*exp(-time/1973)+1.029;
+                    for jj=1:length(RhoeStd)
+                        if RhoeStd(jj)>9.7901
+                            RhoeStd(jj)=9.7901;
+                        end
+                    end
             end % Species selection
             %% ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 			%  The diameter and density are calculated at time 't' by using the value of the 
@@ -436,12 +457,12 @@ Jump;
 			
             %% Diameter fit + scatter
             Dvar(tt,1) = single(normrnd(D(tt),DiamStd(tt)));
-            while (Dvar(tt)>=D(tt)+2*DiamStd(tt))||(Dvar(tt)<=D(tt)-2*DiamStd(tt))
+            while (Dvar(tt)>=D(tt)+DiamStd(tt))||(Dvar(tt)<=D(tt)-DiamStd(tt))
                 Dvar(tt) = single(normrnd(D(tt),DiamStd(tt)));
             end
             %% Fitted density of the eggs  + scatter
             Rhoevar(tt,1) = single(normrnd(Rhoe_ref(tt),RhoeStd(tt)));
-            while (Rhoevar(tt)>=Rhoe_ref(tt)+2*RhoeStd(tt))||(Rhoevar(tt)<=Rhoe_ref(tt)-2*RhoeStd(tt))
+            while (Rhoevar(tt)>=Rhoe_ref(tt)+RhoeStd(tt))||(Rhoevar(tt)<=Rhoe_ref(tt)-RhoeStd(tt))
                 Rhoevar(tt) = single(normrnd(Rhoe_ref(tt),RhoeStd(tt)));
             end
         end
