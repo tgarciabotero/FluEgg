@@ -409,22 +409,22 @@ Jump;
             if strcmp(specie,'Silver')%if specie=='Silver'
                 %% STD
                     %% Diameter
-                    DiamStd = 0.2631.*exp(-time/22410)+0.3073;
+                    DiamStd = 0.2631.*exp(-time/22410)+0.3073; %LJ
                 	%% Density
-                    RhoeStd = 22.4.*exp(-time/1894)+0.4103;
+                    RhoeStd = 22.4.*exp(-time/1894)+0.4103;%LJ
                 %% ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
             elseif strcmp(specie,'Bighead')
                 %% STD
                     %% Diameter
-                    DiamStd = 0.1788.*exp(-time/13570)+0.44;
+                    DiamStd = 0.1788.*exp(-time/13570)+0.44;%LJ
                     %% Density
-                    RhoeStd = 63.12*exp(-time/595)+0.6292;
+                    RhoeStd = 63.12*exp(-time/595)+0.6292;%LJ
                 %% ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
             else %case Grass Carp : TG March,2015
                      %% Diameter
-                    DiamStd = 0.4759.*exp(-time/14150)+0.4586;
+                    DiamStd = 0.4759.*exp(-time/14150)+0.4586;%LJ
                     %% Density
-                    RhoeStd = 19.28.*exp(-time/1973)+1.029;
+                    RhoeStd = 19.28.*exp(-time/1973)+1.029;%LJ
             end % Species selection
             %% ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 			%  The diameter and density are calculated at time 't' by using the value of the 
@@ -436,12 +436,12 @@ Jump;
 			
             %% Diameter fit + scatter
             Dvar(tt,1) = single(normrnd(D(tt),DiamStd(tt)));
-            while (Dvar(tt)>=D(tt)+2*DiamStd(tt))||(Dvar(tt)<=D(tt)-2*DiamStd(tt))
+            while (Dvar(tt)>=D(tt)+DiamStd(tt))||(Dvar(tt)<=D(tt)-DiamStd(tt))
                 Dvar(tt) = single(normrnd(D(tt),DiamStd(tt)));
             end
             %% Fitted density of the eggs  + scatter
             Rhoevar(tt,1) = single(normrnd(Rhoe_ref(tt),RhoeStd(tt)));
-            while (Rhoevar(tt)>=Rhoe_ref(tt)+2*RhoeStd(tt))||(Rhoevar(tt)<=Rhoe_ref(tt)-2*RhoeStd(tt))
+            while (Rhoevar(tt)>=Rhoe_ref(tt)+RhoeStd(tt))||(Rhoevar(tt)<=Rhoe_ref(tt)-RhoeStd(tt))
                 Rhoevar(tt) = single(normrnd(Rhoe_ref(tt),RhoeStd(tt)));
             end
         end
@@ -557,7 +557,7 @@ Jump;
             X(t,~a) = X(t-1,~a);%If they were already dead,leave them in the same position.
             
             %% Y
-            Y(t,a) = Y(t-1,a)'+Inv_mod*((Dt*Vy(a))+(normrnd(0,1,sum(a),1).*sqrt(2*DH(a)*Dt)));
+            Y(t,a) = Y(t-1,a)'+(Dt*Vy(a))+(normrnd(0,1,sum(a),1).*sqrt(2*DH(a)*Dt));
             Y(t,~a) = Y(t-1,~a);%If they were already dead,leave them in the same position.
             
             %% Calculate Vertical dispersion
@@ -573,7 +573,7 @@ Jump;
                 Vswim(a) = zeros(length(Vzpart(a)),1);
             end
             
-            Z(t,a) = Z(t-1,a)'+Inv_mod*(Dt*(Vz(a)+Vswim(a)+Vzpart(a)+Kprime)+(normrnd(0,1,sum(a),1).*sqrt(2*Kz*Dt)));%m
+            Z(t,a) = Z(t-1,a)'+Dt*(Vz(a)+Vswim(a)+Vzpart(a)+Kprime)+(normrnd(0,1,sum(a),1).*sqrt(2*Kz*Dt));%m
             
             %% Movement in Z
             % Z(t,a) = Z(t-1,a)'+Dt*(Vz(a)+Vzpart(a)+Kprime)+(normrnd(0,1,sum(a),1).*sqrt(2*Kz*Dt));%m
