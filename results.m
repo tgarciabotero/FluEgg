@@ -11,15 +11,15 @@
 %-------------------------------------------------------------------------%
 % Copyright 2016 Tatiana Garcia
 %:::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::%
-function varargout = Results(varargin)
-% Last Modified by GUIDE v2.5 01-Sep-2015 09:05:42
+function varargout = results(varargin)
+% Last Modified by GUIDE v2.5 22-Feb-2017 17:55:39
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
 gui_State = struct('gui_Name',       mfilename, ...
     'gui_Singleton',  gui_Singleton, ...
-    'gui_OpeningFcn', @Results_OpeningFcn, ...
-    'gui_OutputFcn',  @Results_OutputFcn, ...
+    'gui_OpeningFcn', @results_OpeningFcn, ...
+    'gui_OutputFcn',  @results_OutputFcn, ...
     'gui_LayoutFcn',  [] , ...
     'gui_Callback',   []);
 if nargin && ischar(varargin{1})
@@ -35,7 +35,7 @@ end
 end
 
 % --- Executes just before Results is made visible.
-function Results_OpeningFcn(hObject, eventdata, handles, varargin)
+function results_OpeningFcn(hObject, eventdata, handles, varargin)
 diary('./results/FluEgg_LogFile.txt')
 axes(handles.bottom); imshow('asiancarp.png');
 button_load_picture(hObject, eventdata, handles);
@@ -51,7 +51,7 @@ set(handles.Postprocessing_option(4),'Visible','off');
 guidata(hObject, handles);
 end
 
-function varargout = Results_OutputFcn(~, ~, handles)
+function varargout = results_OutputFcn(~, ~, handles)
 diary off
 varargout{1} = handles.output;
 end
@@ -201,9 +201,6 @@ end
 function checkbox1_Callback(~, ~, handles)
 end
 
-function ResultsPathName_Callback(~, eventdata, handles)
-end
-
 function ResultsPathName_CreateFcn(hObject, eventdata, handles)
 if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
     set(hObject,'BackgroundColor','white');
@@ -246,8 +243,8 @@ ylimits=[0 1];
 %% Plot
 %ylimits=get(ax1,'YLim');
 %% text
-text(double(Xi/1000-0.07),1.02, '\downarrow','FontWeight','normal','FontName','Arial')
-text(double(Xi/1000-0.02),1.15, {'Fish','spawn','here'},'HorizontalAlignment','center','FontName','Arial')
+text(double(Xi*0.9/1000),1.02, '\downarrow','FontWeight','normal','FontName','Arial')
+text(double(Xi*0.9/1000),1.08, {'Egg','drift','started','here'},'HorizontalAlignment','center','FontName','Arial')
 %%
 if round(T2_Hatching*60*60)<=time(end)%+Dt to round by Dt
     Time_index=find(time>=round(T2_Hatching*60*60));Time_index=Time_index(1);
@@ -276,7 +273,8 @@ xlabel('Average downstream distance [km]','FontName','Arial','FontSize',12);
 ylabel('Normalized vertical position (z/h+1) [ ]','FontName','Arial','FontSize',12);
 set(gca,'TickDir','in','TickLength',[0.021 0.021],'FontName','Arial','FontSize',12)
 ylim([0 1])
-xlim([0 max(CumlDistance)])
+%xlim([0 max(CumlDistance)])
+xlim([0 max(ceil(max(meanX)/1000))])
 %% Water surface
 annotation('line',[0.901 1],[0.79 0.79]);
 annotation('line',[0.93 0.97],[0.78 0.78]);%annotation('line',[0.92 0.98](x location),[0.88 0.88](y location));
@@ -342,7 +340,7 @@ diary off
         for t=2:size(X,1)
             Cell(t,:)=Cell(t-1,:);
             h(t,:)=Depth(Cell(t-1,:));%if the eggs are still in the same cell use the same characteristic as previous time step
-            [c,~]=find(X(t,:)'>(CumlDistance(Cell(t-1,:))*1000));
+            [c,~]=find(X(t,:)'>(CumlDistance(Cell(t-1,:),1)*1000));
             for j=1:length(c)
                 if X(t,c(j))<CumlDistance(end)*1000 % If the eggs are in the last cell
                     C=find(X(t,c(j))<CumlDistance*1000);Cell(t,c(j))=C(1);%cell is the cell were an egg is
@@ -550,7 +548,7 @@ choice = questdlg('Eggs have not hatched yet, would you want to plot vertical di
 % Handle response
 switch choice
     case 'Yes'
-        disp([choice ' Perfect.'])
+        %disp([choice ' Perfect.'])
         TimeToHatch=time(end)/3600;
     case 'at a different time'
         TimeToHatch=str2double(inputdlg('time(h)',...
@@ -857,7 +855,7 @@ if SetTime==T2_Gas_bladder
 else     %% Distribution of eggs at hatching time
     
     Distribution_eggs_hatch(SetTime);
-    annotation('rectangle',position_axes1,'FaceColor','flat','linewidth',1.5);
+    %annotation('rectangle',position_axes1,'linewidth',1.5);
 end
 %%=========================================================================
 
@@ -903,7 +901,7 @@ end
         %%
         k=round(size(X_at_Time,1)^(1/3));%Number of bins %2*size
         %% look for rice rule-->k=2n^1/3-->https://en.wikipedia.org/wiki/Histogram
-        ds=round(100*((max(max(X_at_Time))-min(min(X_at_Time)))+0.001)/k)/100;
+        ds=ceil(100*((max(max(X_at_Time))-min(min(X_at_Time)))+0.001)/k)/100;
         edges=0:ds:CumlDistance(end)+0.001;
         %edges=0:(CumlDistance(end)+0.01)/k:CumlDistance(end)+0.01;
         bids=(edges(1:end-1)+edges(2:end))/2;bids=bids';
@@ -929,23 +927,25 @@ end
         cdf_Nsusp=cumsum(Nsusp*100/size(X_at_Time,1));
         percentage_of_Eggs=[Nbot Nsusp]*100/size(X_at_Time,1);
         bar1=bar(bids,percentage_of_Eggs,1,'stacked');
-        set(bar1(2),'FaceColor',[0.3804,0.8118,0.8980]);
-        set(bar1(1),'FaceColor',[0.6,0.6,0.6]);
+        set(bar1(2),'FaceColor',[0.3804,0.8118,0.8980],'EdgeColor',[0 0 0]);
+        set(bar1(1),'FaceColor',[0.6,0.6,0.6],'EdgeColor',[0 0 0]);
         %--Cust0mize plot -----------------------------------------------------
         position_axes1= get(gca,'position');
                %[Convert_km_to_miles,xlabel_text,StringStats]=setupUnits(X_at_Time(Z_at_Time_H>0.05));%Calculate stats for eggs in susp.
         [Convert_km_to_miles,xlabel_text,StringStats]=setupUnits(X_at_Time);
-        xStep=round((Convert_km_to_miles*(k*ds+max(max(X_at_Time)))/4)/10)*10;%in miles
+        xStep=ceil((Convert_km_to_miles*(k*ds+max(max(X_at_Time)))/4)/10)*10;%in miles
         %xaxisticks=[0:ceil(xStep/10)*10:5*ceil(xStep/10)*10];
         %xlim([0 xaxisticks(end)/Convert_km_to_miles]) %Xaxis limit
-        xlim([fix(0.9*min(X_at_Time)/10)*10 round(xStep*5)]./Convert_km_to_miles) %Xaxis limit
+        %xlim([fix(0.9*min(X_at_Time)/10)*10 round(xStep*5)]./Convert_km_to_miles) %Xaxis limit
+        xlim([fix(0.9*min(X_at_Time)/10)*10 ceil(1.1*max(X_at_Time)/10)*10]./Convert_km_to_miles) %Xaxis limit-->Changes this for case of Inv modeling
         xaxisticks=get(gca,'XTick');
         set(gca,'XTick',xaxisticks/Convert_km_to_miles,'Xticklabel',xaxisticks)
         set(gca,'TickDir','in','TickLength',[0.021 0.021],'XMinorTick','off','FontName','Arial','FontSize',12)
         xlabel(xlabel_text,'FontName','Arial','FontSize',12);
         ylim([0 round(1.2*max([Nsusp+Nbot]*100/size(X_at_Time,1)))])
         ylabel('Percentage of eggs [%]','FontName','Arial','FontSize',12);
-        set(gca, 'box','off');set(gca,'YaxisLocation','left');
+        %set(gca, 'box','off');
+        set(gca,'YaxisLocation','left');
         xlim_axis1=get(gca,'Xlim');
         legend('Near the bottom','In suspension','location','NorthWest');
         %
@@ -1136,23 +1136,6 @@ guidata(hObject, handles);
 
 end
 
-% --- Executes on button press in Postprocessing_option.
-function Postprocessing_option_Callback(hObject, eventdata, handles)
-% hObject    handle to Postprocessing_option (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    structure with handles and user data (see GUIDATA)
-
-% Hint: get(hObject,'Value') returns toggle state of Postprocessing_option
-end
-
-% --- Executes on button press in Life_stage_group.
-function Life_stage_group_Callback(hObject, eventdata, handles)
-% hObject    handle to Life_stage_group (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    structure with handles and user data (see GUIDATA)
-
-% Hint: get(hObject,'Value') returns toggle state of Life_stage_group
-end
 
 
 % --------------------------------------------------------------------
@@ -1207,3 +1190,4 @@ setappdata(handleResults, 'Menu',Menu);
 set(handles.MenuMetric, 'Checked','off')
 set(handles.MenuEnglish,'Checked','on')
 end
+

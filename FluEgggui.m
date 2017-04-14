@@ -26,6 +26,30 @@
 
 function [minDt,CheckDt,Exit]=FluEgggui(~, ~,handles,CheckDt)
 
+%% Are we doing inverse modeling? TG
+Inv_mod_status=get(handles.Inverse_modeling,'Checked');
+switch Inv_mod_status
+    %======================================================================
+    case 'off' %If forward modeling
+        Inv_mod=1;
+    case 'on' % If inverse modeling is activated
+        Inv_mod=-1;
+        %% Inverse modeling [TG}
+        choice = questdlg('You are about to start an inverse simulation of drifting eggs, are you sure you want to continue?'...
+            ,'Warning','Yes','No','Yes');
+        switch choice
+            case 'Yes'
+                %Continue
+            case 'No'
+                minDt = 0;
+                Exit=1;
+                h = msgbox('The simulation was terminated by user','Warn');
+                pause(4)
+                 delete(h)
+                return
+        end
+end
+
 %% Iniciate Waitbar
 h = waitbar(0,'Initializing variables...','Name','Eggs drifting...',...
     'CreateCancelBtn',...
@@ -237,6 +261,12 @@ switch str{val};
     case 'Use diameter and egg density time series (Chapman and George (2011, 2014))'
         Tref = 22; %C
         [D,Rhoe_ref] = EggBio;
+        %% Are we doing inverse modeling? TG
+        if Inv_mod==-1 %If yes invert the array of D and Rhoe in such a way D decreases with every time step
+                       %and Rhoe increases with every time step
+            D=D(end:-1:1);
+            Rhoe_ref=Rhoe_ref(end:-1:1);
+        end
 end % Do we use constant diameter and egg density? or do we use grow development time series
 
 %% Calculate water density
@@ -372,29 +402,29 @@ Jump;
         %% ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
         for tt=1:length(D) %because the counter of the array starts from 1
 		%The following standard deviation relationships were calculated by fitting
-		% a normal probability density function to increments of Chapman's data and 
+		% a normal probability density function to increments of Chapman's data gruped by time periods and 
 		%calculating the standard deviation of the data points from the fitted curve.
-        %A curve of form a*exp(-t/b)+c was then fit to the time series of standard deviation values (LJ February 2017).
+        %A curve of form a*exp(-t/b)+c was then fit to the time series of standard deviation values as a function of time (LJ February 2017).
             %% ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
             if strcmp(specie,'Silver')%if specie=='Silver'
                 %% STD
                     %% Diameter
-                    DiamStd = 0.2631.*exp(-time/22410)+0.3073;
+                    DiamStd = 0.2631.*exp(-time/22410)+0.3073; %LJ
                 	%% Density
-                    RhoeStd = 22.4.*exp(-time/1894)+0.4103;
+                    RhoeStd = 22.4.*exp(-time/1894)+0.4103;%LJ
                 %% ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
             elseif strcmp(specie,'Bighead')
                 %% STD
                     %% Diameter
-                    DiamStd = 0.1788.*exp(-time/13570)+0.44;
+                    DiamStd = 0.1788.*exp(-time/13570)+0.44;%LJ
                     %% Density
-                    RhoeStd = 63.12*exp(-time/595)+0.6292;
+                    RhoeStd = 63.12*exp(-time/595)+0.6292;%LJ
                 %% ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
             else %case Grass Carp : TG March,2015
                      %% Diameter
-                    DiamStd = 0.4759.*exp(-time/14150)+0.4586;
+                    DiamStd = 0.4759.*exp(-time/14150)+0.4586;%LJ
                     %% Density
-                    RhoeStd = 19.28.*exp(-time/1973)+1.029;
+                    RhoeStd = 19.28.*exp(-time/1973)+1.029;%LJ
             end % Species selection
             %% ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 			%  The diameter and density are calculated at time 't' by using the value of the 
@@ -405,14 +435,14 @@ Jump;
 			%  of the observed data. (LJ February 2017)
 			
             %% Diameter fit + scatter
-            Dvar(tt,1) = single(normrnd(D(tt),DiamStd));
-            while (Dvar(tt)>=D(tt)+2*DiamStd)||(Dvar(tt)<=D(tt)-2*DiamStd)
-                Dvar(tt) = single(normrnd(D(tt),DiamStd));
+            Dvar(tt,1) = single(normrnd(D(tt),DiamStd(tt)));
+            while (Dvar(tt)>=D(tt)+DiamStd(tt))||(Dvar(tt)<=D(tt)-DiamStd(tt))
+                Dvar(tt) = single(normrnd(D(tt),DiamStd(tt)));
             end
             %% Fitted density of the eggs  + scatter
-            Rhoevar(tt,1) = single(normrnd(Rhoe_ref(tt),RhoeStd));
-            while (Rhoevar(tt)>=Rhoe_ref(tt)+2*RhoeStd)||(Rhoevar(tt)<=Rhoe_ref(tt)-2*RhoeStd)
-                Rhoevar(tt) = single(normrnd(Rhoe_ref(tt),RhoeStd));
+            Rhoevar(tt,1) = single(normrnd(Rhoe_ref(tt),RhoeStd(tt)));
+            while (Rhoevar(tt)>=Rhoe_ref(tt)+RhoeStd(tt))||(Rhoevar(tt)<=Rhoe_ref(tt)-RhoeStd(tt))
+                Rhoevar(tt) = single(normrnd(Rhoe_ref(tt),RhoeStd(tt)));
             end
         end
         Rhoe_ref = Rhoevar;
@@ -453,8 +483,7 @@ Jump;
         waitstep = floor((Steps)/100);
         alpha = 2.51;%Average value among several rivers
         beta = 2.47;
-        %%=================================================================================================
-        
+        %%=================================================================================================    
         for t=2:Steps                    
             if ~mod(t, waitstep) || t==Steps
                 fill=time(t)/Totaltime;
@@ -500,11 +529,12 @@ Jump;
             %% Streamwise velocity distribution in the transverse direction
             Vxz = abs(Vxz).*betapdf(Y(t-1,a)'./W(a),alpha,beta);
             %% X
-            X(t,a) = X(t-1,a)'+(Dt*Vxz)+(normrnd(0,1,sum(a),1).*sqrt(2*DH(a)*Dt));
+            X(t,a) = X(t-1,a)'+Inv_mod*((Dt*Vxz)+(normrnd(0,1,sum(a),1).*sqrt(2*DH(a)*Dt)));
             % Reflecting Boundary: Iff Eggs are located outside the
             % upstream boundary condition
             check = X(t,a);
-            check(check<d/2) = d-check(check<d/2);
+            if Inv_mod==1
+              check(check<d/2) = d-check(check<d/2);
             if length(check<d/2)>1 && Warning_flag==0
                 hh=msgbox('Some eggs crossed the upstream boundary and where bounced back to the domain','FluEgg Warning','warn');
                 pause(2)
@@ -513,7 +543,15 @@ Jump;
                 delete(hh)
                 catch
                 end
-            end    
+            end 
+            elseif sum(check<d/2)>=1
+                ed=errordlg([{'Eggs are outside the domain'},{'Please review river input file or decrese the simulation time.'}],'Error');
+                set(ed, 'WindowStyle', 'modal');
+                uiwait(ed);
+                minDt = 0; %terminate the simulation
+                Exit=1;
+                return
+            end
             X(t,a) = check; %The new location of the eggs is check;
             check = []; %reset check
             X(t,~a) = X(t-1,~a);%If they were already dead,leave them in the same position.
@@ -610,8 +648,9 @@ Jump;
         Folderpath=['./results/Results_', get(handles.edit_River_name, 'String'),'_',get(handles.Totaltime, 'String'),'h_', ...
             get(handles.Dt, 'String'),'s/'];
         
-        %%
-        if handles.userdata.Batch==1
+        %% If Batch mode is activated
+        Batchmode=get(handles.Batch,'Checked');
+        if strcmp(Batchmode,'on')
             outputfile = [Folderpath,'Results_', get(handles.edit_River_name, 'String'),'_',get(handles.Totaltime, 'String'),'h_', ...
                 get(handles.Dt, 'String'),'s','run ',num2str(handles.userdata.RunNumber) '.mat'];
         else
@@ -742,7 +781,28 @@ Jump;
         
         %% Check if eggs are in a new cell in this jump
         %Find egg index of eggs that are in a new cell
-        [c,~]=find(X(t,:)'>(CumlDistance(cell)*1000));
+        
+        %% If not doing forward modeling.
+        if Inv_mod==1
+        [c,~]=find(X(t,:)'>(CumlDistance(cell)*1000));%If egg is in a new cell
+        else %% If we are doing inverse modeling
+         %For eggs in cells>1
+         %find eggs that crossed a new cell
+         [c,~]=find(X(t,cell>1)'<(CumlDistance(cell(cell>1)-1)*1000));
+         eggs_in_first_cell=cell==1;
+         if sum(eggs_in_first_cell)>=1
+          [out,~]=find(X(t,eggs_in_first_cell)'<0);
+          if length(out)>1
+              ed=errordlg([{'Eggs are outside the domain'},{'Please review river input file or decrese the simulation time.'}],'Error');
+                set(ed, 'WindowStyle', 'modal');
+                uiwait(ed);
+                minDt = 0; %terminate the simulation
+                Exit=1;
+                return
+          end
+         end
+        end %End if Inv mod
+        
         for i=1:length(c)
             egg_index=c(i);
             C=find(X(t,egg_index)<CumlDistance*1000,1,'first'); %Find the new cell where eggs are located

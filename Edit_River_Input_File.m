@@ -45,8 +45,12 @@ ScreenSize=get(0, 'screensize');
 set(handles.River_inputfile_GUI,'Position',[1 1 ScreenSize(3:4)])
 %Logs erros in a log file
 diary('./results/FluEgg_LogFile.txt')
-set(handles.panel_Single_xls_file, 'visible', 'off'); %The default is to display HEC-RAS project import.
-set(handles.panel2, 'visible', 'on');
+
+%The default is to display HEC-RAS project import.
+set(handles.panel_Single_xls_file, 'visible', 'off'); 
+set(handles.panel2,                'visible', 'on');
+set(handles.popup_variable,        'Visible','off')
+set(handles.checkbox_flow,         'value', 1)
 
 handles.output = hObject;
 guidata(hObject, handles);
@@ -81,20 +85,23 @@ set(handles.Import_data_button,'String', 'Import data')
 guidata(hObject, handles);% Update handles structure
 
     function init_ImportHECRAS_panel()
-        set(handles.text_TempHEC,'Visible','on')
-        set(handles.popup_TempHEC,'Visible','on')
-        set(handles.Const_Temp,'Visible','on')
-        set(handles.checkbox_flow,'Visible','on')
-        set(handles.checkbox_H,'Visible','on')
-        set(handles.LoadObsData, 'Visible','off')
-        set(handles.edit4, 'Visible','off')
+        set(handles.text_TempHEC, 'Visible', 'on')
+        set(handles.popup_TempHEC,'Visible', 'on')
+        set(handles.Const_Temp,   'Visible', 'on')
+        set(handles.checkbox_flow,'Visible', 'on')
+        set(handles.panel2,       'visible', 'on')
+        set(handles.checkbox_H,   'Visible', 'on')
+        set(handles.LoadObsData,  'Visible', 'off')
+        set(handles.edit4,        'Visible', 'off')
+        set(handles.popup_variable,'Visible','off')
+        set(handles.panel_Single_xls_file,   'visible', 'off')
         
         %set(handles.text_HECRAS_profile,'String','HEC-RAS profile:')
-        set(handles.panel_Single_xls_file, 'visible', 'off')
-        set(handles.panel2, 'visible', 'on')
-        set(handles.River_Input_File_Panel_button,'Value',0)
-        set(handles.Import_HECRAS_panel_button,'Value',1)
-        set(handles.time_series_panel,'Value',0)
+        set(handles.checkbox_flow,                'value', 1)
+        set(handles.checkbox_H,                   'value', 0)
+        set(handles.River_Input_File_Panel_button,'Value', 0)
+        set(handles.Import_HECRAS_panel_button,   'Value', 1)
+        set(handles.time_series_panel,            'Value', 0)
     end % init_ImportHECRAS_panel()
 end
 
@@ -204,6 +211,15 @@ end % end function loadfromfile_Callback
 %% <<<<<<<<<<< USER WANTS TO IMPORT A HEC-RAS PROJECT >>>>>>>>>>>%%
 % --- Executes on button press in load_hecras_button.
 function load_hecras_button_Callback(hObject, eventdata, handles)
+% Keeps active the current Panel
+% This is important when updating the Hec-Ras profiles pop-up button
+what = get(handles.Import_data_button, 'string');
+if strcmp(what, 'Import data')
+    set(handles.Import_HECRAS_panel_button,   'Value', 1)
+elseif strcmp(what, 'Import TS')
+    set(handles.time_series_panel,            'Value', 1)
+end
+
 [FileName,PathName]=uigetfile({'*.prj'     , 'HEC-RAS project'}, ...
     'Select the HEC-RAS project file to import');
 strFilename=fullfile(PathName,FileName);
@@ -229,7 +245,6 @@ end
 %%
 guidata(hObject, handles);% Update handles structure
 close(m)
-
 
 %% Clear old input data
 set(handles.Riverinput_filename,'String',' ')
@@ -263,42 +278,49 @@ set(handles.TempPlot,'Visible','off');
                         uiwait(ed);
                     end %HECRAS 5.0.0
                 end %HECRAS 5.0.1
-            end%HECRAS 5.0.2
-            
+            end%HECRAS 5.0.2     
         end %HECRAS 5.0.3
         
         %% Open the project
-        %strRASProject = 'D:\Asian Carp\Asian Carp_USGS_Project\Tributaries data\Sandusky River\SANDUSKY_Hec_RAS_mod\Sandusky_mod_II\BallvilleDam_Updated.prj';
-        RC.Project_Open(strFilename); %open and show interface, no need to use RC.ShowRAS in Matlab
-        
-        % Profile Names
-        [lngNumProf,strProfileName]=RC.Output_GetProfiles(0,0);
-        importData = get(handles.Import_HECRAS_panel_button,'Value');
-        if importData == 1
-            % add the option of including all profiles-->For unsteady state
-            strProfileName(2:end+1) = strProfileName(1:end);
-            strProfileName{1}='All profiles-unsteady flow';
-            set(handles.popup_HECRAS_profile,'string',strProfileName);%Display profile names in GUI
-        else
-            %'Do Nothing, this is not necessary when using the time series option'
+        try
+            %strRASProject = 'D:\Asian Carp\Asian Carp_USGS_Project\Tributaries data\Sandusky River\SANDUSKY_Hec_RAS_mod\Sandusky_mod_II\BallvilleDam_Updated.prj';
+            RC.Project_Open(strFilename); %open and show interface, no need to use RC.ShowRAS in Matlab
+            
+            % Profile Names
+            [lngNumProf,strProfileName]=RC.Output_GetProfiles(0,0);
+                        importData = get(handles.Import_HECRAS_panel_button,'Value');
+            if importData == 1 
+               % Only if Import HECRAS tab is highlighted
+               % add the option of including all profiles --> For unsteady state
+                strProfileName(2:end+1) = strProfileName(1:end);
+               % Display ALL profile names in GUI                
+                strProfileName{1} = 'All profiles-unsteady flow';
+                set(handles.popup_HECRAS_profile,'string',strProfileName);
+            else
+                % Display only 'All profiles-unsteady flow'
+                set(handles.popup_HECRAS_profile,'string','All profiles-unsteady flow');
+            end
+            % Plan Name
+            [lngPlanCount,strPlanNames,~]=RC.Plan_Names(0,0,0);%Gets plan names. Output:[lngPlanCount,strPlanNames,blnIncludeBasePlansOnly]
+            set(handles.popupPlan,'string',strPlanNames);%Display plan names in GUI
+            % River Name
+            [lngRiv,strRiv]=RC.Geometry_GetRivers(0,0);%Gets River(s) name
+            set(handles.popup_River,'string',strRiv);%Display plan names in GUI
+            %Get selected River ID
+            lngRiverID=get(handles.popup_River,'Value');
+            % Reach Name
+            [~,lngRch,strRch]=RC.Geometry_GetReaches(lngRiverID,0,0);%Gets River(s) Reach name
+            set(handles.popup_Reach,'string',strRch);%Display plan names in GUI
+            %Get selected River Reach ID
+            lngReachID=get(handles.popup_Reach,'Value');
+            % River station
+            [~,~,lgnNode,strNode,strNodeType]=RC.Geometry_GetNodes(lngRiverID,lngReachID,0,0,0);%Number of nodes.~&~==>strRS & strNodeType
+            set(handles.popup_River_Station,'string',strNode(strcmp(strNodeType,'')));%Display plan names in GUI
+        catch
+            ed = errordlg('FluEgg cannot load you HEC-RAS project. Please check HEC-RAS files and try again','Error');
+            set(ed, 'WindowStyle', 'modal');
+            uiwait(ed);
         end
-        
-        % Plan Name
-        [lngPlanCount,strPlanNames,~]=RC.Plan_Names(0,0,0);%Gets plan names. Output:[lngPlanCount,strPlanNames,blnIncludeBasePlansOnly]
-        set(handles.popupPlan,'string',strPlanNames);%Display plan names in GUI
-        % River Name
-        [lngRiv,strRiv]=RC.Geometry_GetRivers(0,0);%Gets River(s) name
-        set(handles.popup_River,'string',strRiv);%Display plan names in GUI
-        %Get selected River ID
-        lngRiverID=get(handles.popup_River,'Value');
-        % Reach Name
-        [~,lngRch,strRch]=RC.Geometry_GetReaches(lngRiverID,0,0);%Gets River(s) Reach name
-        set(handles.popup_Reach,'string',strRch);%Display plan names in GUI
-        %Get selected River Reach ID
-        lngReachID=get(handles.popup_Reach,'Value');
-        % River station
-        [~,~,lgnNode,strNode,strNodeType]=RC.Geometry_GetNodes(lngRiverID,lngReachID,0,0,0);%Number of nodes.~&~==>strRS & strNodeType
-        set(handles.popup_River_Station,'string',strNode(strcmp(strNodeType,'')));%Display plan names in GUI
     end %loadsProfiles
 
 end%End load HEC-RAS project
@@ -314,52 +336,51 @@ x = Riverinputfile(:,2);
 x = [(x+[0; x(1:end-1)])/2; x(end)];
 %% Depth
 set(handles.DepthPlot,'Visible','on');
-plot(handles.DepthPlot,x,[Riverinputfile(:,3);Riverinputfile(end,3)],'LineWidth',1.5,'Color',[0 0 0]);
+plot(handles.DepthPlot,[0; x],[Riverinputfile(1,3); Riverinputfile(:,3);Riverinputfile(end,3)],'LineWidth',1.5,'Color',[0 0 0]);
 ylabel(handles.DepthPlot,'H [m]','FontWeight','bold','FontSize',10);
 box(handles.DepthPlot,'on');
 xlim(handles.DepthPlot,[0 max(Riverinputfile(:,2))]);
 %==========================================================================
 %% QPlot Riverin data
 set(handles.QPlot,'Visible','on');
-plot(handles.QPlot,x,[Riverinputfile(:,4);Riverinputfile(end,4)],'LineWidth',1.5,'Color',[0 0 0]);
+plot(handles.QPlot,[0; x],[Riverinputfile(1,4); Riverinputfile(:,4);Riverinputfile(end,4)],'LineWidth',1.5,'Color',[0 0 0]);
 ylabel(handles.QPlot,{'Q [cms]'},'FontWeight','bold','FontSize',10);
 box(handles.QPlot,'on');
 xlim(handles.QPlot,[0 max(Riverinputfile(:,2))]);
 %==========================================================================
 %% VmagPlot Riverin data
 set(handles.VmagPlot,'Visible','on');
-plot(handles.VmagPlot,x,[Riverinputfile(:,5);Riverinputfile(end,5)],'LineWidth',1.5,'Color',[0 0 0]);
+plot(handles.VmagPlot,[0; x],[Riverinputfile(1,5); Riverinputfile(:,5); Riverinputfile(end,5)],'LineWidth',1.5,'Color',[0 0 0]);
 ylabel(handles.VmagPlot,{'Vmag [m/s]'},'FontWeight','bold','FontSize',10);
 box(handles.VmagPlot,'on');
 xlim(handles.VmagPlot,[0 max(Riverinputfile(:,2))]);
 %==========================================================================
 %% VyPlot Riverin data
 set(handles.VyPlot,'Visible','on');
-plot(handles.VyPlot,x,[Riverinputfile(:,6);Riverinputfile(end,6)],'LineWidth',1.5,'Color',[0 0 0]);
+plot(handles.VyPlot,[0; x],[Riverinputfile(1,6); Riverinputfile(:,6);Riverinputfile(end,6)],'LineWidth',1.5,'Color',[0 0 0]);
 ylabel(handles.VyPlot,{'Vy [m/s]'},'FontWeight','bold','FontSize',10);
 box(handles.VyPlot,'on');%check
 xlim(handles.VyPlot,[0 max(Riverinputfile(:,2))]);
 %==========================================================================
 %% VzPlot Riverin data
 set(handles.VzPlot,'Visible','on');
-plot(handles.VzPlot,x,[Riverinputfile(:,7);Riverinputfile(end,7)],'LineWidth',1.5,'Color',[0 0 0]);
+plot(handles.VzPlot,[0; x],[Riverinputfile(1,7); Riverinputfile(:,7); Riverinputfile(end,7)],'LineWidth',1.5,'Color',[0 0 0]);
 ylabel(handles.VzPlot,{'Vz [m/s]'},'FontWeight','bold','FontSize',10);
 box(handles.VzPlot,'on');
 xlim(handles.VzPlot,[0 max(Riverinputfile(:,2))]);
 %==========================================================================
 %% UstarPlot Riverin data
 set(handles.UstarPlot,'Visible','on');
-plot(handles.UstarPlot,x,[Riverinputfile(:,8);Riverinputfile(end,8)],'LineWidth',1.5,'Color',[0 0 0]);
+plot(handles.UstarPlot,[0; x],[Riverinputfile(1,8); Riverinputfile(:,8);Riverinputfile(end,8)],'LineWidth',1.5,'Color',[0 0 0]);
 ylabel(handles.UstarPlot,{'u_* [m/s]'},'FontWeight','bold','FontSize',10);
 xlabel(handles.UstarPlot,{'Cumulative distance [Km]'},'FontWeight','bold',...
     'FontSize',10);
 box(handles.UstarPlot,'on');
 xlim(handles.UstarPlot,[0 max(Riverinputfile(:,2))]);
 %==========================================================================
-
 %% TempPlot Riverin data
 set(handles.TempPlot,'Visible','on');
-plot(handles.TempPlot,x,[Riverinputfile(:,9);Riverinputfile(end,9)],'LineWidth',1.5,'Color',[0 0 0]);
+plot(handles.TempPlot,[0; x],[Riverinputfile(1,9); Riverinputfile(:,9);Riverinputfile(end,9)],'LineWidth',1.5,'Color',[0 0 0]);
 ylabel(handles.TempPlot,{'T [^oC]'},'FontWeight','bold','FontSize',10);
 xlabel(handles.TempPlot,{'Cumulative distance [Km]'},'FontWeight','bold', 'FontSize',10);
 box(handles.TempPlot,'on');
@@ -550,9 +571,6 @@ end
 end
 
 function popup_HECRAS_profile_Callback(hObject, eventdata, handles)
-if get(handles.popup_HECRAS_profile,'Value')==1
-    set(handles.checkbox_flow,'value',1)
-end
 end
 
 function popup_HECRAS_profile_CreateFcn(hObject, eventdata, handles)
@@ -580,7 +598,7 @@ function popup_River_Station_Callback(hObject, eventdata, handles)
 try
     pushbutton_plot_Callback(hObject, eventdata, handles)
 catch
-    %Don't do any thing, for Time series analysis the user needs to import again the data
+    %Do nothin. For Model Evaluation the user needs to import again the data
 end
 end
 
@@ -627,34 +645,70 @@ function pushbutton_plot_Callback(hObject, eventdata, handles)
 %% Determines the action the user would want to do (TG)
 what = get(handles.Import_data_button, 'String');
 if strcmp(    what,'Import data')
-    % If the user wants to plot the flow or water depth time series for 
-    % every XS for any plan (TG)
-    plotProfiles(handles);       
+    % Plot the flow or water depth time series for 
+    % any XS for any plan (TG)
+    [date_axis, Yylabel] = plotProfiles(handles);
 elseif strcmp(    what,'Import TS')
-    % If the user wants to plot the flow or water depth time series for
-    % a individual XS(TG)
-    plotTS(handles); 
-    % If the user wants to plot the observed data for a particular XS (TG)
+    % Plot time series of selected variable at specific River Station
+    % Variable to plot from popup menu
+    str = get(handles.popup_variable,'String');
+    val = get(handles.popup_variable,'Value');
+    var = str{val};
+    
+    % Plot HEC-RAS results
+    [date_axis, Yylabel] = plotTS(handles, var); 
+    
+    % Plot observed data for selected River Station
     plot_obs_data(handles);
+    
+    %Run Model Evaluation
+    [pbias, nse] = modeleval(handles);
+    
+    % Add model evaluation results to polot
+    pbiasstr = strcat({'PBIAS ='}, {' '}, {num2str(pbias)});
+    nsestr   = strcat({'NSE ='}  , {' '}, {num2str(nse)});
+    txt = sprintf('%s \n%s', pbiasstr{1}, nsestr{1});
+    uicontrol('style'   ,'text',...
+          'String'  , txt,...
+          'Position', [950 150 180 50],...
+          'Max'     , 2,...
+          'FontSize', 12,...
+          'BackgroundColor', 'white');
 end
+%% Format plot
+handles.Plot_Hydrograph;
+h.FontName          = 'Arial';
+h.XLabel            = xlabel('Time', 'FontSize',14 );
+h.Visible           = 'on';
+h.XTickLabel        = date_axis;
+h.XColor            = 'k';
+h.XLabel.Visible    = 'on';
+h.YLabel            = ylabel(Yylabel, 'FontSize',14);
+h.YLabel.Visible    = 'on';
+h.XMinorTick        = 'on';
+box( h, 'on')
+grid(h, 'on')
+set( h, 'XMinorTick','on');
 
-    function plotProfiles(handles)
+%% Sub-functions 
+    function [date_axis, Yylabel] = plotProfiles(handles)
         %% As coded by Tatiana
         hFluEggGui = getappdata(0,'hFluEggGui');
         try
             HECRAS_data = getappdata(hFluEggGui,'inputdata'); %0 means root-->storage in desktop
+            h = handles.Plot_Hydrograph;
             %% Determine the parameter to plot
             str = get(handles.popup_River_Station, 'String');
             val = get(handles.popup_River_Station,'Value');
             % Hydrographs:
             if get(handles.checkbox_flow,'value') == 1
                 set(handles.checkbox_H,'value',0)
-                Hydrograph=arrayfun(@(x) x.Riverinputfile(val,4), HECRAS_data.Profiles);
-                Yylabel='Flow, in cubic meters per second';
+                Hydrograph = arrayfun(@(x) x.Riverinputfile(val,4), HECRAS_data.Profiles);
+                Yylabel = 'Flow, in cubic meters per second';
             elseif get(handles.checkbox_H,'value') == 1
                 set(handles.checkbox_flow,'value',0)
-                Hydrograph=arrayfun(@(x) x.Riverinputfile(val,3), HECRAS_data.Profiles);
-                Yylabel='Water depth, in meters';
+                Hydrograph = arrayfun(@(x) x.Riverinputfile(val,3), HECRAS_data.Profiles);
+                Yylabel = 'Water depth, in meters';
             else
                 m = msgbox('Please select a variable to plot','FluEgg error','error');
                 uiwait(m)
@@ -665,34 +719,44 @@ end
             uiwait(m)
             return
         end
-        date=arrayfun(@(x) datenum(x.Date,'ddmmyyyy HHMM'), HECRAS_data.Profiles);
-        set(handles.Plot_Hydrograph,'visible','on')
-        plot(handles.Plot_Hydrograph,date,Hydrograph,'linewidth',2)
-        %xlim(handles.Plot_Hydrograph,[date(1) date(end)])
-        %%set(handles.Plot_Hydrograph,'XTick',[date(1):(date(end)-date(1))/5:date(end)]);
-        %set(handles.Plot_Hydrograph,'XTickLabel',datestr([date(1):(date(end)-date(1))/5:date(end)],'mm/dd/yy HH:MM AM'),'XColor','k','FontName','Arial');
-        set(handles.Plot_Hydrograph,'XTickLabel',datestr(get(handles.Plot_Hydrograph,'XTick'),'mm/dd/yy HH:MM AM'),'XColor','k','FontName','Arial');
-        box(handles.Plot_Hydrograph,'on')
-        xlabel(handles.Plot_Hydrograph,'Time','FontName','Arial','FontSize',14);
-        grid(handles.Plot_Hydrograph,'on')
-        set(handles.Plot_Hydrograph,'XMinorTick','on')
-        ylabel(handles.Plot_Hydrograph,Yylabel,'FontName','Arial','FontSize',14);
-        %msgbox('Feature under development, no available','FluEgg message')
-        set(handles.delete_spawning_time,'Visible','off')
-        set(handles.Set_up_spawning_time,'Visible','on')
+        % Format Date data for plot
+        date = arrayfun(@(x) datenum(x.Date,'ddmmyyyy HHMM'), HECRAS_data.Profiles);
+        date_axis = datestr(date, 'mm/dd/yy HH:MM AM');
+        
+        % Create Axes and line object         
+        plot(h, date, Hydrograph, 'linewidth',2);       
+%         %xlim(handles.Plot_Hydrograph,[date(1) date(end)])
+%         %%set(handles.Plot_Hydrograph,'XTick',[date(1):(date(end)-date(1))/5:date(end)]);
+%         %set(handles.Plot_Hydrograph,'XTickLabel',datestr([date(1):(date(end)-date(1))/5:date(end)],'mm/dd/yy HH:MM AM'),'XColor','k','FontName','Arial');
+%         set(handles.Plot_Hydrograph,'XTickLabel',datestr(get(handles.Plot_Hydrograph,'XTick'),'mm/dd/yy HH:MM AM'),'XColor','k','FontName','Arial');
+%         box(handles.Plot_Hydrograph,'on')
+%         xlabel(handles.Plot_Hydrograph,'Time','FontName','Arial','FontSize',14);
+%         grid(handles.Plot_Hydrograph,'on')
+%         set(handles.Plot_Hydrograph,'XMinorTick','on')
+%         ylabel(handles.Plot_Hydrograph,Yylabel,'FontName','Arial','FontSize',14);
+%         %msgbox('Feature under development, no available','FluEgg message')
+%         set(handles.delete_spawning_time,'Visible','off')
+%         set(handles.Set_up_spawning_time,'Visible','on')
     end %plotProfiles()
-    function plotTS(handles)
-        %% Coded by Santi for Time Series Analysis
+    function [date_axis, Yylabel] = plotTS(handles, var)
+        %% Coded by Santi for Model Evaluation
+        % This function plots HEC-RAS output hydrographs.
+        % Load HEC-RAS outputs
         hFluEggGui = getappdata(0,'hFluEggGui');
         HECRAS_data = getappdata(hFluEggGui,'inputdata');
+        h = handles.Plot_Hydrograph;
+        
         if isempty(HECRAS_data)
+            % If HEC-RAS data store in FluEGG is not found
             m = msgbox('Please import data and try again','FluEgg error','error');
             uiwait(m)
             return
         else
-            %% Determine the parameter to plot
+            % If HEC-RAS data is found: Determine the parameter to plot
             str = get(handles.popup_River_Station, 'String');
-            val = get(handles.popup_River_Station,'Value');
+            val = get(handles.popup_River_Station, 'Value');
+            
+            % Check data was imported for selected River Station
             currentRS = HECRAS_data.RiverStation;
             if val ~= currentRS
                 m = msgbox('Please Import TS for new river station',...
@@ -700,57 +764,58 @@ end
                 uiwait(m)
                 return
             end
-            % Hydrographs:
-            if get(handles.checkbox_flow,'value') == 1
+            
+            % Get Hydrographs data
+            if strcmp(var, 'Flow')
+                % Flow Hydrograph
                 Hydrograph = HECRAS_data.TS(:,2);
                 Yylabel='Flow, in cubic meters per second';
-            elseif get(handles.checkbox_H,'value') == 1
+            elseif strcmp(var,'Water Depth') == 1
+                % Water Level hydrograph
+                Hydrograph = HECRAS_data.TS(:,3);
+                Yylabel='Water Depth, in meters';
+            elseif strcmp(var,'Stage') == 1
+                % Water Level hydrograph
                 Hydrograph = HECRAS_data.TS(:,3);
                 Yylabel='Water Surface Elevation, in meters';
             else
+                % No hydrograph has been selected
                 m = msgbox('Please select a variable to plot',...
                     'FluEgg error','error');
                 uiwait(m)
                 return
             end
         end %if
-        date = arrayfun(@(x) datenum(x,'ddmmyyyy HHMM'), HECRAS_data.Dates);
-        set(handles.Plot_Hydrograph,'visible','on')
         
-        plot(handles.Plot_Hydrograph,date,Hydrograph,'linewidth',2)
-        set(handles.Plot_Hydrograph,...
-            'XTickLabel',...
-            datestr(get(handles.Plot_Hydrograph,'XTick'),'mm/dd/yy HH:MM AM'),...
-            'XColor','k',...
-            'FontName','Arial');
-        box(handles.Plot_Hydrograph,'on')
-        xlabel(handles.Plot_Hydrograph,'Time',...
-            'FontName','Arial',...
-            'FontSize',14);
-        grid(handles.Plot_Hydrograph,'on')
-        set(handles.Plot_Hydrograph,'XMinorTick','on')
-        ylabel(handles.Plot_Hydrograph,Yylabel,...
-            'FontName','Arial',...
-            'FontSize',14);
-        %
+        % Format Date data for plot
+        date = arrayfun(@(x) datenum(x,'ddmmyyyy HHMM'), HECRAS_data.Dates);
+        date_axis = datestr(date, 'mm/dd/yy HH:MM AM');
+        
+        % Create Axes and line object
+         plot(h, date, Hydrograph, 'linewidth',2);
     end %plotTS()
     function plot_obs_data(handles)
-        % Get Observed data if any
-        % [SS] Need to add a check-point for non-existing data
-        hFluEggGui = getappdata(0,'hFluEggGui');
-        HECRAS_data = getappdata(hFluEggGui,'inputdata');
-        obs_data = getappdata(hFluEggGui,'obsdata');
-        text1 = obs_data.data{1,2};
-        text2 = obs_data.data{1,3};
-        profile = arrayfun(@(x, y) strcat(x,{' '},y), text1, text2);
+        % Add Observed data to plot, if any
+        hFluEggGui  = getappdata(0,'hFluEggGui');
+        obs_data    = getappdata(hFluEggGui,'obsdata');
+        h = handles.Plot_Hydrograph;
         
-        % Format dates for plotting
-        date = arrayfun(@(x) datenum(x,'ddmmyyyy HHMM'), profile);
-        hydrograph = obs_data.data{1,4};
-        plot(handles.Plot_Hydrograph, date, hydrograph,'s',...
-            'MarkerSize',2, 'MarkerEdgeColor','k')
-        % [SS] This plot is over-writing the existing one. How to just add markers to
-        % existing plot?
+        if ~isempty(obs_data)
+            % Observed data was loaded in FluEgg
+            % Format dates for plotting
+            text1 = obs_data.data{1,2};
+            text2 = obs_data.data{1,3};
+            profile = arrayfun(@(x, y) strcat(x,{' '},y), text1, text2);
+            date = arrayfun(@(x) datenum(x,'ddmmyyyy HHMM'), profile);
+            hydrograph = obs_data.data{1,4};
+            
+            %Add line to plot and add format
+            h2 = line(date, hydrograph, 'Parent', h);
+            h2.LineStyle        = 'none';
+            h2.Marker           = 's';
+            h2.MarkerEdgeColor  = 'k';
+            h2.MarkerSize       = 2;
+        end
     end %plot_obs_data()
 end % pushbutton_plot_Callback(hObject, eventdata, handles)
 
@@ -769,7 +834,6 @@ if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgr
     set(hObject,'BackgroundColor','white');
 end
 end
-
 
 % --- Executes on selection change in popupPlan.
 function popupPlan_Callback(hObject, eventdata, handles)
@@ -798,12 +862,20 @@ if  strcmp(project,' ') == 1 % If project was not loaded
     error_load()
     return
 end
-
+% If project was loaded, take action according to Import button's string
 if strcmp(    what,'Import data')
+    % Load HEC-RAS data
     import_data();
 elseif strcmp(    what,'Import TS')
+    % Import HEC_RAS data and Observed Data if any
     import_TS();
-    import_OBS();
+    try
+        import_OBS();
+    catch
+        ed = warndlg('No Observed Data was found','Observed Data');
+        set(ed, 'WindowStyle', 'modal');
+        uiwait(ed);  
+    end
 elseif strcmp(what,   'Continue')
     ContinueButton_Callback(hObject, eventdata, handles)
 end
@@ -1000,24 +1072,21 @@ function time_series_panel_Callback(hObject, eventdata, handles)
 % handles    structure with handles and user data (see GUIDATA)
 %TimeSeries_GUI()
 % Initialize GUI: makes some objects invisible
-init_TS_panel()
-
-    function init_TS_panel()
-        set(handles.text_TempHEC,'Visible','off')
-        set(handles.popup_TempHEC,'Visible','off')
-        set(handles.Const_Temp,'Visible','off')
-        set(handles.LoadObsData,'Visible','on')
-        set(handles.edit4, 'Visible','on')
-        %set(handles.checkbox_flow,'Visible','off')
-        %set(handles.checkbox_H,'Visible','off')
-        set(handles.Import_data_button,'String', 'Import TS')
-        set(handles.popup_HECRAS_profile,'String', 'ALL PROFILES')
-        set(handles.River_Input_File_Panel_button,'Value',0)
-        set(handles.Import_HECRAS_panel_button,'Value',0)
-        set(handles.time_series_panel,'Value',1)
-    end % init_TS_panel()
+set(handles.text_TempHEC,  'Visible', 'off')
+set(handles.popup_TempHEC, 'Visible', 'off')
+set(handles.Const_Temp,    'Visible', 'off')
+set(handles.checkbox_flow, 'Visible', 'off')
+set(handles.checkbox_H,    'Visible', 'off')
+set(handles.LoadObsData,   'Visible', 'on')
+set(handles.edit4,         'Visible', 'on')
+set(handles.popup_variable,'Visible', 'on')
+set(handles.popup_variable, ...
+    'String', {'Variable','Flow', 'Water Depth','Stage'})
+set(handles.Import_data_button,           'String', 'Import TS')
+set(handles.River_Input_File_Panel_button,'Value',0)
+set(handles.Import_HECRAS_panel_button,   'Value',0)
+set(handles.time_series_panel,            'Value',1)
 end %time_series_panel_Callback(hObject, eventdata, handles)
-
 
 % --------------------------------------------------------------------
 function Untitled_1_Callback(hObject, eventdata, handles)
@@ -1066,4 +1135,26 @@ end
 % --- Executes on button press in checkbox_flow.
 function checkbox_flow_Callback(hObject, eventdata, handles)
 set(handles.checkbox_H,'value',0)
+end
+
+% --- Executes on selection change in popup_variable.
+function popup_variable_Callback(hObject, eventdata, handles)
+% hObject    handle to popup_variable (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+% Hints: contents = cellstr(get(hObject,'String')) returns popup_variable contents as cell array
+%        contents{get(hObject,'Value')} returns selected item from popup_variable
+end
+
+% --- Executes during object creation, after setting all properties.
+function popup_variable_CreateFcn(hObject, eventdata, handles)
+% hObject    handle to popup_variable (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    empty - handles not created until after all CreateFcns called
+% Hint: popupmenu controls usually have a white background on Windows.
+%       See ISPC and COMPUTER.
+if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
+    set(hObject,'BackgroundColor','white');
+end
 end

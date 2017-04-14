@@ -13,7 +13,7 @@
 %-------------------------------------------------------------------------%
 %   Created by      : Santiago Santacruz & Tatiana                        %
 %   Date            : January 20, 2016                                    %
-%   Last Modified   : January 20, 2016                                    %
+%   Last Modified   : Febrauary 20, 2016                                    %
 %-------------------------------------------------------------------------%
 % Inputs:
 % Outputs:
@@ -27,11 +27,13 @@ function [dss_data] = import_dss(filename)
     dss_data.units = textscan(fid, '%s %s', 1);
     dss_data.type = textscan(fid, '%s %s', 1);
     dss_data.data = textscan(fid, '%s %s %s %f');
-    fclose(fid)
+    fclose(fid);
 end
 
 function check_fid(fid)
     if fid == -1
-        error('Your file could not be read')
+        ed = warndlg('Your file could not be read','Observed Data');
+        set(ed, 'WindowStyle', 'modal');
+        uiwait(ed);
     end
 end
