@@ -214,9 +214,9 @@ function load_hecras_button_Callback(hObject, eventdata, handles)
 % Keeps active the current Panel
 % This is important when updating the Hec-Ras profiles pop-up button
 what = get(handles.Import_data_button, 'string');
-if strcmp(what, 'Import data')
+if strcmp(what, 'Import data') %import HEC-RAS model results 
     set(handles.Import_HECRAS_panel_button,   'Value', 1)
-elseif strcmp(what, 'Import TS')
+elseif strcmp(what, 'Import TS') %import time-series from HEC-RAS to evaluate HEC-RAS model performance
     set(handles.time_series_panel,            'Value', 1)
 end
 
@@ -288,15 +288,17 @@ set(handles.TempPlot,'Visible','off');
             
             % Profile Names
             [lngNumProf,strProfileName]=RC.Output_GetProfiles(0,0);
+            % Identify whether we are importing data for FluEgg simulation or HEC-RAS
+            % performance evaluation
                         importData = get(handles.Import_HECRAS_panel_button,'Value');
-            if importData == 1 
+            if importData == 1 %Importing data for FluEgg simulation
                % Only if Import HECRAS tab is highlighted
                % add the option of including all profiles --> For unsteady state
                 strProfileName(2:end+1) = strProfileName(1:end);
                % Display ALL profile names in GUI                
                 strProfileName{1} = 'All profiles-unsteady flow';
                 set(handles.popup_HECRAS_profile,'string',strProfileName);
-            else
+            else %HEC-RAS performance evaluation
                 % Display only 'All profiles-unsteady flow'
                 set(handles.popup_HECRAS_profile,'string','All profiles-unsteady flow');
             end
