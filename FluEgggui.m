@@ -766,8 +766,9 @@ Jump;
         try % for unsteady input
              HECRAS_time_sec=HECRAS_data.HECRAS_time_sec;
             if time(t)+ HECRAS_FluEgg_Timediff>=HECRAS_time_sec(HECRAS_time_counter+1)
-                HECRAS_time_index=HECRAS_time_index+1;
+                HECRAS_time_index=HECRAS_time_index+Inv_mod; %Take into account inverse modeling when time index should go backward
                 HECRAS_time_counter=HECRAS_time_counter+1;
+                
                 [~,Depth,Q,~,Vlat,Vvert,Ustar,Temp,Width,VX,ks]=Create_Update_Hydraulic_and_QW_Variables(HECRAS_time_index);
                 for egg_index=1:length(H)
                     Cell=cell(egg_index);%Cell is the cell were the current egg is located 
@@ -923,6 +924,16 @@ Jump;
     function [CumlDistance,Depth,Q,Vmag,Vlat,Vvert,Ustar,Temp,Width,VX,ks]=Create_Update_Hydraulic_and_QW_Variables(HECRAS_time_index)
         hFluEggGui = getappdata(0,'hFluEggGui');
         HECRAS_data=getappdata(hFluEggGui,'inputdata');
+
+        %display error for users
+        if HECRAS_time_index<1||HECRAS_time_index>length(HECRAS_data.Profiles)
+                ed=errordlg([{'HEC-RAS simulation time error'},{'Please review HEC-RAS simulation time and make sure it is long enough to perform FluEgg simulation.'}],'Error');
+                set(ed, 'WindowStyle', 'modal');
+                uiwait(ed);
+                minDt = 0; %terminate the simulation
+                Exit=1;
+                return
+        end
         
         %% Delete or uncomment, this is for testing of the unsteady input new development
 %         for i=1:7
