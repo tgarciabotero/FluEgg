@@ -953,7 +953,7 @@ end
         hFluEggGui = getappdata(0,'hFluEggGui');
         setappdata(hFluEggGui,'inputdata',HECRAS_data);
         %%
-        % set(handles.Set_up_spawning_time,'Visible','on')
+        set(handles.Set_up_spawning_time,'Visible','on')
     end %import data function
 
 %==========================================================================
@@ -1033,7 +1033,7 @@ HECRAS_data=getappdata(hFluEggGui, 'inputdata');
 HECRAS_data.SpawningTime=[];
 setappdata(hFluEggGui, 'inputdata',HECRAS_data);
 pushbutton_plot_Callback(hObject, eventdata, handles)
-
+% 
 set(gcf, 'pointer', 'crosshair');
 [xi,yi] = ginput(1);
 hold on
