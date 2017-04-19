@@ -946,7 +946,7 @@ Jump;
         
         CumlDistance = Riverinputfile(:,2);   %Km
         Depth = Riverinputfile(:,3);          %m
-        Q = Riverinputfile(:,4);              %m3/s-->sign ipros in Vx
+        Q = Riverinputfile(:,4);              %m3/s-->sign is in Vx
         Vmag = Riverinputfile(:,5);           %m/s
         Vlat = Riverinputfile(:,6);           %m/s
         Vvert = Riverinputfile(:,7);          %m/s
