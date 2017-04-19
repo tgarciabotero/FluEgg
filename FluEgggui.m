@@ -529,7 +529,7 @@ Jump;
             %% Streamwise velocity distribution in the transverse direction
             Vxz = abs(Vxz).*betapdf(Y(t-1,a)'./W(a),alpha,beta);
             %% X
-            X(t,a) = X(t-1,a)'+Inv_mod*((Dt*Vxz)+(normrnd(0,1,sum(a),1).*sqrt(2*DH(a)*Dt)));
+            X(t,a) = X(t-1,a)'+Inv_mod*(Dt*Vxz)+(normrnd(0,1,sum(a),1).*sqrt(2*DH(a)*Dt));
             % Reflecting Boundary: Iff Eggs are located outside the
             % upstream boundary condition
             check = X(t,a);
