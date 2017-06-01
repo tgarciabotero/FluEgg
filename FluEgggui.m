@@ -168,6 +168,7 @@ switch Larvaemode %:Updated TG May,2015
                 case 'Yes'
                     Totaltime=handles.userdata.Max_Sim_Time;
                     set(handles.Totaltime,'String',handles.userdata.Max_Sim_Time);
+                    Totaltime=Totaltime*3600;%Edit 6/1/2017
                 case 'No'
                     minDt=0;
                     delete(h)
@@ -189,6 +190,7 @@ switch Larvaemode %:Updated TG May,2015
                 case 'Yes'
                     Totaltime = handles.userdata.Max_Sim_Time;
                     set(handles.Totaltime,'String',handles.userdata.Max_Sim_Time);
+                    Totaltime=Totaltime*3600;%Edit 6/1/2017
                 case 'No'
                     minDt = 0;
                     delete(h)
