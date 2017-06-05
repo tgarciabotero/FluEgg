@@ -70,6 +70,18 @@ catch
     ed = errordlg(' File ./results/FluEgg_LogFile.txt not found','Error');
     set(ed, 'WindowStyle', 'modal');
     uiwait(ed);
+    
+    %Then Create file and file
+    [status,msg] = mkdir('results');
+    fid = fopen( 'FluEgg_LogFile.txt', 'wt' );
+    fclose(fid);
+    
+    %Confirmation message
+    if status == 1
+        ed = msgbox(' File ./results/FluEgg_LogFile.txt was created','warn');
+        set(ed, 'WindowStyle', 'modal');
+        uiwait(ed);
+    end
 end
 workpath = pwd;setappdata(0,'workpath',workpath);
 
