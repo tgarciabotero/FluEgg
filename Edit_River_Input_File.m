@@ -658,7 +658,7 @@ elseif strcmp(    what,'Import TS')
     var = str{val};
     
     % Plot HEC-RAS results
-    [date_axis, Yylabel] = plotTS(handles, var); 
+    [~, Yylabel] = plotTS(handles, var); 
     
     % Plot observed data for selected River Station
     plot_obs_data(handles);
@@ -678,11 +678,12 @@ elseif strcmp(    what,'Import TS')
           'BackgroundColor', 'white');
 end
 %% Format plot
-handles.Plot_Hydrograph;
+h = handles.Plot_Hydrograph;
 h.FontName          = 'Arial';
 h.XLabel            = xlabel('Time', 'FontSize',14 );
 h.Visible           = 'on';
-h.XTickLabel        = date_axis;
+%h.XTickLabel        = date_axis;
+h.XTickLabel        = datestr(h.XTick, 'mm/dd/yy HH:MM');
 h.XColor            = 'k';
 h.XLabel.Visible    = 'on';
 h.YLabel            = ylabel(Yylabel, 'FontSize',14);
@@ -772,10 +773,11 @@ set( h, 'XMinorTick','on');
                 % Flow Hydrograph
                 Hydrograph = HECRAS_data.TS(:,2);
                 Yylabel='Flow, in cubic meters per second';
-            elseif strcmp(var,'Water Depth') == 1
+            %elseif strcmp(var,'Water Depth') == 1
+                % This option is not ACTIVE yet
                 % Water Level hydrograph
-                Hydrograph = HECRAS_data.TS(:,3);
-                Yylabel='Water Depth, in meters';
+            %    Hydrograph = HECRAS_data.TS(:,3);
+            %    Yylabel='Water Depth, in meters';
             elseif strcmp(var,'Stage') == 1
                 % Water Level hydrograph
                 Hydrograph = HECRAS_data.TS(:,3);
