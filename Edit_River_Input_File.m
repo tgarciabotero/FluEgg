@@ -761,7 +761,7 @@ set( h, 'XMinorTick','on');
             
             % Check data was imported for selected River Station
             currentRS = HECRAS_data.RiverStation;
-            if val ~= currentRS
+            if ~strcmp(str, currentRS)
                 m = msgbox('Please Import TS for new river station',...
                     'FluEgg error','error');
                 uiwait(m)
@@ -949,7 +949,8 @@ end
             %     msgbox('Feature under development, no available','FluEgg message')
             %     return
         else
-            HECRAS_data.Profiles(1).Riverinputfile=Extract_RAS(handles.strFilename,handles,1);
+            HECRAS_data.Profiles(1).Riverinputfile = ...
+                Extract_RAS(handles.strFilename,handles,1); sta
         end
         %% Save data in hFluEggGui
         hFluEggGui = getappdata(0,'hFluEggGui');
@@ -961,20 +962,17 @@ end
 %==========================================================================
 %% Import Time Series Data
     function import_TS()
-        list = get(handles.popup_River_Station,'String');
-        val = get(handles.popup_River_Station,'value');
-        XS = list(val,:);
         try
             %HECRAS_data.TimeSeries(length(list),1) = NaN;
-            [TS, dates] = Extract_RAS_TS(handles.strFilename,handles,XS);
+            [XS, TS, dates] = ...
+                Extract_RAS_TS(handles.strFilename, handles);
             HECRAS_data.TS = TS;
             HECRAS_data.Dates = dates;
-            HECRAS_data.RiverStation = val;
+            HECRAS_data.RiverStation = XS;
         catch
             ed = errordlg('Error importing data','Error');
             set(ed, 'WindowStyle', 'modal');
             uiwait(ed);
-            %             delete(h)
             return
         end
         

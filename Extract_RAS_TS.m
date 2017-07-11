@@ -12,14 +12,15 @@
 %-------------------------------------------------------------------------%
 %   Created by      : Santiago Santacruz & Tatiana                        %
 %   Date            : December 20, 2016                                   %
-%   Last Modified   : December 20, 2016                                   %
+%   Last Modified   : July 11, 2017                                       %
 %-------------------------------------------------------------------------%
 % Inputs:
 % Outputs:
 % Copyright 2016 Santiago Santacruz & Tatiana Garcia
 %:::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::%
 
-function [hydrographs, profiles] = Extract_RAS_TS(strRASProject,handles,RiverStation)
+function [XS, hydrographs, profiles] = ...
+    Extract_RAS_TS(strRASProject, handles)%, Plan, RiverStation)
 
 %% Creates a COM Server for the HEC-RAS Controller
 % The command above depends on the version of HEC-RAS you have, in my case
@@ -41,16 +42,29 @@ catch
     end%HECRAS 5.0.2
 end %HECRAS 5.0.3
 
+%% get variables from GUI with user selection
+lngRiverID = get(handles.popup_River,'Value');   % RiverID
+lngReachID = get(handles.popup_Reach,'Value');   % ReachID
+
+% Plan
+list = get(handles.popupPlan,'String');
+val = get(handles.popupPlan,'value');
+Plan = list(val,:);
+Plan = Plan{1};
+
+% River Station
+list = get(handles.popup_River_Station,'String');
+val = get(handles.popup_River_Station,'value');
+XS = list(val,:);
+XS = XS{1};
+
 %% Open the project
 %strRASProject = 'D:\Asian Carp\Asian Carp_USGS_Project\Tributaries data\Sandusky River\SANDUSKY_Hec_RAS_mod\Sandusky_mod_II\BallvilleDam_Updated.prj';
 RC.Project_Open(strRASProject); %open and show interface, no need to use RC.ShowRAS in Matlab
+RC.Plan_SetCurrent(Plan);    %Set Current Plan to selected Plan
 
 %% Define Variables
-% get variables from GUI with user selection
-lngRiverID = get(handles.popup_River,'Value');   % RiverID
-lngReachID = get(handles.popup_Reach,'Value');   % ReachID
-%lngPlanID = get(handles.popupPlan,'Value');   % PlanID
-lngNodeID = RC.Geometry_GetNode(lngRiverID, lngReachID, RiverStation{1});   % NodeID
+lngNodeID = RC.Geometry_GetNode(lngRiverID, lngReachID, XS);   % NodeID
 %%
 % Variables to be extracted
 lngQChannelID = 7;    % Flow in the main channel
@@ -62,13 +76,13 @@ WSE = nan(nProfiles - 1, 1); % Discard MaxWSL profile
 
 for i = 1:nProfiles-1 % Profile = 1 is for MaxWSL (to be discarded)
     QChannel_TS(i) = RC.Output_NodeOutput(lngRiverID,...
-                                          lngReachID,....
+                                          lngReachID,...
                                            lngNodeID,...
                                                    0,...
                                                i + 1,...
                                        lngQChannelID);
     WSE(i)         = RC.Output_NodeOutput(lngRiverID,...
-                                          lngReachID,....
+                                          lngReachID,...
                                            lngNodeID,...
                                                    0,...
                                                i + 1,...
