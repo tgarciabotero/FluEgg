@@ -1,3 +1,21 @@
+%==============================================================================
+% FluEgg -Fluvial Egg Drift Simulator
+%==============================================================================
+% Copyright (c) 2013-2017 Tatiana Garcia
+
+   % This program is free software: you can redistribute it and/or modify
+    % it under the terms of the GNU General Public License version 3 as published by
+    % the Free Software Foundation (currently at http://www.gnu.org/licenses/agpl.html) 
+    % with a permitted obligation to maintain Appropriate Legal Notices.
+
+    % This program is distributed in the hope that it will be useful,
+    % but WITHOUT ANY WARRANTY; without even the implied warranty of
+    % MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    % GNU General Public License for more details.
+
+    % You should have received a copy of the GNU General Public License
+    % along with this program.  If not, see <http://www.gnu.org/licenses/>.
+
 %%%:::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::%
 %%                 Egg vertical concentration distribution                %
 %:::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::%
@@ -96,7 +114,7 @@ if handles.update==0
         Nodes = 0:-H/(Nlayers):-H;
         Nodes = Nodes';
     end
-else %handles.update==1 œf the table is eddited please update the Nodes
+else %handles.update==1 √èf the table is eddited please update the Nodes
     Nodes = get(handles.LayerNodes_table,'Data');Nodes=Nodes(:,1);
 end
 
