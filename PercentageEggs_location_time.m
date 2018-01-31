@@ -30,7 +30,7 @@ function varargout = PercentageEggs_location_time(varargin)
 %   Created by      : Tatiana Garcia                                      %
 %   Last Modified   : October 24, 2016                                    %
 %-------------------------------------------------------------------------%
-% Copyright 2016 Tatiana Garcia
+% Copyright 2013 Tatiana Garcia
 %:::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::%
 
 % Last Modified by GUIDE v2.5 25-Oct-2016 10:57:47
