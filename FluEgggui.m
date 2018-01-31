@@ -1,3 +1,21 @@
+%==============================================================================
+% FluEgg -Fluvial Egg Drift Simulator
+%==============================================================================
+% Copyright (c) 2013-2017 Tatiana Garcia
+
+   % This program is free software: you can redistribute it and/or modify
+    % it under the terms of the GNU General Public License version 3 as published by
+    % the Free Software Foundation (currently at http://www.gnu.org/licenses/agpl.html) 
+    % with a permitted obligation to maintain Appropriate Legal Notices.
+
+    % This program is distributed in the hope that it will be useful,
+    % but WITHOUT ANY WARRANTY; without even the implied warranty of
+    % MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    % GNU General Public License for more details.
+
+    % You should have received a copy of the GNU General Public License
+    % along with this program.  If not, see <http://www.gnu.org/licenses/>.
+
 %% FluEgg main function: FluEgggui.m
 %%:::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::%
 %%                       MAIN FUNCTION                                    %
@@ -16,7 +34,7 @@
 %   Last Modified   : July 29, 2016                                        %
 % ------------------------------------------------------------------------%
 %                                                                         %
-% Copyright 2016 Tatiana Garcia                                           %
+%                                             %
 % ::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::%
 % With nested functions and single precision and uint8 data types         %
 %
