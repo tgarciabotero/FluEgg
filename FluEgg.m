@@ -1,7 +1,7 @@
 %==============================================================================
 % FluEgg -Fluvial Egg Drift Simulator
 %==============================================================================
-% Copyright (c) 2013-2017 Tatiana Garcia
+% Copyright (c) 2013 Tatiana Garcia
 
    % This program is free software: you can redistribute it and/or modify
     % it under the terms of the GNU General Public License version 3 as published by
@@ -34,8 +34,7 @@
 %   Date            : May 20, 2010                                        %
 %   Last Modified   : June 28, 2016
 %:::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::%
-% Copyright 2016 Tatiana Garcia                                           %
-% ::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::%
+ 
 
 function varargout = FluEgg(varargin)
 
