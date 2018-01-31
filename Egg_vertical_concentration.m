@@ -1,7 +1,7 @@
 %==============================================================================
 % FluEgg -Fluvial Egg Drift Simulator
 %==============================================================================
-% Copyright (c) 2013-2017 Tatiana Garcia
+% Copyright (c) 2013 Tatiana Garcia
 
    % This program is free software: you can redistribute it and/or modify
     % it under the terms of the GNU General Public License version 3 as published by
@@ -29,7 +29,7 @@
 %   Created by      : Tatiana Garcia                                      %
 %   Last Modified   : May 31, 2016                                      %
 %-------------------------------------------------------------------------%
-% Copyright 2016 Tatiana Garcia
+%  
 %:::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::%
 function varargout = Egg_vertical_concentration(varargin)
 % EGG_VERTICAL_CONCENTRATION MATLAB code for Egg_vertical_concentration.fig
