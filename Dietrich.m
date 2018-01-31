@@ -1,7 +1,7 @@
 %==============================================================================
 % FluEgg -Fluvial Egg Drift Simulator
 %==============================================================================
-% Copyright (c) 2013-2017 Tatiana Garcia
+% Copyright (c) 2013 Tatiana Garcia
 
    % This program is free software: you can redistribute it and/or modify
     % it under the terms of the GNU General Public License version 3 as published by
@@ -37,7 +37,7 @@
 %        SG =egg specific gravity (dimensionless)= density of egg/density
 %        of water.
 % Outputs:
-% Copyright 2016 Tatiana Garcia
+% 
 %:::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::%
 function [vs] = Dietrich(D,SG,T)
 D = D/10; % convert to cm from mm
