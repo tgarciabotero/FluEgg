@@ -1,4 +1,52 @@
-                    GNU GENERAL PUBLIC LICENSE
+==============================================================================
+FluEgg -Fluvial Egg Drift Simulator
+==============================================================================
+Copyright (c) 2013-2017 Tatiana Garcia
+
+    This program is free software: you can redistribute it and/or modify
+    it under the terms of the GNU General Public License version 3 as published by
+    the Free Software Foundation (currently at http://www.gnu.org/licenses/agpl.html) 
+    with a permitted obligation to maintain Appropriate Legal Notices.
+
+    This program is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU General Public License for more details.
+
+    You should have received a copy of the GNU General Public License
+    along with this program.  If not, see <http://www.gnu.org/licenses/>.
+
+
+==============================================================================
+DISCLAIMER
+==============================================================================
+
+Unless otherwise noted below, this software is in the public domain because it contains materials that
+originally came from the United States Geological Survey, an agency of the United States Department of
+Interior. For more information, see the official USGS copyright policy at:
+
+http://www.usgs.gov/visual-id/credit_usgs.html#copyright
+
+Although this software program has been used by the USGS, no warranty, expressed or implied, is made by 
+the USGS or the U.S. Government as to the accuracy and functioning of the program and related program material 
+nor shall the fact of distribution constitute any such warranty, and no responsibility is assumed by the USGS 
+in connection therewith.
+
+This software is provided "AS IS."
+
+Attributions and Licences:
+References to or use of non-U.S. Department of the Interior (DOI) products does not constitute an endorsement by the DOI.
+
+This information is preliminary or provisional and is subject to
+revision. It is being provided to meet the need for timely best
+science. The information has not received final approval by the USGS
+and is provided on the condition that neither the USGS nor the
+U.S. Government shall be held liable for any damages resulting from
+the authorized or unauthorized use of the information.
+
+                   
+                   
+                   GNU GENERAL PUBLIC LICENSE
                        Version 3, 29 June 2007
 
  Copyright (C) 2007 Free Software Foundation, Inc. <http://fsf.org/>
